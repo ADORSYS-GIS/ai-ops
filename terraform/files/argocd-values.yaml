@@ -1,0 +1,78 @@
+global:
+  domain: ${domain}
+  logging:
+    format: text
+    level: info
+
+configs:
+  secret:
+    extra:
+      "oidc.keycloak.clientSecret": ${oidc_kc_client_secret}
+  ## Ref: https://github.com/argoproj/argo-cd/blob/master/docs/operator-manual/argocd-cm.yaml
+  cm:
+    create: true
+    exec.enabled: true
+
+    # Dex configuration
+    # dex.config: |
+    #   connectors:
+    #     # GitHub example
+    #     - type: github
+    #       id: github
+    #       name: GitHub
+    #       config:
+    #         clientID: aabbccddeeff00112233
+    #         clientSecret: $dex.github.clientSecret # Alternatively $<some_K8S_secret>:dex.github.clientSecret
+    #         orgs:
+    #         - name: your-github-org
+
+    # OIDC configuration as an alternative to dex (optional).
+    oidc.config: |
+      name: Adorsys
+      issuer: ${oidc_kc_issuer_url}
+      clientID: ${oidc_kc_client_id}
+      clientSecret: $oidc.keycloak.clientSecret
+      requestedScopes: ["openid", "profile", "email", "groups"]
+
+  ## Ref: https://github.com/argoproj/argo-cd/blob/master/docs/operator-manual/rbac.md
+  rbac:
+    policy.csv: |
+      g, ArgoCDAdmins, role:admin
+      g, ArgoCDViewer, role:readonly
+    #
+    # Policy rules are in the form:
+    #  p, subject, resource, action, object, effect
+    # Role definitions and bindings are in the form:
+    #  g, subject, inherited-subject
+    # policy.csv: |
+    #   p, role:org-admin, applications, *, */*, allow
+    #   p, role:org-admin, clusters, get, *, allow
+    #   p, role:org-admin, repositories, *, *, allow
+    #   p, role:org-admin, logs, get, *, allow
+    #   p, role:org-admin, exec, create, */*, allow
+    #   g, your-github-org:your-team, role:org-admin
+
+    # -- OIDC scopes to examine during rbac enforcement (in addition to `sub` scope).
+    # The scope value can be a string, or a list of strings.
+    scopes: |
+      - groups
+
+    # -- Matcher function for Casbin, `glob` for glob matcher and `regex` for regex matcher.
+    policy.matchMode: "glob"
+    policy.default: ""
+
+server:
+  ingress:
+    enabled: true
+    annotations:
+      alb.ingress.kubernetes.io/load-balancer-name: "${name}-server"
+      alb.ingress.kubernetes.io/backend-protocol: HTTPS
+      alb.ingress.kubernetes.io/listen-ports: '[{"HTTP":80}, {"HTTPS": 443}]'
+      alb.ingress.kubernetes.io/ssl-redirect: '443'
+      alb.ingress.kubernetes.io/scheme: internet-facing
+      alb.ingress.kubernetes.io/target-type: ip
+      alb.ingress.kubernetes.io/certificate-arn: ${certArn}
+      external-dns.alpha.kubernetes.io/hostname: "${domain}"
+      alb.ingress.kubernetes.io/actions.forward-single: '{"Type":"forward","ForwardConfig":{"TargetGroups":[{"ServiceName":"argocd-server","ServicePort":"8080"}]}}'
+    ingressClassName: "alb"
+    tls: false

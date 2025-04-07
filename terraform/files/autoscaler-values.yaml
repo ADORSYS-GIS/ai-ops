@@ -1,0 +1,27 @@
+extraArgs:
+  logtostderr: true
+  stderrthreshold: info
+  v: 4
+  skip-nodes-with-local-storage: false
+  skip-nodes-with-system-pods: false
+affinity:
+  podAntiAffinity:
+    preferredDuringSchedulingIgnoredDuringExecution:
+      - weight: 100
+        podAffinityTerm:
+          labelSelector:
+            matchExpressions:
+              - key: app.kubernetes.io/name
+                operator: In
+                values:
+                  - aws-cluster-autoscaler
+          topologyKey: "kubernetes.io/hostname"
+      - weight: 100
+        podAffinityTerm:
+          labelSelector:
+            matchExpressions:
+              - key: app.kubernetes.io/name
+                operator: In
+                values:
+                  - aws-cluster-autoscaler
+          topologyKey: "topology.kubernetes.io/zone"

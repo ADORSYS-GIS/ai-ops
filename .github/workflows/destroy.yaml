@@ -1,0 +1,86 @@
+name: Terraform Destroy
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: "Environment name"
+        required: true
+        type: choice
+        options:
+          - dev
+
+defaults:
+  run:
+    working-directory: ./terraform
+
+jobs:
+  destroy:
+    runs-on: ubuntu-latest
+    name: Destroys ${{ matrix.name }} Environment
+    environment:
+      name: ${{ matrix.name }}
+      url: https://${{ vars.DOMAIN_NAME }}
+    strategy:
+      matrix: 
+        name:
+          - dev
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Check if deployment should proceed
+        run: |
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" && "${{ inputs.environment }}" != "${{ matrix.name }}" ]]; then
+            echo "Skipping deployment for ${{ matrix.name }}"
+            exit 0
+          fi
+
+
+      - name: Set up Terraform
+        uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: 1.9.8
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ vars.AWS_REGION }}
+
+      - name: Set Environment Variables
+        run: |
+          echo "TF_VAR_name=${{ matrix.name }}-cluster" >> $GITHUB_ENV
+          echo "TF_VAR_db_username=${{ vars.DB_USERNAME }}" >> $GITHUB_ENV
+          echo "TF_VAR_db_password=${{ secrets.DB_PASSWORD }}" >> $GITHUB_ENV
+          echo "TF_VAR_oidc_kc_client_id=${{ vars.OIDC_KC_CLIENT_ID }}" >> $GITHUB_ENV
+          echo "TF_VAR_oidc_kc_client_secret=${{ secrets.OIDC_KC_CLIENT_SECRET }}" >> $GITHUB_ENV
+          echo "TF_VAR_oidc_kc_issuer_url=${{ vars.OIDC_KC_ISSUER_URL }}" >> $GITHUB_ENV
+          echo "TF_VAR_cert_arn=${{ vars.CERT_ARN }}" >> $GITHUB_ENV
+          echo "TF_VAR_region=${{ vars.AWS_REGION }}" >> $GITHUB_ENV
+          echo "TF_VAR_zone_name=${{ vars.DOMAIN_NAME }}" >> $GITHUB_ENV
+          echo "TF_VAR_prs_private_key=${{ secrets.SERVER_PRIVATE_KEY_JSON }}" >> $GITHUB_ENV
+          echo "TF_VAR_prs_public_key=${{ secrets.SERVER_PUBLIC_KEY_JSON }}" >> $GITHUB_ENV
+          echo "TF_VAR_jwt_issuer=${{ vars.JWT_ISSUER }}" >> $GITHUB_ENV
+          echo "TF_VAR_jwt_expiration=${{ vars.JWT_EXPIRATION_TIME_MS }}" >> $GITHUB_ENV
+          echo "TF_VAR_twilio_account_sid=${{ vars.TWILIO_ACCOUNT_SID }}" >> $GITHUB_ENV
+          echo "TF_VAR_twilio_auth_token=${{ vars.TWILIO_AUTH_TOKEN }}" >> $GITHUB_ENV
+          echo "TF_VAR_twilio_phone_number=${{ vars.TWILIO_PHONE_NUMBER }}" >> $GITHUB_ENV
+          echo "TF_VAR_otp_salt=${{ secrets.OTP_SALT }}" >> $GITHUB_ENV
+
+      - name: Terraform Init
+        run: |
+          terraform init -var-file=${{ matrix.name }}.tfvars \
+          -backend-config="region=${{ vars.AWS_REGION }}" \
+          -backend-config="bucket=adorsys-ai-terraform-state" \
+          -backend-config="dynamodb_table=adorsys-ai-terraform-state-lock"
+
+      - name: Terraform Plan
+        run: |
+          terraform plan -destroy -var-file=${{ matrix.name }}.tfvars -out=plan.tfplan
+
+      - name: Terraform Destroy
+        if: github.event_name == 'workflow_dispatch'
+        run: |
+          terraform destroy -auto-approve -var-file=${{ matrix.name }}.tfvars

@@ -1,0 +1,39 @@
+litellm:
+  db:
+    secret:
+      name: rds-secret
+  environmentSecrets:
+    - litellm-openai-api-key
+    - litellm-gemini-api-key
+    - litellm-anthropic-api-key
+    - litellm-redis-secret
+  environmentConfigMaps:
+    - litellm-rds-config
+  
+  # if set, use this secret for the master key; otherwise, autogenerate a new one
+  masterkeySecretName: "litellm-master-key"
+
+  # if set, use this secret key for the master key; otherwise, use the default key
+  masterkeySecretKey: "masterkey"
+  
+  autoscaling:
+    enabled: true
+    maxReplicas: 2
+
+ui:
+  persistence: # TODO Use EFS-Based volumes for this
+    enabled: true
+    accessModes: [ "ReadWriteMany" ]
+    storageClass: ai-efs
+  extraEnvVars:
+    - name: OPENAI_API_KEY
+      secretKeyRef:
+        name: litellm-master-key
+        key: masterkey
+        
+ollama:
+  persistentVolume: # TODO Use EFS-Based volumes for this
+    enabled: true
+    accessModes: [ "ReadWriteMany" ]
+    storageClass: ai-efs
+  

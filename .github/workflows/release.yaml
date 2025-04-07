@@ -1,0 +1,41 @@
+name: Release Charts
+
+on:
+  push:
+    branches:
+      - main
+      - feat/deploy-over-argocd
+
+jobs:
+  release:
+    permissions:
+      contents: write
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Configure Git
+        run: |
+          git config user.name "$GITHUB_ACTOR"
+          git config user.email "$GITHUB_ACTOR@users.noreply.github.com"
+
+      - name: Install Helm
+        uses: azure/setup-helm@v4
+        env:
+          GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
+
+      - name: Add repos to Helm
+        run: |
+          helm repo add bitnami https://repo.broadcom.com/bitnami-files/
+          helm repo add kivoyo https://adorsys-gis.github.io/ai-ops
+          helm repo update
+
+      - name: Run chart-releaser
+        uses: helm/chart-releaser-action@v1
+        env:
+          CR_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
+        with:
+          skip_existing: true

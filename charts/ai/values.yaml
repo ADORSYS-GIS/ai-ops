@@ -1,0 +1,46 @@
+ollama:
+  fullnameOverride: ollama
+  nodeSelector:
+    gpu-node: "yes"
+  ollama:
+    # -- List of models to pull at container startup
+    models:
+      pull:
+        - gemma3:12b # 8.1Gb
+        - qwen2.5:14b # 9.0Gb
+        - deepseek-r1:14b # 9.1Gb
+      run:
+        - deepseek-r1:14b
+
+ui:
+  ollama:
+    enabled: false
+  openaiBaseApiUrl: "http://litellm:4000"
+  extraEnvVars: []
+  ingress:
+    enabled: true
+  websocket:
+    enabled: true
+    url: "redis://redis-test:6379"
+    redis:
+      enabled: false
+
+litellm:
+  fullnameOverride: litellm
+  envVars: {
+    USE_DDTRACE: "true",
+#    REDIS_URL: "redis://redis-master.database.svc.cluster.local:6379",
+#    OPENAI_API_KEY: "<openai_key>",
+#    GEMINI_API_KEY: "<gemini_key>",
+#    ANTHROPIC_API_KEY: "<anthropic_key>",
+    OLLAMA_BASE_URL: "http://ollama:11434"
+  }
+  
+  ingress:
+    enabled: true
+    
+  db:
+    endpoint: "postgresql.database.svc.cluster.local" #TODO
+    secret:
+      name: secret-name
+    deployStandalone: false
