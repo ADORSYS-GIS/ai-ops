@@ -1,3 +1,13 @@
+registry: txt
+logLevel: info
+
+
+domainFilters:
+  - ${zone_name}
+    
 sources:
   - service
   - ingress
+
+serviceAccount:
+  name: ai-ops-external-dns

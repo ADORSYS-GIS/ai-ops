@@ -114,7 +114,11 @@ module "eks_blueprints_addons" {
     chart_version = "1.16.0"
     repository    = "https://kubernetes-sigs.github.io/external-dns/"
     namespace     = "external-dns"
-    values = [templatefile("${path.module}/files/externaldns-values.yaml", {})]
+    values = [
+      templatefile("${path.module}/files/externaldns-values.yaml", {
+        zone_name = var.zone_name
+      })
+    ]
   }
 
   enable_cluster_autoscaler = true
