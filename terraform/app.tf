@@ -1,9 +1,9 @@
-module "cert_manager_issuer" {
+module "argocd_app" {
   source  = "blackbird-cloud/deployment/helm"
   version = "~> 1.0"
 
-  name             = "cert-manager-clusterissuer"
-  namespace        = "cert-manager"
+  name             = "argocd_app"
+  namespace        = "argocd"
   create_namespace = false
 
   repository    = "https://bedag.github.io/helm-charts"
