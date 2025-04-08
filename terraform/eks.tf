@@ -111,7 +111,7 @@ module "eks_blueprints_addons" {
   external_dns_route53_zone_arns = [data.aws_route53_zone.selected.arn]
   external_dns = {
     name          = "external-dns"
-    chart_version = "1.12.2"
+    chart_version = "1.16.1"
     repository    = "https://kubernetes-sigs.github.io/external-dns/"
     namespace     = "external-dns"
     values = [templatefile("${path.module}/files/externaldns-values.yaml", {})]
@@ -120,7 +120,7 @@ module "eks_blueprints_addons" {
   enable_cluster_autoscaler = true
   cluster_autoscaler = {
     name          = "cluster-autoscaler"
-    chart_version = "9.29.0"
+    chart_version = "9.46.2"
     repository    = "https://kubernetes.github.io/autoscaler"
     namespace     = "kube-system"
     values = [templatefile("${path.module}/files/autoscaler-values.yaml", {})]
@@ -129,7 +129,7 @@ module "eks_blueprints_addons" {
   enable_argocd = true
   argocd = {
     name          = "argocd"
-    chart_version = "7.7.5"
+    chart_version = "7.8.19"
     repository    = "https://argoproj.github.io/argo-helm"
     namespace     = "argocd"
     values = [
