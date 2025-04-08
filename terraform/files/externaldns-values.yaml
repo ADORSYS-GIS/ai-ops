@@ -10,4 +10,4 @@ sources:
   - ingress
 
 serviceAccount:
-  name: ai-ops-external-dns
+  name: ~
