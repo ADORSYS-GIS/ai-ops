@@ -3,13 +3,13 @@ module "redis" {
   version = "~> 1.0"
 
   cluster_id               = "${local.name}-cache"
+  create_cluster           = true
   create_replication_group = false
-  create_parameter_group   = false
 
   subnet_group_name = "${local.name}-redis"
   node_type         = "cache.t4g.small"
   apply_immediately = true
-  
+
   log_delivery_configuration = {}
 
   # Security group

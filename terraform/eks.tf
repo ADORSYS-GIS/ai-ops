@@ -32,9 +32,9 @@ module "eks" {
       }
       taints = [
         {
-          key    = "gpu"
+          key    = "gpu-node"
           value  = "true"
-          effect = "NoSchedule"
+          effect = "NO_SCHEDULE"
         }
       ]
     }
