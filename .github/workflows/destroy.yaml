@@ -60,8 +60,8 @@ jobs:
         run: |
           terraform init -var-file=${{ inputs.environment }}.tfvars \
           -backend-config="region=${{ vars.AWS_REGION }}" \
-          -backend-config="bucket=adorsys-ai-terraform-state" \
-          -backend-config="dynamodb_table=adorsys-ai-terraform-state-lock"
+          -backend-config="bucket=adorsys-ai-prod-terraform-state" \
+          -backend-config="dynamodb_table=adorsys-ai-prod-terraform-state-lock"
 
       - name: Terraform Plan
         run: |
