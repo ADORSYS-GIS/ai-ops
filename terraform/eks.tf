@@ -62,6 +62,12 @@ module "eks_blueprints_addons" {
   cluster_version   = module.eks.cluster_version
   oidc_provider_arn = module.eks.oidc_provider_arn
 
+  enable_argocd                       = true
+  enable_external_dns                 = true
+  enable_cluster_autoscaler           = true
+  enable_aws_load_balancer_controller = true
+  enable_aws_node_termination_handler = true
+
   eks_addons = {
     coredns = {
       most_recent = true
@@ -81,7 +87,6 @@ module "eks_blueprints_addons" {
     }
   }
 
-  enable_aws_load_balancer_controller = true
   aws_load_balancer_controller = {
     set = [
       {
@@ -106,31 +111,7 @@ module "eks_blueprints_addons" {
       },
     ]
   }
-
-  enable_external_dns = true
-  external_dns_route53_zone_arns = [data.aws_route53_zone.selected.arn]
-  external_dns = {
-    name          = "external-dns"
-    chart_version = "1.16.0"
-    repository    = "https://kubernetes-sigs.github.io/external-dns/"
-    namespace     = "external-dns"
-    values = [
-      templatefile("${path.module}/files/externaldns-values.yaml", {
-        zone_name = var.zone_name
-      })
-    ]
-  }
-
-  enable_cluster_autoscaler = true
-  cluster_autoscaler = {
-    name          = "cluster-autoscaler"
-    chart_version = "9.46.2"
-    repository    = "https://kubernetes.github.io/autoscaler"
-    namespace     = "kube-system"
-    values = [templatefile("${path.module}/files/autoscaler-values.yaml", {})]
-  }
-
-  enable_argocd = true
+  
   argocd = {
     name          = "argocd"
     chart_version = "7.8.19"
@@ -147,6 +128,8 @@ module "eks_blueprints_addons" {
       })
     ]
   }
+
+  external_dns_route53_zone_arns = [data.aws_route53_zone.selected.arn]
 
   tags = merge(
     local.tags,
