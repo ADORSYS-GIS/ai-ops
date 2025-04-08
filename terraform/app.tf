@@ -1,8 +1,8 @@
-module "argocd_app" {
+module "ops" {
   source  = "blackbird-cloud/deployment/helm"
   version = "~> 1.0"
 
-  name             = "argocd_app"
+  name             = "ops"
   namespace        = "argocd"
   create_namespace = false
 
