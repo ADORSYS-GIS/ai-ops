@@ -6,17 +6,17 @@ ollama:
     # -- List of models to pull at container startup
     models:
       pull:
-        - gemma3:12b # 8.1Gb
-        - qwen2.5:14b # 9.0Gb
-        - deepseek-r1:14b # 9.1Gb
+        - gemma
+        - qwen2.5
+        - deepseek-r1
       run:
-        - deepseek-r1:14b
+        - deepseek-r1
 
 ui:
   ollama:
     enabled: false
   openaiBaseApiUrl: "http://litellm:4000"
-  extraEnvVars: []
+  extraEnvVars: [ ]
   ingress:
     enabled: true
   websocket:
@@ -24,21 +24,27 @@ ui:
     url: "redis://redis-test:6379"
     redis:
       enabled: false
+  sso:
+    enabled: true
+    enableSignup: true
+    mergeAccountsByEmail: true
+    enableRoleManagement: true
+    enableGroupManagement: true
 
 litellm:
   fullnameOverride: litellm
   envVars: {
     USE_DDTRACE: "true",
-#    REDIS_URL: "redis://redis-master.database.svc.cluster.local:6379",
-#    OPENAI_API_KEY: "<openai_key>",
-#    GEMINI_API_KEY: "<gemini_key>",
-#    ANTHROPIC_API_KEY: "<anthropic_key>",
+    # REDIS_URL: "redis://redis-master.database.svc.cluster.local:6379",
+    # OPENAI_API_KEY: "<openai_key>",
+    # GEMINI_API_KEY: "<gemini_key>",
+    # ANTHROPIC_API_KEY: "<anthropic_key>",
     OLLAMA_BASE_URL: "http://ollama:11434"
   }
   
   ingress:
     enabled: true
-    
+  
   db:
     endpoint: "postgresql.database.svc.cluster.local" #TODO
     secret:

@@ -6,12 +6,12 @@ module "vpc" {
   cidr = var.vpc_cidr
   azs  = var.azs
 
-  default_security_group_name = "${local.name}-sg"
+  default_security_group_name = local.sg
 
-  public_subnets   = [for k, v in local.azs : cidrsubnet(var.vpc_cidr, 8, k)]
-  private_subnets  = [for k, v in local.azs : cidrsubnet(var.vpc_cidr, 8, k + 2 * local.azs_count)]
-  database_subnets = [for k, v in local.azs : cidrsubnet(var.vpc_cidr, 8, k + 7 * local.azs_count)]
-  intra_subnets    = [for k, v in local.azs : cidrsubnet(var.vpc_cidr, 8, k + 13 * local.azs_count)]
+  public_subnets   = [for k, v in local.azs : cidrsubnet(var.vpc_cidr, 6, k)]
+  private_subnets  = [for k, v in local.azs : cidrsubnet(var.vpc_cidr, 6, k + 2 * local.azs_count)]
+  database_subnets = [for k, v in local.azs : cidrsubnet(var.vpc_cidr, 6, k + 7 * local.azs_count)]
+  intra_subnets    = [for k, v in local.azs : cidrsubnet(var.vpc_cidr, 6, k + 13 * local.azs_count)]
 
   enable_vpn_gateway           = true
   enable_nat_gateway           = true

@@ -7,13 +7,13 @@ variable "region" {
 variable "name" {
   description = "The name of the cluster"
   type        = string
-  default     = "ai-cluster"
+  default     = "ai"
 }
 
 variable "vpc_cidr" {
   description = "The CIDR block for the VPC"
   type        = string
-  default     = "12.34.0.0/16"
+  default     = "11.0.0.0/16"
 }
 
 variable "azs" {
@@ -25,70 +25,11 @@ variable "azs" {
 variable "db_username" {
   description = "Username for the RDS database"
   type        = string
+  sensitive   = true
 }
 
 variable "db_password" {
   description = "Password for the RDS database"
-  type        = string
-  sensitive   = true
-}
-
-variable "prs_private_key" {
-  description = "prs private key token"
-  type        = string
-  sensitive   = true
-}
-
-variable "prs_public_key" {
-  description = "prs public key token"
-  type        = string
-  sensitive   = false
-}
-
-variable "jwt_issuer" {
-  description = "jwt issuer"
-  type        = string
-  sensitive   = false
-}
-
-variable "jwt_expiration" {
-  description = "jwt expiration"
-  type        = string
-  sensitive   = false
-}
-
-variable "twilio_account_sid" {
-  description = "twilio account sid"
-  type        = string
-  sensitive   = false
-}
-
-variable "twilio_auth_token" {
-  description = "twilio auth token"
-  type        = string
-  sensitive   = false
-}
-
-variable "twilio_phone_number" {
-  description = "twilio phone number"
-  type        = string
-  sensitive   = false
-}
-
-variable "otp_salt" {
-  description = "otp salt"
-  type        = string
-  sensitive   = true
-}
-
-variable "email" {
-  description = "email"
-  type        = string
-  sensitive   = false
-}
-
-variable "email_password" {
-  description = "email password"
   type        = string
   sensitive   = true
 }
@@ -106,9 +47,8 @@ variable "environment" {
 }
 
 variable "eks_ec2_instance_types" {
-  description = "The EC2 instance type for the Jenkins server"
+  description = "The EC2 instance type for the EKS server"
   type = list(string)
-  default = ["t2.medium"]
 }
 
 variable "eks_min_instance" {
@@ -124,15 +64,14 @@ variable "eks_max_instance" {
 }
 
 variable "eks_gpu_ec2_instance_types" {
-  description = "The EC2 instance type for the Jenkins server"
+  description = "The EC2 instance type for the EKS GPU server"
   type = list(string)
-  default = ["t2.medium"]
 }
 
 variable "eks_gpu_min_instance" {
   description = "The minimum number of instances for the EKS GPU cluster"
   type        = number
-  default     = 1
+  default     = 0
 }
 
 variable "eks_gpu_max_instance" {
@@ -144,7 +83,7 @@ variable "eks_gpu_max_instance" {
 variable "eks_gpu_desired_instance" {
   description = "The desired number of instances for the EKS GPU cluster"
   type        = number
-  default     = 1
+  default     = 0
 }
 
 variable "eks_desired_instance" {
@@ -168,7 +107,6 @@ variable "db_skip_final_snapshot" {
 variable "zone_name" {
   description = "The name of the Route 53 zone"
   type        = string
-  default     = "apple.banana.miaou"
 }
 
 variable "cert_arn" {
@@ -179,11 +117,13 @@ variable "cert_arn" {
 variable "oidc_kc_client_id" {
   description = "The client ID for the OIDC provider"
   type        = string
+  sensitive   = true
 }
 
 variable "oidc_kc_client_secret" {
   description = "The client secret for the OIDC provider"
   type        = string
+  sensitive   = true
 }
 
 variable "oidc_kc_issuer_url" {
@@ -191,30 +131,24 @@ variable "oidc_kc_issuer_url" {
   type        = string
 }
 
-variable "userapp_teller_password" {
-  description = "Password for teller privileges in userapp"
-  type        = string
-  sensitive   = true
-}
-
 #======
 variable "litelllm_masterkey" {
   type        = string
   sensitive   = true
-  description = "Meh" # TODO
+  description = "LiteLLM Master Key"
 }
 variable "anthropic_key" {
   type        = string
   sensitive   = true
-  description = "Meh" # TODO
+  description = "Anthropic API Key"
 }
 variable "gemini_key" {
   type        = string
   sensitive   = true
-  description = "Meh" # TODO
+  description = "Gemini API Key"
 }
 variable "openapi_key" {
   type        = string
   sensitive   = true
-  description = "Meh" # TODO
+  description = "OpenAI API Key"
 }

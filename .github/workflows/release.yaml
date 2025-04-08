@@ -3,8 +3,7 @@ name: Release Charts
 on:
   push:
     branches:
-      - main
-      - feat/deploy-over-argocd
+      - "*"
 
 jobs:
   release:
@@ -29,12 +28,14 @@ jobs:
 
       - name: Add repos to Helm
         run: |
-          helm repo add bitnami https://repo.broadcom.com/bitnami-files/
-          helm repo add kivoyo https://adorsys-gis.github.io/ai-ops
+          helm repo add bitnami https://repo.broadcom.com/bitnami-files
+          helm repo add ollama-helm https://otwld.github.io/ollama-helm
+          helm repo add openwebui https://helm.openwebui.com
           helm repo update
 
       - name: Run chart-releaser
         uses: helm/chart-releaser-action@v1
+        if: github.ref == 'refs/heads/main'
         env:
           CR_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
         with:

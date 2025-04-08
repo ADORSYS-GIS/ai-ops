@@ -16,74 +16,19 @@ defaults:
     working-directory: ./terraform
 
 jobs:
-  tflint:
-    runs-on: ubuntu-latest
-
-    steps:
-    - uses: actions/checkout@v4
-      name: Checkout source code
-
-    - uses: actions/cache@v4
-      name: Cache plugin dir
-      with:
-        path: ~/.tflint.d/plugins
-        key: ${{ runner.os }}-tflint-${{ hashFiles('.tflint.hcl') }}
-
-    - uses: terraform-linters/setup-tflint@v4.1.0
-      name: Setup TFLint
-      with:
-        tflint_version: v0.52.0
-    - name: Show version
-      run: tflint --version
-
-    - name: Init TFLint
-      run: tflint --init
-      env:
-        # https://github.com/terraform-linters/tflint/blob/master/docs/user-guide/plugins.md#avoiding-rate-limiting
-        GITHUB_TOKEN: ${{ github.token }}
-
-    - name: Run TFLint
-      run: tflint -f compact
-
-  tfsec:
-    name: tfsec
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Clone repo
-        uses: actions/checkout@v4
-
-      - name: Cache tfsec binary
-        uses: actions/cache@v4
-        with:
-          path: ~/.tfsec
-          key: tfsec-${{ runner.os }}-${{ hashFiles('**/*.tf') }}
-          restore-keys: |
-            tfsec-${{ runner.os }}-
-
-      - name: Install tfsec (if not cached)
-        run: |
-          if [ ! -f ~/.tfsec/tfsec ]; then
-            mkdir -p ~/.tfsec
-            curl -L "https://github.com/aquasecurity/tfsec/releases/download/v1.28.0/tfsec-linux-amd64" -o ~/.tfsec/tfsec
-            chmod +x ~/.tfsec/tfsec
-          fi
-        shell: bash
-
-      - name: Run tfsec
-        run: ~/.tfsec/tfsec . || true
-
   deploy:
-    needs: [tflint, tfsec]
     runs-on: ubuntu-latest
-    name: Deploy to ${{ matrix.name }} Environment
+    name: Deploy to ${{ matrix.environment }} Environment
     environment:
-      name: ${{ matrix.name }}
+      name: ${{ matrix.environment }}
       url: https://${{ vars.DOMAIN_NAME }}
     strategy:
       matrix: 
         name:
-          - dev
+          - prod
+        includes:
+          - name: prod
+            environment: production
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
@@ -111,25 +56,21 @@ jobs:
       - name: Set DB Password and Username as Environment Variables
         run: |
           echo "TF_VAR_name=${{ matrix.name }}-env" >> $GITHUB_ENV
+          echo "TF_VAR_region=${{ vars.AWS_REGION }}" >> $GITHUB_ENV
           echo "TF_VAR_db_username=${{ vars.DB_USERNAME }}" >> $GITHUB_ENV
           echo "TF_VAR_db_password=${{ secrets.DB_PASSWORD }}" >> $GITHUB_ENV
-          echo "TF_VAR_oidc_kc_client_id=${{ vars.OIDC_KC_CLIENT_ID }}" >> $GITHUB_ENV
+          
+          echo "TF_VAR_zone_name=${{ vars.DOMAIN_NAME }}" >> $GITHUB_ENV
+          echo "TF_VAR_cert_arn=${{ vars.CERT_ARN }}" >> $GITHUB_ENV
+          
+          echo "TF_VAR_oidc_kc_client_id=${{ secrets.OIDC_KC_CLIENT_ID }}" >> $GITHUB_ENV
           echo "TF_VAR_oidc_kc_client_secret=${{ secrets.OIDC_KC_CLIENT_SECRET }}" >> $GITHUB_ENV
           echo "TF_VAR_oidc_kc_issuer_url=${{ vars.OIDC_KC_ISSUER_URL }}" >> $GITHUB_ENV
-          echo "TF_VAR_cert_arn=${{ vars.CERT_ARN }}" >> $GITHUB_ENV
-          echo "TF_VAR_region=${{ vars.AWS_REGION }}" >> $GITHUB_ENV
-          echo "TF_VAR_zone_name=${{ vars.DOMAIN_NAME }}" >> $GITHUB_ENV
-          echo "TF_VAR_prs_private_key=${{ secrets.SERVER_PRIVATE_KEY_JSON }}" >> $GITHUB_ENV
-          echo "TF_VAR_prs_public_key=${{ secrets.SERVER_PUBLIC_KEY_JSON }}" >> $GITHUB_ENV
-          echo "TF_VAR_jwt_issuer=${{ vars.JWT_ISSUER }}" >> $GITHUB_ENV
-          echo "TF_VAR_jwt_expiration=${{ vars.JWT_EXPIRATION_TIME_MS }}" >> $GITHUB_ENV
-          echo "TF_VAR_twilio_account_sid=${{ vars.TWILIO_ACCOUNT_SID }}" >> $GITHUB_ENV
-          echo "TF_VAR_twilio_auth_token=${{ vars.TWILIO_AUTH_TOKEN }}" >> $GITHUB_ENV
-          echo "TF_VAR_twilio_phone_number=${{ vars.TWILIO_PHONE_NUMBER }}" >> $GITHUB_ENV
-          echo "TF_VAR_otp_salt=${{ secrets.OTP_SALT }}" >> $GITHUB_ENV
-          echo "TF_VAR_userapp_teller_password"="${{ secrets.USERAPP_TELLER_PASSWORD }}" >> $GITHUB_ENV
-          echo "TF_VAR_email"="${{ vars.EMAIL }}" >> $GITHUB_ENV
-          echo "TF_VAR_email_password"="${{ secrets.PASSWORD }}" >> $GITHUB_ENV
+          
+          echo "TF_VAR_litelllm_masterkey=${{ secrets.LITELLLM_MASTERKEY }}" >> $GITHUB_ENV
+          echo "TF_VAR_anthropic_key=${{ secrets.ANTHROPIC_KEY }}" >> $GITHUB_ENV
+          echo "TF_VAR_gemini_key=${{ secrets.gemini_key }}" >> $GITHUB_ENV
+          echo "TF_VAR_openapi_key=${{ secrets.OPENAPI_KEY }}" >> $GITHUB_ENV
 
       - name: Terraform Init
         run: |

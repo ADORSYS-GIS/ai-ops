@@ -18,7 +18,7 @@ spec:
         litellm:
           ingress:
             hosts:
-              - host: ai.kivoyo.com
+              - host: api.ai.kivoyo.com
                 paths:
                   - path: /
                     pathType: Prefix
@@ -39,7 +39,7 @@ spec:
               alb.ingress.kubernetes.io/scheme: "internet-facing"
               alb.ingress.kubernetes.io/target-type: "ip"
               alb.ingress.kubernetes.io/certificate-arn: "arn:aws:acm:eu-central-1:571075516563:certificate/1cee4019-ba69-40a8-a888-95f62a376f88"
-              external-dns.alpha.kubernetes.io/hostname: "ai.kivoyo.com"
+              external-dns.alpha.kubernetes.io/hostname: "api.ai.kivoyo.com"
               alb.ingress.kubernetes.io/healthcheck-interval-seconds: '15'
               alb.ingress.kubernetes.io/healthcheck-timeout-seconds: '5'
               alb.ingress.kubernetes.io/healthy-threshold-count: '2'
@@ -92,7 +92,7 @@ spec:
                   rpm: 6
         ui:
           ingress:
-            host: chat.kivoyo.com
+            host: ai.kivoyo.com
             class: alb
             annotations:
               alb.ingress.kubernetes.io/tags: Environment=dev,Owner=adorsys-gis
@@ -110,7 +110,7 @@ spec:
               alb.ingress.kubernetes.io/scheme: "internet-facing"
               alb.ingress.kubernetes.io/target-type: "ip"
               alb.ingress.kubernetes.io/certificate-arn: "arn:aws:acm:eu-central-1:571075516563:certificate/1cee4019-ba69-40a8-a888-95f62a376f88"
-              external-dns.alpha.kubernetes.io/hostname: "chat.kivoyo.com"
+              external-dns.alpha.kubernetes.io/hostname: "ai.kivoyo.com"
               alb.ingress.kubernetes.io/healthcheck-interval-seconds: '15'
               alb.ingress.kubernetes.io/healthcheck-timeout-seconds: '5'
               alb.ingress.kubernetes.io/healthy-threshold-count: '2'
@@ -121,12 +121,11 @@ spec:
             # -- List of models to pull at container startup
             models:
               pull:
-                - gemma3
-                - mistral
-                - llama3
-                - deepseek-r1
+                - gemma3:12b # 8.1Gb
+                - qwen2.5:14b # 9.0Gb
+                - deepseek-r1:14b # 9.1Gb
               run:
-                - deepseek-r1
+                - deepseek-r1:14b
   destination:
     server: https://kubernetes.default.svc
     namespace: kivoyo

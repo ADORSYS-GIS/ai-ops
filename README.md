@@ -108,7 +108,3 @@ The project uses GitHub Actions for continuous integration and deployment:
 ## 🤝 Support
 
 For support, please open an issue in the GitHub repository or contact the maintainers.
-
-```
-
-```

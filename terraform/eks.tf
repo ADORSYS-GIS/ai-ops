@@ -21,11 +21,22 @@ module "eks" {
     }
     gpu-cluster-ng = {
       name           = "${local.name}-gpu"
+      ami_type       = "AL2_x86_64_GPU"
       min_size       = var.eks_gpu_min_instance
       max_size       = var.eks_gpu_max_instance
       desired_size   = var.eks_gpu_desired_instance
       instance_types = var.eks_gpu_ec2_instance_types
       capacity_type  = "SPOT"
+      labels = {
+        gpu-node : "yes"
+      }
+      taints = [
+        {
+          key    = "gpu"
+          value  = "true"
+          effect = "NoSchedule"
+        }
+      ]
     }
   }
 
@@ -100,7 +111,7 @@ module "eks_blueprints_addons" {
   external_dns_route53_zone_arns = [data.aws_route53_zone.selected.arn]
   external_dns = {
     name          = "external-dns"
-    chart_version = "1.12.2"
+    chart_version = "1.16.0"
     repository    = "https://kubernetes-sigs.github.io/external-dns/"
     namespace     = "external-dns"
     values = [templatefile("${path.module}/files/externaldns-values.yaml", {})]
@@ -109,7 +120,7 @@ module "eks_blueprints_addons" {
   enable_cluster_autoscaler = true
   cluster_autoscaler = {
     name          = "cluster-autoscaler"
-    chart_version = "9.29.0"
+    chart_version = "9.46.6"
     repository    = "https://kubernetes.github.io/autoscaler"
     namespace     = "kube-system"
     values = [templatefile("${path.module}/files/autoscaler-values.yaml", {})]
@@ -118,7 +129,7 @@ module "eks_blueprints_addons" {
   enable_argocd = true
   argocd = {
     name          = "argocd"
-    chart_version = "7.7.5"
+    chart_version = "7.8.23"
     repository    = "https://argoproj.github.io/argo-helm"
     namespace     = "argocd"
     values = [
