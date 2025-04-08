@@ -9,6 +9,8 @@ resource "kubernetes_secret" "litellm_rds_secret" {
     DATABASE_HOST     = module.rds.db_instance_endpoint
     DATABASE_NAME     = module.rds.db_instance_name
   }
+  
+  depends_on = [kubernetes_namespace.litellm_namespace]
 }
 
 locals {
@@ -25,6 +27,8 @@ resource "kubernetes_secret" "litellm_redis_secret" {
     REDIS_URL           = local.redis_url
     WEBSOCKET_REDIS_URL = local.redis_url
   }
+
+  depends_on = [kubernetes_namespace.litellm_namespace]
 }
 
 resource "kubernetes_secret" "litellm_openai_api_key" {
@@ -35,6 +39,8 @@ resource "kubernetes_secret" "litellm_openai_api_key" {
   data = {
     OPENAI_API_KEY = var.openapi_key
   }
+
+  depends_on = [kubernetes_namespace.litellm_namespace]
 }
 
 resource "kubernetes_secret" "litellm_gemini_api_key" {
@@ -45,6 +51,8 @@ resource "kubernetes_secret" "litellm_gemini_api_key" {
   data = {
     GEMINI_API_KEY = var.gemini_key
   }
+
+  depends_on = [kubernetes_namespace.litellm_namespace]
 }
 
 resource "kubernetes_secret" "litellm_anthropic_api_key" {
@@ -55,6 +63,8 @@ resource "kubernetes_secret" "litellm_anthropic_api_key" {
   data = {
     ANTHROPIC_API_KEY = var.anthropic_key
   }
+
+  depends_on = [kubernetes_namespace.litellm_namespace]
 }
 
 resource "kubernetes_secret" "litellm_master_key" {
@@ -65,6 +75,8 @@ resource "kubernetes_secret" "litellm_master_key" {
   data = {
     master_key = var.litelllm_masterkey
   }
+
+  depends_on = [kubernetes_namespace.litellm_namespace]
 }
 
 resource "kubernetes_secret" "open_web_ui_oidc" {
@@ -77,4 +89,6 @@ resource "kubernetes_secret" "open_web_ui_oidc" {
     oauth_client_secret = var.oidc_kc_client_secret
     openid_provider_url = var.oidc_kc_issuer_url
   }
+
+  depends_on = [kubernetes_namespace.litellm_namespace]
 }

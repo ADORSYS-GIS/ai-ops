@@ -72,7 +72,7 @@ server:
       alb.ingress.kubernetes.io/scheme: internet-facing
       alb.ingress.kubernetes.io/target-type: ip
       alb.ingress.kubernetes.io/certificate-arn: ${certArn}
-      external-dns.alpha.kubernetes.io/hostname: "${domain}"
+      external-dns.alpha.kubernetes.io/hostname: ${domain}
       alb.ingress.kubernetes.io/actions.forward-single: '{"Type":"forward","ForwardConfig":{"TargetGroups":[{"ServiceName":"argocd-server","ServicePort":"8080"}]}}'
     ingressClassName: "alb"
     tls: false
