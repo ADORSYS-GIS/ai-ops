@@ -12,7 +12,7 @@ module "eks" {
 
   eks_managed_node_groups = {
     cluster-ng = {
-      name           = local.name
+      name           = "main"
       min_size       = var.eks_min_instance
       max_size       = var.eks_max_instance
       desired_size   = var.eks_desired_instance
@@ -20,7 +20,7 @@ module "eks" {
       capacity_type  = "SPOT"
     }
     gpu-cluster-ng = {
-      name           = "${local.name}-gpu"
+      name           = "accel"
       ami_type       = "AL2_x86_64_GPU"
       min_size       = var.eks_gpu_min_instance
       max_size       = var.eks_gpu_max_instance
