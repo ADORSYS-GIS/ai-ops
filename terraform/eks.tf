@@ -111,7 +111,7 @@ module "eks_blueprints_addons" {
   external_dns_route53_zone_arns = [data.aws_route53_zone.selected.arn]
   external_dns = {
     name          = "external-dns"
-    chart_version = "1.16.1"
+    chart_version = "1.16.0"
     repository    = "https://kubernetes-sigs.github.io/external-dns/"
     namespace     = "external-dns"
     values = [templatefile("${path.module}/files/externaldns-values.yaml", {})]
