@@ -66,7 +66,6 @@ module "eks_blueprints_addons" {
   enable_external_dns                 = true
   enable_cluster_autoscaler           = true
   enable_aws_load_balancer_controller = true
-  enable_aws_node_termination_handler = true
 
   eks_addons = {
     coredns = {
