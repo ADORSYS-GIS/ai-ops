@@ -66,7 +66,7 @@ module "eks_blueprints_addons" {
   enable_external_dns                 = true
   enable_cluster_autoscaler           = true
   enable_aws_load_balancer_controller = true
-
+  enable_aws_efs_csi_driver           = true
   eks_addons = {
     coredns = {
       most_recent = true
@@ -110,7 +110,7 @@ module "eks_blueprints_addons" {
       },
     ]
   }
-  
+
   argocd = {
     name          = "argocd"
     chart_version = "7.8.19"
