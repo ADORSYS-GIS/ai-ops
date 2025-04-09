@@ -148,7 +148,7 @@ resources:
   - apiVersion: storage.k8s.io/v1
     kind: StorageClass
     metadata:
-      name: ai-ebs
+      name: ai-efs
     provisioner: efs.csi.aws.com
     parameters:
       basePath: /ai-data
