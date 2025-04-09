@@ -20,9 +20,9 @@ module "eks" {
       instance_types = var.eks_ec2_instance_types
       capacity_type  = "SPOT"
     }
-    gpu-cluster-ng = {
-      name           = "accel"
-      ami_type       = "AL2_x86_64_GPU"
+    gpu-ng = {
+      name = "accel"
+      ami_type       = "BOTTLEROCKET_x86_64_NVIDIA"
       min_size       = var.eks_gpu_min_instance
       max_size       = var.eks_gpu_max_instance
       desired_size   = var.eks_gpu_desired_instance
@@ -31,6 +31,7 @@ module "eks" {
       labels = {
         gpu-node : "true"
       }
+
     }
   }
 
