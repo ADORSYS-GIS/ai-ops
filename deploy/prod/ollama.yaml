@@ -1,0 +1,46 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: ollama
+  namespace: argocd
+spec:
+  project: application
+  source:
+    repoURL: https://otwld.github.io/ollama-helm
+    chart: ollama
+    targetRevision: 1.13.0
+    helm:
+      releaseName: ollama
+      valuesObject:
+        nodeSelector:
+          gpu-node: "yes"
+        persistentVolume:
+          enabled: true
+          accessModes: [ "ReadWriteMany" ]
+          storageClass: ai-efs
+        ollama:
+          models:
+            pull:
+              - gemma3:12b # 8.1Gb
+              - qwen2.5:14b # 9.0Gb
+              - deepseek-r1:14b # 9.1Gb
+            run:
+              - deepseek-r1:14b
+          gpu:
+            enabled: true
+        tolerations:
+          - key: "gpu"
+            operator: "Equal"
+            value: "true"
+            effect: "NoSchedule"
+  
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: kivoyo
+  
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+  
+  revisionHistoryLimit: 10
