@@ -2,13 +2,14 @@ module "eks" {
   source  = "terraform-aws-modules/eks/aws"
   version = "~> 20.0"
 
-  cluster_name                   = "${local.name}-eks"
-  cluster_endpoint_public_access = true
-  enable_efa_support             = true
-  vpc_id                         = module.vpc.vpc_id
-  subnet_ids                     = module.vpc.private_subnets
-  control_plane_subnet_ids       = module.vpc.intra_subnets
-  create_cloudwatch_log_group    = false
+  cluster_name                             = "${local.name}-eks"
+  cluster_endpoint_public_access           = true
+  enable_efa_support                       = true
+  vpc_id                                   = module.vpc.vpc_id
+  subnet_ids                               = module.vpc.private_subnets
+  control_plane_subnet_ids                 = module.vpc.intra_subnets
+  create_cloudwatch_log_group              = false
+  enable_cluster_creator_admin_permissions = true
 
   eks_managed_node_groups = {
     cluster-ng = {
@@ -28,19 +29,10 @@ module "eks" {
       instance_types = var.eks_gpu_ec2_instance_types
       capacity_type  = "SPOT"
       labels = {
-        gpu-node : "yes"
+        gpu-node : "true"
       }
-      taints = [
-        {
-          key    = "gpu-node"
-          value  = "true"
-          effect = "NO_SCHEDULE"
-        }
-      ]
     }
   }
-
-  enable_cluster_creator_admin_permissions = true
 
   tags = merge(
     local.tags,
@@ -62,7 +54,16 @@ module "eks_blueprints_addons" {
   cluster_version   = module.eks.cluster_version
   oidc_provider_arn = module.eks.oidc_provider_arn
 
+  enable_argocd                       = true
+  enable_external_dns                 = true
+  enable_cluster_autoscaler           = true
+  enable_aws_load_balancer_controller = true
+  enable_aws_efs_csi_driver           = true
+
   eks_addons = {
+    aws-ebs-csi-driver = {
+      most_recent = true
+    }
     coredns = {
       most_recent = true
     }
@@ -81,7 +82,6 @@ module "eks_blueprints_addons" {
     }
   }
 
-  enable_aws_load_balancer_controller = true
   aws_load_balancer_controller = {
     set = [
       {
@@ -107,29 +107,9 @@ module "eks_blueprints_addons" {
     ]
   }
 
-  enable_external_dns = true
-  external_dns_route53_zone_arns = [data.aws_route53_zone.selected.arn]
-  external_dns = {
-    name          = "external-dns"
-    chart_version = "1.16.0"
-    repository    = "https://kubernetes-sigs.github.io/external-dns/"
-    namespace     = "external-dns"
-    values = [templatefile("${path.module}/files/externaldns-values.yaml", {})]
-  }
-
-  enable_cluster_autoscaler = true
-  cluster_autoscaler = {
-    name          = "cluster-autoscaler"
-    chart_version = "9.46.6"
-    repository    = "https://kubernetes.github.io/autoscaler"
-    namespace     = "kube-system"
-    values = [templatefile("${path.module}/files/autoscaler-values.yaml", {})]
-  }
-
-  enable_argocd = true
   argocd = {
     name          = "argocd"
-    chart_version = "7.8.23"
+    chart_version = "7.8.19"
     repository    = "https://argoproj.github.io/argo-helm"
     namespace     = "argocd"
     values = [
@@ -144,10 +124,31 @@ module "eks_blueprints_addons" {
     ]
   }
 
+  external_dns_route53_zone_arns = [data.aws_route53_zone.selected.arn]
+
   tags = merge(
     local.tags,
     {
       "kubernetes.io/cluster/${local.name}-eks" = "shared"
+      "kubernetes.io/cluster-service"           = "true"
     }
   )
+}
+
+module "ebs_csi_driver_irsa" {
+  source  = "terraform-aws-modules/iam/aws//modules/iam-role-for-service-accounts-eks"
+  version = "~> 5.0"
+
+  role_name_prefix = "${local.name}-ebs-csi-driver-"
+
+  oidc_providers = {
+    cluster = {
+      provider_arn = module.eks.oidc_provider_arn
+      namespace_service_accounts = ["kube-system:ebs-csi-controller-sa"]
+    }
+  }
+
+  attach_ebs_csi_policy = true
+
+  tags = merge(local.tags, {})
 }

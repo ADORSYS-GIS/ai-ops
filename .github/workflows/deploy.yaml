@@ -45,6 +45,7 @@ jobs:
           echo "TF_VAR_db_username=${{ vars.DB_USERNAME }}" >> $GITHUB_ENV
           echo "TF_VAR_db_password=${{ secrets.DB_PASSWORD }}" >> $GITHUB_ENV
 
+          echo "TF_VAR_fileSystemId=${{ vars.FILE_SYSTEM_ID }}" >> $GITHUB_ENV
           echo "TF_VAR_zone_name=${{ vars.DOMAIN_NAME }}" >> $GITHUB_ENV
           echo "TF_VAR_cert_arn=${{ vars.CERT_ARN }}" >> $GITHUB_ENV
 

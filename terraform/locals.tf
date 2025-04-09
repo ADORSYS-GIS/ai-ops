@@ -7,7 +7,7 @@ locals {
 
   app_name  = "kivoyo"
   namespace = local.app_name
-
+  
   tags = {
     Owner       = local.name,
     Environment = var.environment

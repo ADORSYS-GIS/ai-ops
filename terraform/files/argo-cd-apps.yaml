@@ -1,0 +1,162 @@
+resources:
+  - apiVersion: v1
+    kind: Secret
+    metadata:
+      name: ai-ops-${environment}
+      namespace: argocd
+      labels:
+        argocd.argoproj.io/secret-type: repository
+      annotations:
+        deployment-date: ${deployment-date}
+    stringData:
+      type: git
+      url: https://github.com/adorsys-gis/ai-ops
+
+  - apiVersion: argoproj.io/v1alpha1
+    kind: AppProject
+    metadata:
+      name: application
+      namespace: argocd
+      # Finalizer that ensures that project is not deleted until it is not referenced by any application
+      finalizers:
+        - resources-finalizer.argocd.argoproj.io
+      annotations:
+        deployment-date: ${deployment-date}
+    spec:
+      # Project description
+      description: Application Project
+      
+      # Allow manifests to deploy from any Git repos
+      sourceRepos:
+        - '*'
+      
+      # Only permit applications to deploy to the guestbook namespace in the same cluster
+      # Destination clusters can be identified by 'server', 'name', or both.
+      destinations:
+        - namespace: '*'
+          server: https://kubernetes.default.svc
+          name: in-cluster
+      
+      # Deny all cluster-scoped resources from being created, except for Namespace
+      clusterResourceWhitelist:
+        - group: '*'
+          kind: '*'
+      
+      # Allow all namespaced-scoped resources to be created, except for ResourceQuota, LimitRange, NetworkPolicy
+      namespaceResourceBlacklist:
+        - group: ''
+          kind: ResourceQuota
+        - group: ''
+          kind: LimitRange
+        - group: ''
+          kind: NetworkPolicy
+      
+      # Deny all namespaced-scoped resources from being created, except for Deployment and StatefulSet
+      namespaceResourceWhitelist:
+        - group: '*'
+          kind: '*'
+      
+      # Enables namespace orphaned resource monitoring.
+      orphanedResources:
+        warn: false
+      
+      roles: [ ]
+      
+      # Sync windows restrict when Applications may be synced. https://argo-cd.readthedocs.io/en/stable/user-guide/sync_windows/
+      syncWindows: []
+#        - kind: allow
+#          schedule: '10 1 * * *'
+#          duration: 1h
+#          applications:
+#            - '*-prod'
+#          manualSync: true
+#        - kind: deny
+#          schedule: '0 22 * * *'
+#          duration: 1h
+#          namespaces:
+#            - default
+      
+      # By default, apps may sync to any cluster specified under the `destinations` field, even if they are not
+      # scoped to this project. Set the following field to `true` to restrict apps in this cluster to only clusters
+      # scoped to this project.
+      permitOnlyProjectScopedClusters: false
+      
+      # When using Applications-in-any-namespace, this field determines which namespaces this AppProject permits
+      # Applications to reside in. Details: https://argo-cd.readthedocs.io/en/stable/operator-manual/app-any-namespace/
+      sourceNamespaces:
+        - "argocd-apps-*"
+        - "argocd"
+
+  - apiVersion: argoproj.io/v1alpha1
+    kind: Application
+    metadata:
+      name: ops-${environment}
+      # You'll usually want to add your resources to the argocd namespace.
+      namespace: argocd
+      # Add this finalizer ONLY if you want these to cascade delete.
+      finalizers:
+        - resources-finalizer.argocd.argoproj.io
+      annotations:
+        deployment-date: ${deployment-date}
+    spec:
+      # The project the application belongs to.
+      project: default
+    
+      # Source of the application manifests
+      source:
+        repoURL: https://github.com/adorsys-gis/ai-ops
+        targetRevision: HEAD  # For Helm, this refers to the chart version.
+        path: deploy/${environment}  # This has no meaning for Helm charts pulled directly from a Helm repo instead of git.
+    
+      # Destination cluster and namespace to deploy the application
+      destination:
+        server: https://kubernetes.default.svc
+        namespace: argocd
+    
+      # Sync policy
+      syncPolicy:
+        automated: # automated sync by default retries failed attempts 5 times with following delays between attempts ( 5s, 10s, 20s, 40s, 80s ); retry controlled using `retry` field.
+          prune: true # Specifies if resources should be pruned during auto-syncing ( false by default ).
+          selfHeal: true # Specifies if partial app sync should be executed when resources are changed only in target Kubernetes cluster and no git change detected ( false by default ).
+          allowEmpty: false # Allows deleting all application resources during automatic syncing ( false by default ).
+    
+        # The retry feature is available since v1.7
+        retry:
+          limit: 5 # number of failed sync attempt retries; unlimited number of attempts if less than 0
+          backoff:
+            duration: 5s # the amount to back off. Default unit is seconds, but could also be a duration (e.g. "2m", "1h")
+            factor: 2 # a factor to multiply the base duration after each failed retry
+            maxDuration: 3m # the maximum amount of time allowed for the backoff strategy
+    
+      # RevisionHistoryLimit limits the number of items kept in the application's revision history, which is used for
+      # informational purposes as well as for rollbacks to previous versions. This should only be changed in exceptional
+      # circumstances. Setting to zero will store no history. This will reduce storage used. Increasing will increase the
+      # space used to store the history, so we do not recommend increasing it.
+      revisionHistoryLimit: 5
+
+  - apiVersion: storage.k8s.io/v1
+    kind: StorageClass
+    metadata:
+      name: ai-ebs
+    provisioner: ebs.csi.aws.com
+    parameters:
+      encrypted: "true"
+      type: gp3
+    volumeBindingMode: WaitForFirstConsumer
+    reclaimPolicy: Retain
+    allowVolumeExpansion: true
+   
+  - apiVersion: storage.k8s.io/v1
+    kind: StorageClass
+    metadata:
+      name: ai-efs
+    provisioner: efs.csi.aws.com
+    parameters:
+      basePath: /ai-data
+      directoryPerms: "775"
+      fileSystemId: ${fileSystemId}
+      gid: "0"
+      provisioningMode: efs-ap
+      uid: "0"
+    reclaimPolicy: Retain
+    allowVolumeExpansion: true

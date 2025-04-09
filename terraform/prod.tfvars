@@ -20,9 +20,9 @@ eks_gpu_ec2_instance_types = [
   "g4dn.xlarge",
   "g5.xlarge"
 ]
-eks_gpu_min_instance     = 0
+eks_gpu_min_instance     = 1
 eks_gpu_max_instance     = 2
-eks_gpu_desired_instance = 1
+eks_gpu_desired_instance = 2
 
 db_backup_retention_period = null
 db_skip_final_snapshot     = true
