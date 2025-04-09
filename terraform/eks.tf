@@ -67,6 +67,7 @@ module "eks_blueprints_addons" {
   enable_cluster_autoscaler           = true
   enable_aws_load_balancer_controller = true
   enable_aws_efs_csi_driver           = true
+  
   eks_addons = {
     coredns = {
       most_recent = true

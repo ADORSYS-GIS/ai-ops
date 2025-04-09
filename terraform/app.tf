@@ -12,7 +12,8 @@ module "ops" {
 
   values = [
     templatefile("${path.module}/files/argo-cd-apps.yaml", {
-      environment = var.environment
+      environment  = var.environment
+      fileSystemId = var.fileSystemId
     })
   ]
 

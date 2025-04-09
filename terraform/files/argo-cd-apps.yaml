@@ -29,14 +29,14 @@ resources:
       # Only permit applications to deploy to the guestbook namespace in the same cluster
       # Destination clusters can be identified by 'server', 'name', or both.
       destinations:
-        - namespace: guestbook
+        - namespace: '*'
           server: https://kubernetes.default.svc
           name: in-cluster
       
       # Deny all cluster-scoped resources from being created, except for Namespace
       clusterResourceWhitelist:
-        - group: ''
-          kind: Namespace
+        - group: '*'
+          kind: '*'
       
       # Allow all namespaced-scoped resources to be created, except for ResourceQuota, LimitRange, NetworkPolicy
       namespaceResourceBlacklist:
@@ -49,10 +49,8 @@ resources:
       
       # Deny all namespaced-scoped resources from being created, except for Deployment and StatefulSet
       namespaceResourceWhitelist:
-        - group: 'apps'
-          kind: Deployment
-        - group: 'apps'
-          kind: StatefulSet
+        - group: '*'
+          kind: '*'
       
       # Enables namespace orphaned resource monitoring.
       orphanedResources:
@@ -89,6 +87,7 @@ resources:
       # Applications to reside in. Details: https://argo-cd.readthedocs.io/en/stable/operator-manual/app-any-namespace/
       sourceNamespaces:
         - "argocd-apps-*"
+        - "argocd"
 
   - apiVersion: argoproj.io/v1alpha1
     kind: Application
@@ -134,3 +133,29 @@ resources:
       # circumstances. Setting to zero will store no history. This will reduce storage used. Increasing will increase the
       # space used to store the history, so we do not recommend increasing it.
       revisionHistoryLimit: 5
+
+  - apiVersion: storage.k8s.io/v1
+    kind: StorageClass
+    metadata:
+      name: ai-ebs
+    provisioner: ebs.csi.aws.com
+    parameters:
+      encrypted: "true"
+      type: gp3
+    volumeBindingMode: WaitForFirstConsumer
+    reclaimPolicy: Retain
+   
+  - apiVersion: storage.k8s.io/v1
+    kind: StorageClass
+    metadata:
+      name: ai-ebs
+    provisioner: efs.csi.aws.com
+    parameters:
+      basePath: /ai-data
+      directoryPerms: "775"
+      fileSystemId: ${fileSystemId}
+      gid: "0"
+      provisioningMode: efs-ap
+      uid: "0"
+    
+    reclaimPolicy: Retain

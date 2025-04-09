@@ -21,7 +21,7 @@ litellm:
     maxReplicas: 2
 
 ui:
-  persistence: # TODO Use EFS-Based volumes for this
+  persistence:
     enabled: true
     accessModes: [ "ReadWriteMany" ]
     storageClass: ai-efs
@@ -52,7 +52,7 @@ ui:
       value: "openid email profile"
 
 ollama:
-  persistentVolume: # TODO Use EFS-Based volumes for this
+  persistentVolume:
     enabled: true
     accessModes: [ "ReadWriteMany" ]
     storageClass: ai-efs
