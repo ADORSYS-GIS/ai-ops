@@ -25,4 +25,28 @@ entries:
     urls:
     - https://github.com/ADORSYS-GIS/ai-ops/releases/download/kivoyo-0.1.0/kivoyo-0.1.0.tgz
     version: 0.1.0
-generated: "2025-04-08T12:17:25.53056693Z"
+  litellm:
+  - apiVersion: v2
+    appVersion: v1.50.2
+    created: "2025-04-09T06:59:31.58086481Z"
+    dependencies:
+    - condition: db.deployStandalone
+      name: common
+      repository: oci://registry-1.docker.io/bitnamicharts
+      version: '*'
+    - condition: db.deployStandalone
+      name: postgresql
+      repository: oci://registry-1.docker.io/bitnamicharts
+      version: '>=13.3.0'
+    - condition: redis.enabled
+      name: redis
+      repository: oci://registry-1.docker.io/bitnamicharts
+      version: '>=18.0.0'
+    description: Call all LLM APIs using the OpenAI format
+    digest: d8195fda461f2610b63dde89eedf22f544e97ad95f5a3e01b0926691e26530dd
+    name: litellm
+    type: application
+    urls:
+    - https://github.com/ADORSYS-GIS/ai-ops/releases/download/litellm-0.1.0/litellm-0.1.0.tgz
+    version: 0.1.0
+generated: "2025-04-09T06:59:31.580872173Z"
