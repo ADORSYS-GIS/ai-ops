@@ -13,8 +13,8 @@ eks_ec2_instance_types = [
   "t2.large",
 ]
 eks_min_instance     = 0
-eks_max_instance     = 6
-eks_desired_instance = 2
+eks_max_instance     = 4
+eks_desired_instance = 1
 
 eks_gpu_ec2_instance_types = [
   "g4dn.xlarge",

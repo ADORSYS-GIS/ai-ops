@@ -46,11 +46,6 @@ variable "environment" {
   default     = "dev"
 }
 
-variable "fileSystemId" {
-  description = "File System ID from AWS EFS"
-  type        = string
-}
-
 variable "eks_ec2_instance_types" {
   description = "The EC2 instance type for the EKS server"
   type = list(string)
