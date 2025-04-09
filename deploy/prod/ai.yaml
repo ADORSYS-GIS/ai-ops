@@ -16,6 +16,8 @@ spec:
         - values-eks.yaml
       valuesObject:
         litellm:
+          db:
+            useExisting: true
           ingress:
             hosts:
               - host: api.ai.kivoyo.com

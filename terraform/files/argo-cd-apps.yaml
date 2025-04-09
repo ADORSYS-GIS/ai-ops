@@ -6,6 +6,8 @@ resources:
       namespace: argocd
       labels:
         argocd.argoproj.io/secret-type: repository
+      annotations:
+        deployment-date: ${deployment-date}
     stringData:
       type: git
       url: https://github.com/adorsys-gis/ai-ops
@@ -18,6 +20,8 @@ resources:
       # Finalizer that ensures that project is not deleted until it is not referenced by any application
       finalizers:
         - resources-finalizer.argocd.argoproj.io
+      annotations:
+        deployment-date: ${deployment-date}
     spec:
       # Project description
       description: Application Project
@@ -59,24 +63,18 @@ resources:
       roles: [ ]
       
       # Sync windows restrict when Applications may be synced. https://argo-cd.readthedocs.io/en/stable/user-guide/sync_windows/
-      syncWindows:
-        - kind: allow
-          schedule: '10 1 * * *'
-          duration: 1h
-          applications:
-            - '*-prod'
-          manualSync: true
-        - kind: deny
-          schedule: '0 22 * * *'
-          duration: 1h
-          namespaces:
-            - default
-        - kind: allow
-          schedule: '0 23 * * *'
-          duration: 1h
-          clusters:
-            - in-cluster
-            - kivoyo
+      syncWindows: []
+#        - kind: allow
+#          schedule: '10 1 * * *'
+#          duration: 1h
+#          applications:
+#            - '*-prod'
+#          manualSync: true
+#        - kind: deny
+#          schedule: '0 22 * * *'
+#          duration: 1h
+#          namespaces:
+#            - default
       
       # By default, apps may sync to any cluster specified under the `destinations` field, even if they are not
       # scoped to this project. Set the following field to `true` to restrict apps in this cluster to only clusters
