@@ -14,6 +14,7 @@ module "ops" {
     templatefile("${path.module}/files/argo-cd-apps.yaml", {
       environment  = var.environment
       fileSystemId = var.fileSystemId
+      deployment-date = timestamp()
     })
   ]
 
