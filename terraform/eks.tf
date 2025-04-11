@@ -12,8 +12,8 @@ module "eks" {
   enable_cluster_creator_admin_permissions = true
 
   eks_managed_node_groups = {
-    cluster-ng = {
-      name           = "main"
+    cpu-ng = {
+      name           = "cpu"
       min_size       = var.eks_min_instance
       max_size       = var.eks_max_instance
       desired_size   = var.eks_desired_instance
@@ -21,7 +21,7 @@ module "eks" {
       capacity_type  = "SPOT"
     }
     gpu-ng = {
-      name = "accel"
+      name           = "gpu"
       ami_type       = "BOTTLEROCKET_x86_64_NVIDIA"
       min_size       = var.eks_gpu_min_instance
       max_size       = var.eks_gpu_max_instance
@@ -31,7 +31,6 @@ module "eks" {
       labels = {
         gpu-node : "true"
       }
-
     }
   }
 
@@ -63,7 +62,7 @@ module "eks_blueprints_addons" {
 
   eks_addons = {
     aws-ebs-csi-driver = {
-      most_recent = true
+      most_recent              = true
       service_account_role_arn = module.ebs_csi_driver_irsa.iam_role_arn
     }
     coredns = {
