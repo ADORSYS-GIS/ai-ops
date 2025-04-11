@@ -14,7 +14,7 @@ spec:
         persistence:
           enabled: true
           size: 10Gi
-          storageClass: ai-ebs
+          storageClass: ai-efs
         ollama:
           enabled: false
         openaiBaseApiUrl: "http://litellm:4000"
@@ -76,6 +76,12 @@ spec:
         envFrom:
           - secretRef:
               name: litellm-redis-secret
+          - secretRef:
+              name: open-web-ui-db
+          - secretRef:
+              name: open-web-ui-s3
+          - configMapRef:
+              name: open-web-ui-s3
         sso:
           enabled: true
           enableSignup: true
@@ -89,6 +95,13 @@ spec:
             storageClass: ai-ebs
         tika:
           enabled: true
+        extraInitContainers:
+          - name: init-db-schema
+            image: alpine/psql
+            command: [ "psql", "-c", "\"CREATE SCHEMA IF NOT EXISTS ${local.db_open_web_ui_schema};\"" ]
+            envFrom:
+              - secretRef:
+                  name: open-web-ui-db-init
   
   destination:
     server: https://kubernetes.default.svc
