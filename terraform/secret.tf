@@ -126,7 +126,7 @@ resource "kubernetes_secret" "open_web_ui_db" {
     namespace = local.namespace
   }
   data = {
-    DATABASE_URL       = "postgresql://${var.db_username}:${var.db_password}@${module.rds.db_instance_endpoint}/${module.rds.db_instance_name}?schema=${local.db_open_web_ui}"
+    DATABASE_URL       = "postgresql://${var.db_username}:${var.db_password}@${module.rds.db_instance_endpoint}/${module.rds.db_instance_name}?schema=${local.db_open_web_ui_schema}"
     DATABASE_POOL_SIZE = "10"
   }
 

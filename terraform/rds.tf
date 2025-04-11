@@ -67,7 +67,7 @@ resource "null_resource" "db_setup" {
   ]
 
   provisioner "local-exec" {
-    command = "psql -c \"CREATE SCHEMA IF NOT EXISTS ${schema_name};\""
+    command = "psql -c \"CREATE SCHEMA IF NOT EXISTS ${local.db_open_web_ui_schema};\""
 
     environment = {
       # for instance, postgres would need the password here:
