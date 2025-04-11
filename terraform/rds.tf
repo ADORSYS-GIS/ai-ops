@@ -60,7 +60,7 @@ module "rds" {
 }
 
 locals {
-  db_host = split(module.rds.db_instance_endpoint, ":")[0]
+  db_host = split(":", module.rds.db_instance_endpoint)[0]
 }
 
 resource "null_resource" "db_setup" {
