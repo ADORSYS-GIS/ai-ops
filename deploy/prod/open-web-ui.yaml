@@ -70,6 +70,7 @@ spec:
             alb.ingress.kubernetes.io/unhealthy-threshold-count: '2'
         websocket:
           enabled: true
+          url: null
           redis:
             enabled: false
         envFrom:
