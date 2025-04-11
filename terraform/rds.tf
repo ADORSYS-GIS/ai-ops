@@ -59,12 +59,6 @@ module "rds" {
   )
 }
 
-locals {
-  _script = templatefile("${path.module}/files/init.sql", {
-    schema_name = local.db_open_web_ui
-  })
-}
-
 resource "null_resource" "db_setup" {
   # runs after database and security group providing external access is created
   depends_on = [
@@ -73,7 +67,7 @@ resource "null_resource" "db_setup" {
   ]
 
   provisioner "local-exec" {
-    command = "psql < ${local._script}"
+    command = "psql -c 'CREATE SCHEMA IF NOT EXISTS ${schema_name};'"
 
     environment = {
       # for instance, postgres would need the password here:
