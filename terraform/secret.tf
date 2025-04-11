@@ -132,3 +132,19 @@ resource "kubernetes_secret" "open_web_ui_db" {
 
   depends_on = [kubernetes_namespace.litellm_namespace]
 }
+
+resource "kubernetes_secret" "open_web_ui_db_init" {
+  metadata {
+    name      = "open-web-ui-db-init"
+    namespace = local.namespace
+  }
+  data = {
+    PGHOST     = local.db_host
+    PGPORT     = module.rds.db_instance_port
+    PGDATABASE = module.rds.db_instance_name
+    PGUSER     = var.db_username
+    PGPASSWORD = var.db_password
+  }
+
+  depends_on = [kubernetes_namespace.litellm_namespace]
+}

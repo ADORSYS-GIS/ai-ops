@@ -58,28 +58,3 @@ module "rds" {
     {}
   )
 }
-
-locals {
-  db_host = split(":", module.rds.db_instance_endpoint)[0]
-}
-
-resource "null_resource" "db_setup" {
-  # runs after database and security group providing external access is created
-  depends_on = [
-    module.rds,
-    module.security_group,
-  ]
-
-  provisioner "local-exec" {
-    command = "psql -c \"CREATE SCHEMA IF NOT EXISTS ${local.db_open_web_ui_schema};\""
-
-    environment = {
-      # for instance, postgres would need the password here:
-      PGHOST     = local.db_host
-      PGPORT     = module.rds.db_instance_port
-      PGDATABASE = module.rds.db_instance_name
-      PGUSER     = var.db_username
-      PGPASSWORD = var.db_password
-    }
-  }
-}
