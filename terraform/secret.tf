@@ -128,7 +128,7 @@ resource "kubernetes_secret" "open_web_ui_db" {
   data = {
     DATABASE_URL       = "postgresql://${var.db_username}:${var.db_password}@${module.rds.db_instance_endpoint}/${module.rds.db_instance_name}"
     DATABASE_POOL_SIZE = "10"
-    DATABASE_SCHEMA    = "ui"
+    DATABASE_SCHEMA    = "web-ui"
   }
 
   depends_on = [kubernetes_namespace.litellm_namespace]
