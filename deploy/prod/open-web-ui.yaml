@@ -98,7 +98,7 @@ spec:
         extraInitContainers:
           - name: init-db-schema
             image: alpine/psql
-            command: [ "psql", "-c", "\"CREATE SCHEMA IF NOT EXISTS ${local.db_open_web_ui_schema};\"" ]
+            command: [ "psql", "-c", "CREATE SCHEMA IF NOT EXISTS ui;" ]
             envFrom:
               - secretRef:
                   name: open-web-ui-db-init

@@ -8,7 +8,6 @@ locals {
   app_name  = "kivoyo"
   namespace = local.app_name
 
-  db_open_web_ui_schema = "ui"
   db_name = replace(local.name, "-", "_")
 
   tags = {
