@@ -86,6 +86,8 @@ spec:
             enabled: true
             size: 10Gi
             storageClass: ai-ebs
+        tika:
+          enabled: true
   
   destination:
     server: https://kubernetes.default.svc

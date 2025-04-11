@@ -20,8 +20,15 @@ sources:
 annotations:
   licenses: MIT
 dependencies:
+  - name: ollama
+    repository: https://otwld.github.io/ollama-helm/
+    version: '>=0.24.0'
+    import-values:
+      - child: service
+        parent: ollama.service
+    condition: ollama.enabled
   - name: pipelines
-    repository: https://adorsys-gis.github.io/ai-ops
+    repository: https://helm.openwebui.com
     version: '>=0.0.1'
     import-values:
       - child: service
