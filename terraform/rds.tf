@@ -32,7 +32,7 @@ module "rds" {
   engine_version      = "17.2"
   instance_class      = var.db_instance
   allocated_storage   = 10
-  db_name = replace(local.name, "-", "_")
+  db_name             = local.db_name
   username            = var.db_username
   password            = var.db_password
   publicly_accessible = false
@@ -51,9 +51,37 @@ module "rds" {
   create_random_password = false
 
   create_cloudwatch_log_group = false
+  apply_immediately           = true
 
   tags = merge(
     local.tags,
     {}
   )
+}
+
+locals {
+  _script = templatefile("${path.module}/files/init.sql", {
+    schema_name = local.db_open_web_ui
+  })
+}
+
+resource "null_resource" "db_setup" {
+  # runs after database and security group providing external access is created
+  depends_on = [
+    module.rds,
+    module.security_group,
+  ]
+
+  provisioner "local-exec" {
+    command = "psql < ${local._script}"
+
+    environment = {
+      # for instance, postgres would need the password here:
+      PGHOST     = module.rds.db_instance_endpoint
+      PGPORT     = module.rds.db_instance_port
+      PGDATABASE = module.rds.db_instance_name
+      PGUSER     = var.db_username
+      PGPASSWORD = var.db_password
+    }
+  }
 }
