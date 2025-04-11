@@ -20,7 +20,6 @@ module "s3_bucket" {
   force_destroy = true
 
   bucket = local.s3_bucket_name
-  acl    = "private"
 
   attach_require_latest_tls_policy         = true
   attach_deny_incorrect_encryption_headers = true
