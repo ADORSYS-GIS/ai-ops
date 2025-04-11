@@ -49,6 +49,47 @@ entries:
     urls:
     - https://github.com/ADORSYS-GIS/ai-ops/releases/download/litellm-0.1.0/litellm-0.1.0.tgz
     version: 0.1.0
+  open-webui:
+  - apiVersion: v2
+    appVersion: 0.6.1
+    created: "2025-04-11T08:52:29.233735723Z"
+    dependencies:
+    - condition: ollama.enabled
+      import-values:
+      - child: service
+        parent: ollama.service
+      name: ollama
+      repository: https://otwld.github.io/ollama-helm/
+      version: '>=0.24.0'
+    - condition: pipelines.enabled
+      import-values:
+      - child: service
+        parent: pipelines.service
+      name: pipelines
+      repository: https://helm.openwebui.com
+      version: '>=0.0.1'
+    - condition: tika.enabled
+      name: tika
+      repository: https://apache.jfrog.io/artifactory/tika
+      version: '*'
+    - alias: redis-cluster
+      condition: redis-cluster.enabled
+      name: redis
+      repository: oci://registry-1.docker.io/bitnamicharts
+      version: '*'
+    description: "Open WebUI: A User-Friendly Web Interface for Chat Interactions
+      \U0001F44B"
+    digest: 17d35069de71fe1213e8351d16291e1a96e978b27faa3361cd7d62ef55c596b0
+    keywords:
+    - llm
+    - chat
+    - web-ui
+    - open-webui
+    name: open-webui
+    type: application
+    urls:
+    - https://github.com/ADORSYS-GIS/ai-ops/releases/download/open-webui-0.5.0/open-webui-0.5.0.tgz
+    version: 0.5.0
   pipelines:
   - annotations:
       licenses: MIT
@@ -70,4 +111,4 @@ entries:
     urls:
     - https://github.com/ADORSYS-GIS/ai-ops/releases/download/pipelines-0.5.0/pipelines-0.5.0.tgz
     version: 0.5.0
-generated: "2025-04-11T08:20:38.587171363Z"
+generated: "2025-04-11T08:52:29.233750791Z"
