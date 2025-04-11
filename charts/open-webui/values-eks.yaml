@@ -57,6 +57,7 @@ ingress:
     alb.ingress.kubernetes.io/unhealthy-threshold-count: '2'
 websocket:
   enabled: true
+  url: null
   redis:
     enabled: false
 envFrom:
@@ -73,3 +74,6 @@ pipelines:
     enabled: true
     size: 10Gi
     storageClass: ai-ebs
+    
+tika: 
+  

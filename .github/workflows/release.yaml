@@ -28,9 +28,9 @@ jobs:
 
       - name: Add repos to Helm
         run: |
-          helm repo add bitnami https://repo.broadcom.com/bitnami-files
           helm repo add ollama-helm https://otwld.github.io/ollama-helm
           helm repo add openwebui https://helm.openwebui.com
+          helm repo add apache https://apache.jfrog.io/artifactory/tika
           helm repo update
 
       - name: Run chart-releaser

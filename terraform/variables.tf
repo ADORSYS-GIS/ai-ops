@@ -132,6 +132,11 @@ variable "oidc_kc_issuer_url" {
 }
 
 #======
+variable "pipeline_key" {
+  type        = string
+  sensitive   = true
+  description = "Pipeline Key"
+}
 variable "litelllm_masterkey" {
   type        = string
   sensitive   = true

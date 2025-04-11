@@ -8,7 +8,7 @@ spec:
   source:
     repoURL: https://adorsys-gis.github.io/ai-ops
     chart: open-webui
-    targetRevision: 0.5.0
+    targetRevision: 0.5.1
     helm:
       valuesObject:
         persistence:
@@ -19,11 +19,11 @@ spec:
           enabled: false
         openaiBaseApiUrl: "http://litellm:4000"
         extraEnvVars:
-          - name: OPENAI_API_KEY
+          - name: OPENAI_API_KEYS
             valueFrom:
               secretKeyRef:
-                name: litellm-master-key
-                key: master_key
+                name: open-web-ui-keys
+                key: keys
           - name: OAUTH_CLIENT_ID
             valueFrom:
               secretKeyRef:
@@ -40,7 +40,7 @@ spec:
                 name: open-web-ui-oidc
                 key: openid_provider_url
           - name: OAUTH_PROVIDER_NAME
-            value: "Keycloak"
+            value: "Adorsys"
           - name: OAUTH_SCOPES
             value: "openid email profile"
         ingress:
@@ -70,6 +70,7 @@ spec:
             alb.ingress.kubernetes.io/unhealthy-threshold-count: '2'
         websocket:
           enabled: true
+          url: null
           redis:
             enabled: false
         envFrom:

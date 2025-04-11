@@ -79,6 +79,18 @@ resource "kubernetes_secret" "litellm_master_key" {
   depends_on = [kubernetes_namespace.litellm_namespace]
 }
 
+resource "kubernetes_secret" "open_web_ui_keys" {
+  metadata {
+    name      = "open-web-ui-keys"
+    namespace = local.namespace
+  }
+  data = {
+    keys = "${var.pipeline_key};${var.litelllm_masterkey}"
+  }
+
+  depends_on = [kubernetes_namespace.litellm_namespace]
+}
+
 resource "kubernetes_secret" "open_web_ui_oidc" {
   metadata {
     name      = "open-web-ui-oidc"
@@ -87,7 +99,7 @@ resource "kubernetes_secret" "open_web_ui_oidc" {
   data = {
     oauth_client_id     = var.oidc_kc_client_id
     oauth_client_secret = var.oidc_kc_client_secret
-    openid_provider_url = var.oidc_kc_issuer_url
+    openid_provider_url = "${var.oidc_kc_issuer_url}/.well-known/openid-configuration"
   }
 
   depends_on = [kubernetes_namespace.litellm_namespace]
