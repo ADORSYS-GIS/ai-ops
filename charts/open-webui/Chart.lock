@@ -9,7 +9,7 @@ dependencies:
   repository: https://apache.jfrog.io/artifactory/tika
   version: 2.9.0
 - name: redis
-  repository: https://charts.bitnami.com/bitnami
+  repository: oci://registry-1.docker.io/bitnamicharts
   version: 20.11.5
-digest: sha256:e056d54c822caf7601281777f54d88f32818982d52b7e81fbf811b8e4661265e
-generated: "2025-04-11T09:33:05.497538+01:00"
+digest: sha256:d8fc0a958710042f870bc4428d269186cce95cf935705136f36b7e22ae252714
+generated: "2025-04-11T09:46:44.946451+01:00"
