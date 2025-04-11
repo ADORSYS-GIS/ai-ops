@@ -18,6 +18,7 @@ module "s3_bucket" {
   version = "~> 4.0"
 
   force_destroy = true
+  block_public_acls = true
 
   bucket = local.s3_bucket_name
 
