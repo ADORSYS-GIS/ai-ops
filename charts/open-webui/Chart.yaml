@@ -29,10 +29,10 @@ dependencies:
     condition: pipelines.enabled
   - name: tika
     repository: https://apache.jfrog.io/artifactory/tika
-    version: '>=2.9.0'
+    version: '*'
     condition: tika.enabled
   - name: redis
-    repository: https://charts.bitnami.com/bitnami
-    version: '>=20.6.2'
+    repository: oci://registry-1.docker.io/bitnamicharts
+    version: '*'
     alias: redis-cluster
     condition: redis-cluster.enabled
