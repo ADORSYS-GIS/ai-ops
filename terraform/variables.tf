@@ -142,6 +142,16 @@ variable "litelllm_masterkey" {
   sensitive   = true
   description = "LiteLLM Master Key"
 }
+variable "webui_secret_key" {
+  type        = string
+  sensitive   = true
+  description = "WebUI Secret Key"
+}
+variable "brave_api_key" {
+  type        = string
+  sensitive   = true
+  description = "Brave API Key"
+}
 variable "anthropic_key" {
   type        = string
   sensitive   = true

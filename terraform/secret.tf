@@ -85,7 +85,10 @@ resource "kubernetes_secret" "open_web_ui_keys" {
     namespace = local.namespace
   }
   data = {
-    keys = "${var.pipeline_key};${var.litelllm_masterkey}"
+    OPENAI_API_KEYS          = "${var.pipeline_key};${var.litelllm_masterkey}"
+    AUDIO_STT_OPENAI_API_KEY = var.litelllm_masterkey
+    AUDIO_TTS_OPENAI_API_KEY = var.litelllm_masterkey
+    IMAGES_OPENAI_API_KEY    = var.litelllm_masterkey
   }
 
   depends_on = [kubernetes_namespace.litellm_namespace]
@@ -126,8 +129,37 @@ resource "kubernetes_secret" "open_web_ui_db" {
     namespace = local.namespace
   }
   data = {
-    DATABASE_URL       = "postgresql://${var.db_username}:${var.db_password}@${module.rds.db_instance_endpoint}/${module.rds.db_instance_name}?schema=${local.db_open_web_ui}"
+    DATABASE_URL       = "postgresql://${var.db_username}:${var.db_password}@${module.rds.db_instance_endpoint}/${module.rds.db_instance_name}"
     DATABASE_POOL_SIZE = "10"
+  }
+
+  depends_on = [kubernetes_namespace.litellm_namespace]
+}
+
+resource "kubernetes_secret" "open_web_ui_db_init" {
+  metadata {
+    name      = "open-web-ui-db-init"
+    namespace = local.namespace
+  }
+  data = {
+    PGHOST     = local.db_host
+    PGPORT     = module.rds.db_instance_port
+    PGDATABASE = module.rds.db_instance_name
+    PGUSER     = var.db_username
+    PGPASSWORD = var.db_password
+  }
+
+  depends_on = [kubernetes_namespace.litellm_namespace]
+}
+
+resource "kubernetes_secret" "open_web_ui_config" {
+  metadata {
+    name      = "open-web-ui-config"
+    namespace = local.namespace
+  }
+  data = {
+    WEBUI_SECRET_KEY     = var.webui_secret_key
+    BRAVE_SEARCH_API_KEY = var.brave_api_key
   }
 
   depends_on = [kubernetes_namespace.litellm_namespace]

@@ -17,48 +17,42 @@ module "s3_bucket" {
   source  = "terraform-aws-modules/s3-bucket/aws"
   version = "~> 4.0"
 
-  force_destroy = true
+  force_destroy     = true
+  block_public_acls = true
 
   bucket = local.s3_bucket_name
-  acl    = "private"
 
-  attach_require_latest_tls_policy         = true
-  attach_deny_incorrect_encryption_headers = true
+  attach_policy = true
 
   cors_rule = [
     {
       allowed_methods = ["PUT", "POST"]
-      allowed_origins = ["https://api.${var.zone_name}", "https://${var.zone_name}"]
+      allowed_origins = ["https://${var.zone_name}"]
       allowed_headers = ["*"]
       expose_headers = ["ETag"]
       max_age_seconds = 3000
     },
   ]
-}
-
-resource "aws_iam_user_policy" "s3_policy" {
-  name = "s3-access-policy"  # Name of the IAM policy
-  user = aws_iam_user.s3_user.name
 
   policy = jsonencode({
     Version = "2012-10-17",
     Statement = [
       {
+        Effect = "Allow",
+        Principal = {
+          AWS = aws_iam_user.s3_user.arn
+        },
         Action = [
-          "s3:ListBucket",
-        ],
-        Effect   = "Allow",
-        Resource = "arn:aws:s3:::${local.s3_bucket_name}"
-      },
-      {
-        Action = [
-          "s3:GetObject",
           "s3:PutObject",
-          "s3:DeleteObject"
+          "s3:GetObject",
+          "s3:DeleteObject",
+          "s3:ListBucket"
         ],
-        Effect   = "Allow",
-        Resource = "arn:aws:s3:::${local.s3_bucket_name}/*"
-      },
+        Resource = [
+          "arn:aws:s3:::${local.s3_bucket_name}",
+          "arn:aws:s3:::${local.s3_bucket_name}/*"
+        ]
+      }
     ]
   })
 }
