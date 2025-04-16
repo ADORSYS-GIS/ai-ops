@@ -19,11 +19,47 @@ spec:
         ollama:
           models:
             pull:
-              - gemma3:12b # 8.1Gb
-              - qwen2.5:14b # 9.0Gb
-              - deepseek-r1:14b # 9.1Gb
+              - deepseek-r1:32b # 20Gb
             run:
-              - deepseek-r1:14b
+              - deepseek-r1:32b
+          gpu:
+            enabled: true
+  
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: kivoyo
+  
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+  
+  revisionHistoryLimit: 10
+---  
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: codelama
+  namespace: argocd
+spec:
+  project: application
+  source:
+    repoURL: https://otwld.github.io/ollama-helm
+    chart: ollama
+    targetRevision: 1.13.0
+    helm:
+      releaseName: codelama
+      valuesObject:
+        persistentVolume:
+          enabled: true
+          accessModes: [ "ReadWriteMany" ]
+          storageClass: ai-efs
+        ollama:
+          models:
+            pull:
+              - qwen2.5-coder:32b # 20GB
+            run:
+              - qwen2.5-coder:32b
           gpu:
             enabled: true
   

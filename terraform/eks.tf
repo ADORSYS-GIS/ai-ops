@@ -19,10 +19,16 @@ module "eks" {
       desired_size   = var.eks_desired_instance
       instance_types = var.eks_ec2_instance_types
       capacity_type  = "SPOT"
-      
+
       iam_role_additional_policies = {
         ebs = "arn:aws:iam::aws:policy/service-role/AmazonEBSCSIDriverPolicy"
       }
+      tags = merge(
+        local.tags,
+        {
+          "gpu-node" = "true",
+        }
+      )
     }
     gpu-ng = {
       name           = "gpu"
@@ -38,6 +44,12 @@ module "eks" {
       labels = {
         gpu-node : "true"
       }
+      tags = merge(
+        local.tags,
+        {
+          "gpu-node" = "true",
+        }
+      )
     }
   }
 

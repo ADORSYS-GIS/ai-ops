@@ -54,7 +54,8 @@ jobs:
 
           echo "TF_VAR_webui_secret_key=${{ secrets.WEBUI_SECRET_KEY }}" >> $GITHUB_ENV
           echo "TF_VAR_brave_api_key=${{ secrets.BRAVE_API_KEY }}" >> $GITHUB_ENV
-          
+
+          echo "TF_VAR_groq_api_key=${{ secrets.GROQ_API_KEY }}" >> $GITHUB_ENV
           echo "TF_VAR_pipeline_key=${{ secrets.PIPELINE_KEY }}" >> $GITHUB_ENV
           echo "TF_VAR_litelllm_masterkey=${{ secrets.LITELLLM_MASTERKEY }}" >> $GITHUB_ENV
           echo "TF_VAR_anthropic_key=${{ secrets.ANTHROPIC_KEY }}" >> $GITHUB_ENV

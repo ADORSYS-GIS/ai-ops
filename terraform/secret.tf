@@ -67,6 +67,18 @@ resource "kubernetes_secret" "litellm_anthropic_api_key" {
   depends_on = [kubernetes_namespace.litellm_namespace]
 }
 
+resource "kubernetes_secret" "litellm_groq_api_key" {
+  metadata {
+    name      = "litellm-groq-api-key"
+    namespace = local.namespace
+  }
+  data = {
+    GROQ_API_KEY = var.groq_api_key
+  }
+
+  depends_on = [kubernetes_namespace.litellm_namespace]
+}
+
 resource "kubernetes_secret" "litellm_master_key" {
   metadata {
     name      = "litellm-master-key"
@@ -129,7 +141,7 @@ resource "kubernetes_secret" "open_web_ui_db" {
     namespace = local.namespace
   }
   data = {
-    DATABASE_URL       = "postgresql://${var.db_username}:${var.db_password}@${module.rds.db_instance_endpoint}/${module.rds.db_instance_name}"
+    DATABASE_URL       = "postgresql://${var.db_username}:${var.db_password}@${module.rds.db_instance_endpoint}/${module.rds.db_instance_name}_web_ui"
     DATABASE_POOL_SIZE = "10"
   }
 
@@ -142,11 +154,12 @@ resource "kubernetes_secret" "open_web_ui_db_init" {
     namespace = local.namespace
   }
   data = {
-    PGHOST     = local.db_host
-    PGPORT     = module.rds.db_instance_port
-    PGDATABASE = module.rds.db_instance_name
-    PGUSER     = var.db_username
-    PGPASSWORD = var.db_password
+    PGDATABASE   = module.rds.db_instance_name
+    PGHOST       = local.db_host
+    PGPORT       = module.rds.db_instance_port
+    PGUSER       = var.db_username
+    PGPASSWORD   = var.db_password
+    DB_TO_CREATE = "${module.rds.db_instance_name}_web_ui"
   }
 
   depends_on = [kubernetes_namespace.litellm_namespace]

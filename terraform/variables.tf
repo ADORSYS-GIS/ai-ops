@@ -18,8 +18,8 @@ variable "vpc_cidr" {
 
 variable "azs" {
   description = "Availability Zones for the VPC"
-  type = list(string)
-  default = ["eu-west-1a", "eu-west-1b"]
+  type        = list(string)
+  default     = ["eu-west-1a", "eu-west-1b"]
 }
 
 variable "db_username" {
@@ -48,7 +48,7 @@ variable "environment" {
 
 variable "eks_ec2_instance_types" {
   description = "The EC2 instance type for the EKS server"
-  type = list(string)
+  type        = list(string)
 }
 
 variable "eks_min_instance" {
@@ -65,7 +65,7 @@ variable "eks_max_instance" {
 
 variable "eks_gpu_ec2_instance_types" {
   description = "The EC2 instance type for the EKS GPU server"
-  type = list(string)
+  type        = list(string)
 }
 
 variable "eks_gpu_min_instance" {
@@ -166,4 +166,9 @@ variable "openapi_key" {
   type        = string
   sensitive   = true
   description = "OpenAI API Key"
+}
+variable "groq_api_key" {
+  type        = string
+  sensitive   = true
+  description = "Groq API Key"
 }

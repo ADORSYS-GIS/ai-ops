@@ -15,35 +15,38 @@ spec:
         db:
           deployStandalone: false
           useExisting: false
-        
-        envVars: {
-          USE_DDTRACE: "true",
-          OLLAMA_BASE_URL: "http://ollama:11434"
-        }
-        
+
+        envVars:
+          {
+            USE_DDTRACE: "true",
+            OLLAMA_BASE_URL: "http://ollama:11434",
+            CODELAMA_BASE_URL: "http://codelama-ollama:11434",
+          }
+
         # if set, use this secret for the master key; otherwise, autogenerate a new one
         masterkeySecretName: "litellm-master-key"
 
         # if set, use this secret key for the master key; otherwise, use the default key
         masterkeySecretKey: "master_key"
-        
+
         autoscaling:
           enabled: true
           maxReplicas: 2
-        
+
         environmentSecrets:
           - litellm-rds-secret
           - litellm-openai-api-key
           - litellm-gemini-api-key
           - litellm-anthropic-api-key
+          - litellm-groq-api-key
           - litellm-redis-secret
         environmentConfigMaps:
           - litellm-db-config
-        
+
         migrationJob:
           environmentSecrets:
             - litellm-rds-secret
-        
+
         ingress:
           enabled: true
           hosts:
@@ -59,99 +62,119 @@ spec:
               [
                 {
                   "HTTP":80
-                }, 
+                },
                 {
                   "HTTPS": 443
                 }
               ]
-            alb.ingress.kubernetes.io/ssl-redirect: '443'
+            alb.ingress.kubernetes.io/ssl-redirect: "443"
             alb.ingress.kubernetes.io/scheme: "internet-facing"
             alb.ingress.kubernetes.io/target-type: "ip"
             alb.ingress.kubernetes.io/certificate-arn: "arn:aws:acm:eu-central-1:571075516563:certificate/980a6ebb-a87e-4cfb-b8bf-3d0e5da5acf5"
             external-dns.alpha.kubernetes.io/hostname: "api.ai.kivoyo.com"
-            alb.ingress.kubernetes.io/healthcheck-interval-seconds: '15'
-            alb.ingress.kubernetes.io/healthcheck-timeout-seconds: '5'
-            alb.ingress.kubernetes.io/healthy-threshold-count: '2'
-            alb.ingress.kubernetes.io/unhealthy-threshold-count: '2'
-        
+            alb.ingress.kubernetes.io/healthcheck-interval-seconds: "15"
+            alb.ingress.kubernetes.io/healthcheck-timeout-seconds: "5"
+            alb.ingress.kubernetes.io/healthy-threshold-count: "2"
+            alb.ingress.kubernetes.io/unhealthy-threshold-count: "2"
+
         proxy_config:
+          litellm_settings:
+            cache: True
+            cache_params: # set cache params for redis
+              type: redis
+              namespace: "litellm.caching.caching"
           model_list:
             # At least one model must exist for the proxy to start.
-            - model_name: gpt-3.5-turbo
-              litellm_params:
-                model: openai/gpt-3.5-turbo
             - model_name: o3-mini
               litellm_params:
                 model: openai/o3-mini
-            - model_name: tutor-o3-mini
+              model_info:
+                mode: completion
+            - model_name: gpt-4.1
               litellm_params:
-                model: openai/o3-mini
-            - model_name: gpt-4o
-              litellm_params:
-                model: openai/gpt-4o
-            - model_name: tutor-gpt-4o
-              litellm_params:
-                model: openai/gpt-4o
+                model: openai/gpt-4.1
+              model_info:
+                mode: completion
+
             - model_name: dall-e-3
               litellm_params:
                 model: openai/dall-e-3
+              model_info:
+                mode: image_generation
             - model_name: whisper-1
               litellm_params:
                 model: openai/whisper-1
+              model_info:
+                mode: audio_transcription
             - model_name: gpt-4o-mini-audio
               litellm_params:
                 model: openai/gpt-4o-mini-audio-preview-2024-12-17
+              model_info:
+                mode: audio_transcription
             - model_name: gpt-4o-transcribe
               litellm_params:
                 model: openai/gpt-4o-transcribe
+              model_info:
+                mode: audio_transcription
             - model_name: gpt-4o-mini-tts
               litellm_params:
                 model: openai/gpt-4o-mini-tts
+              model_info:
+                mode: audio_speech
 
-            - model_name: gemini-pro
-              litellm_params:
-                model: gemini/gemini-1.5-pro
             - model_name: gemini-2.0-flash
               litellm_params:
                 model: gemini/gemini-2.0-flash
-            - model_name: tutor-gemini-2.0-flash
-              litellm_params:
-                model: gemini/gemini-2.0-flash
+              model_info:
+                mode: completion
             - model_name: gemini-2.0-flash-lite
               litellm_params:
                 model: gemini/gemini-2.0-flash-lite-preview-02-05
+              model_info:
+                mode: completion
 
             - model_name: claude-3-5-sonnet
               litellm_params:
                 model: anthropic/claude-3-5-sonnet-20240620
+              model_info:
+                mode: completion # Assuming it's a text-based model
             - model_name: claude-3
               litellm_params:
                 model: anthropic/claude-3-opus-20240229
+              model_info:
+                mode: completion # Assuming it's a text-based model
 
-            - model_name: gemma3
+            - model_name: qwen-qwq-32b
               litellm_params:
-                model: ollama/gemma3:12b
-                api_base: "os.environ/OLLAMA_BASE_URL"
-            - model_name: tutor-gemma3
+                model: groq/qwen-qwq-32b
+            - model_name: deepseek-r1-distill-llama-70b
               litellm_params:
-                model: ollama/gemma3:12b
-                api_base: "os.environ/OLLAMA_BASE_URL"
-            - model_name: qwen2.5
+                model: groq/deepseek-r1-distill-llama-70b
+            - model_name: mistral-saba-24b
               litellm_params:
-                model: ollama/qwen2.5:14b
-                api_base: "os.environ/OLLAMA_BASE_URL"
+                model: groq/mistral-saba-24b
+
             - model_name: deepseek-r1
               litellm_params:
-                model: ollama/deepseek-r1:14b
+                model: ollama/deepseek-r1:32b
                 api_base: "os.environ/OLLAMA_BASE_URL"
-  
+              model_info:
+                mode: completion
+
+            - model_name: qwen2.5-coder
+              litellm_params:
+                model: ollama/qwen2.5-coder:32b
+                api_base: "os.environ/CODELAMA_BASE_URL"
+              model_info:
+                mode: completion
+
   destination:
     server: https://kubernetes.default.svc
     namespace: kivoyo
-  
+
   syncPolicy:
     automated:
       prune: true
       selfHeal: true
-  
+
   revisionHistoryLimit: 10
