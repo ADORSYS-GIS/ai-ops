@@ -147,6 +147,7 @@ spec:
           #enableRoleManagement: true
           #enableGroupManagement: true
         pipelines:
+          enabled: false
           persistence:
             enabled: true
             size: 10Gi
@@ -156,7 +157,7 @@ spec:
         extraInitContainers:
           - name: init-db-schema
             image: alpine/psql
-            command: [ "sh", "-c" ]
+            command: ["sh", "-c"]
             args:
               - |
                 psql -v ON_ERROR_STOP=1 <<-EOSQL
@@ -177,7 +178,6 @@ spec:
             envFrom:
               - secretRef:
                   name: open-web-ui-db-init
-
 
   destination:
     server: https://kubernetes.default.svc
