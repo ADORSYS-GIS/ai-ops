@@ -148,7 +148,6 @@ spec:
           #enableRoleManagement: true
           #enableGroupManagement: true
         pipelines:
-          enabled: false
           persistence:
             enabled: true
             size: 10Gi
