@@ -16,12 +16,7 @@ spec:
           deployStandalone: false
           useExisting: false
 
-        envVars:
-          {
-            USE_DDTRACE: "true",
-            OLLAMA_BASE_URL: "http://ollama:11434",
-            CODELAMA_BASE_URL: "http://codelama-ollama:11434",
-          }
+        envVars: { USE_DDTRACE: "true" }
 
         # if set, use this secret for the master key; otherwise, autogenerate a new one
         masterkeySecretName: "litellm-master-key"
@@ -153,20 +148,6 @@ spec:
             - model_name: mistral-saba-24b
               litellm_params:
                 model: groq/mistral-saba-24b
-
-            - model_name: deepseek-r1
-              litellm_params:
-                model: ollama/deepseek-r1:32b
-                api_base: "os.environ/OLLAMA_BASE_URL"
-              model_info:
-                mode: completion
-
-            - model_name: qwen2.5-coder
-              litellm_params:
-                model: ollama/qwen2.5-coder:32b
-                api_base: "os.environ/CODELAMA_BASE_URL"
-              model_info:
-                mode: completion
 
   destination:
     server: https://kubernetes.default.svc

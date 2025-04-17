@@ -11,6 +11,7 @@ spec:
     targetRevision: 0.5.1
     helm:
       valuesObject:
+        replicaCount: 2
         persistence:
           enabled: true
           size: 10Gi

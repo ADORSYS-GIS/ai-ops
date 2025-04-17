@@ -3,6 +3,5 @@ kind: Kustomization
 
 resources:
   - litellm.yaml
-  - ollama.yaml
   - open-web-ui.yaml
   - adminer.yaml
