@@ -80,9 +80,14 @@ spec:
               namespace: "litellm.caching.caching"
           model_list:
             # At least one model must exist for the proxy to start.
-            - model_name: o3-mini
+            - model_name: gpt-4o-mini
               litellm_params:
-                model: openai/o3-mini
+                model: openai/gpt-4o-mini-2024-07-18
+              model_info:
+                mode: completion
+            - model_name: o-mini
+              litellm_params:
+                model: openai/o4-mini
               model_info:
                 mode: completion
             - model_name: gpt-4.1
