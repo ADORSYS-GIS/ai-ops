@@ -83,18 +83,18 @@ spec:
             - model_name: gpt-4o-mini
               litellm_params:
                 model: openai/gpt-4o-mini-2024-07-18
-              model_info:
-                mode: completion
             - model_name: o-mini
               litellm_params:
                 model: openai/o4-mini
-              model_info:
-                mode: completion
+            - model_name: o3-mini
+              litellm_params:
+                model: openai/o3-mini
             - model_name: gpt-4.1
               litellm_params:
                 model: openai/gpt-4.1
-              model_info:
-                mode: completion
+            - model_name: text-embedding-3-small
+              litellm_params:
+                model: openai/text-embedding-3-small
 
             - model_name: dall-e-3
               litellm_params:
