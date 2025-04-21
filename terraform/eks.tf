@@ -18,7 +18,7 @@ module "eks" {
       max_size       = var.eks_max_instance
       desired_size   = var.eks_desired_instance
       instance_types = var.eks_ec2_instance_types
-      capacity_type  = "SPOT"
+      capacity_type  = var.capacity_type
 
       iam_role_additional_policies = {
         ebs = "arn:aws:iam::aws:policy/service-role/AmazonEBSCSIDriverPolicy"
@@ -26,7 +26,28 @@ module "eks" {
       tags = merge(
         local.tags,
         {
-          "cpu-node" = "true",
+          "gpu-node" = "true",
+        }
+      )
+    }
+    gpu-ng = {
+      name           = "gpu"
+      ami_type       = "BOTTLEROCKET_x86_64_NVIDIA"
+      min_size       = var.eks_gpu_min_instance
+      max_size       = var.eks_gpu_max_instance
+      desired_size   = var.eks_gpu_desired_instance
+      instance_types = var.eks_gpu_ec2_instance_types
+      capacity_type  = var.capacity_type
+      iam_role_additional_policies = {
+        ebs = "arn:aws:iam::aws:policy/service-role/AmazonEBSCSIDriverPolicy"
+      }
+      labels = {
+        gpu-node : "true"
+      }
+      tags = merge(
+        local.tags,
+        {
+          "gpu-node" = "true",
         }
       )
     }
@@ -142,7 +163,7 @@ module "ebs_csi_driver_irsa" {
 
   oidc_providers = {
     cluster = {
-      provider_arn               = module.eks.oidc_provider_arn
+      provider_arn = module.eks.oidc_provider_arn
       namespace_service_accounts = ["kube-system:ebs-csi-controller-sa"]
     }
   }

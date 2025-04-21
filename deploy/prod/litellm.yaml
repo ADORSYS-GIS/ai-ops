@@ -16,7 +16,12 @@ spec:
           deployStandalone: false
           useExisting: false
 
-        envVars: { USE_DDTRACE: "true" }
+        envVars:
+          {
+            USE_DDTRACE: "true",
+            OLLAMA_BASE_URL: "http://ollama:11434",
+            CODELAMA_BASE_URL: "http://codelama-ollama:11434",
+          }
 
         # if set, use this secret for the master key; otherwise, autogenerate a new one
         masterkeySecretName: "litellm-master-key"
@@ -83,18 +88,18 @@ spec:
             - model_name: gpt-4o-mini
               litellm_params:
                 model: openai/gpt-4o-mini-2024-07-18
-              model_info:
-                mode: completion
             - model_name: o-mini
               litellm_params:
                 model: openai/o4-mini
-              model_info:
-                mode: completion
+            - model_name: o3-mini
+              litellm_params:
+                model: openai/o3-mini
             - model_name: gpt-4.1
               litellm_params:
                 model: openai/gpt-4.1
-              model_info:
-                mode: completion
+            - model_name: text-embedding-3-small
+              litellm_params:
+                model: openai/text-embedding-3-small
 
             - model_name: dall-e-3
               litellm_params:
@@ -153,6 +158,28 @@ spec:
             - model_name: mistral-saba-24b
               litellm_params:
                 model: groq/mistral-saba-24b
+
+            - model_name: gemma3
+              litellm_params:
+                model: ollama/gemma3:27b-it-qat
+                api_base: "os.environ/OLLAMA_BASE_URL"
+
+            - model_name: deepseek-coder-v2
+              litellm_params:
+                model: ollama/deepseek-coder-v2:16b-lite-base-q8_0
+                api_base: "os.environ/CODELAMA_BASE_URL"
+            - model_name: llama3.1
+              litellm_params:
+                model: ollama/llama3.1:8b
+                api_base: "os.environ/CODELAMA_BASE_URL"
+            - model_name: mistral
+              litellm_params:
+                model: ollama/mistral:7b
+                api_base: "os.environ/CODELAMA_BASE_URL"
+            - model_name: nomic-embed-text
+              litellm_params:
+                model: ollama/nomic-embed-text
+                api_base: "os.environ/CODELAMA_BASE_URL"
 
   destination:
     server: https://kubernetes.default.svc

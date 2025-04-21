@@ -63,6 +63,29 @@ variable "eks_max_instance" {
   default     = 3
 }
 
+variable "eks_gpu_ec2_instance_types" {
+  description = "The EC2 instance type for the EKS GPU server"
+  type        = list(string)
+}
+
+variable "eks_gpu_min_instance" {
+  description = "The minimum number of instances for the EKS GPU cluster"
+  type        = number
+  default     = 0
+}
+
+variable "eks_gpu_max_instance" {
+  description = "The maximum number of instances for the EKS GPU cluster"
+  type        = number
+  default     = 2
+}
+
+variable "eks_gpu_desired_instance" {
+  description = "The desired number of instances for the EKS GPU cluster"
+  type        = number
+  default     = 0
+}
+
 variable "eks_desired_instance" {
   description = "The desired number of instances for the EKS cluster"
   type        = number
@@ -148,4 +171,9 @@ variable "groq_api_key" {
   type        = string
   sensitive   = true
   description = "Groq API Key"
+}
+
+variable "capacity_type" {
+  default = null
+  description = "EC2 Capacity type"
 }
