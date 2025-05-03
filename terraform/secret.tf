@@ -55,6 +55,66 @@ resource "kubernetes_secret" "litellm_gemini_api_key" {
   depends_on = [kubernetes_namespace.litellm_namespace]
 }
 
+resource "kubernetes_secret" "litellm_fireworks_api_key" {
+  metadata {
+    name      = "litellm-fireworks-api-key"
+    namespace = local.namespace
+  }
+  data = {
+    FIREWORKS_AI_API_KEY = var.fireworks_ai_api_key
+  }
+
+  depends_on = [kubernetes_namespace.litellm_namespace]
+}
+
+resource "kubernetes_secret" "litellm_deepgram_api_key" {
+  metadata {
+    name      = "litellm-deepgram-api-key"
+    namespace = local.namespace
+  }
+  data = {
+    DEEPGRAM_API_KEY = var.deepgram_api_key
+  }
+
+  depends_on = [kubernetes_namespace.litellm_namespace]
+}
+
+resource "kubernetes_secret" "litellm_deepseek_api_key" {
+  metadata {
+    name      = "litellm-deepseek-api-key"
+    namespace = local.namespace
+  }
+  data = {
+    DEEPSEEK_API_KEY = var.deepseek_api_key
+  }
+
+  depends_on = [kubernetes_namespace.litellm_namespace]
+}
+
+resource "kubernetes_secret" "litellm_togetherai_api_key" {
+  metadata {
+    name      = "litellm-togetherai-api-key"
+    namespace = local.namespace
+  }
+  data = {
+    TOGETHERAI_API_KEY = var.togetherai_api_key
+  }
+
+  depends_on = [kubernetes_namespace.litellm_namespace]
+}
+
+resource "kubernetes_secret" "litellm_voyage_api_key" {
+  metadata {
+    name      = "litellm-voyage-api-key"
+    namespace = local.namespace
+  }
+  data = {
+    VOYAGE_API_KEY = var.voyage_api_key_key
+  }
+
+  depends_on = [kubernetes_namespace.litellm_namespace]
+}
+
 resource "kubernetes_secret" "litellm_anthropic_api_key" {
   metadata {
     name      = "litellm-anthropic-api-key"

@@ -23,15 +23,18 @@ module "eks" {
       iam_role_additional_policies = {
         ebs = "arn:aws:iam::aws:policy/service-role/AmazonEBSCSIDriverPolicy"
       }
+      labels = {
+        cpu-node : "true"
+      }
       tags = merge(
         local.tags,
         {
-          "gpu-node" = "true",
+          "cpu-node" = "true",
         }
       )
     }
-    gpu-ng = {
-      name           = "gpu"
+    mlflow-ng = {
+      name           = "mlflow-gpus"
       ami_type       = "BOTTLEROCKET_x86_64_NVIDIA"
       min_size       = var.eks_gpu_min_instance
       max_size       = var.eks_gpu_max_instance
@@ -43,11 +46,50 @@ module "eks" {
       }
       labels = {
         gpu-node : "true"
+        mflow-node : "true"
       }
+      taints = [
+        {
+          key    = "mflow-node"
+          value  = "true"
+          effect = "NO_SCHEDULE"
+        }
+      ]
       tags = merge(
         local.tags,
         {
-          "gpu-node" = "true",
+          "gpu-node"   = "true",
+          "mflow-node" = "true",
+        }
+      )
+    }
+    ollama-ng = {
+      name           = "ollama-gpus"
+      ami_type       = "BOTTLEROCKET_x86_64_NVIDIA"
+      min_size       = var.eks_gpu_min_instance
+      max_size       = var.eks_gpu_max_instance
+      desired_size   = var.eks_gpu_desired_instance
+      instance_types = var.eks_gpu_ec2_instance_types
+      capacity_type  = var.capacity_type
+      iam_role_additional_policies = {
+        ebs = "arn:aws:iam::aws:policy/service-role/AmazonEBSCSIDriverPolicy"
+      }
+      labels = {
+        gpu-node : "true"
+        ollama-node : "true"
+      }
+      taints = [
+        {
+          key    = "ollama-node"
+          value  = "true"
+          effect = "NO_SCHEDULE"
+        }
+      ]
+      tags = merge(
+        local.tags,
+        {
+          "gpu-node"    = "true",
+          "ollama-node" = "true",
         }
       )
     }

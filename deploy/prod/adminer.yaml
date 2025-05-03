@@ -62,4 +62,4 @@ spec:
         factor: 2
         maxDuration: 3m
   
-  revisionHistoryLimit: 10
+  revisionHistoryLimit: 3

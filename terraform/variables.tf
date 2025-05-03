@@ -167,6 +167,31 @@ variable "openapi_key" {
   sensitive   = true
   description = "OpenAI API Key"
 }
+variable "fireworks_ai_api_key" {
+  type        = string
+  sensitive   = true
+  description = "Firework API Key"
+}
+variable "deepgram_api_key" {
+  type        = string
+  sensitive   = true
+  description = "Deepgram API Key"
+}
+variable "deepseek_api_key" {
+  type        = string
+  sensitive   = true
+  description = "DeepSeek API Key"
+}
+variable "togetherai_api_key" {
+  type        = string
+  sensitive   = true
+  description = "TogetherAI API Key"
+}
+variable "voyage_api_key_key" {
+  type        = string
+  sensitive   = true
+  description = "Voyage API Key"
+}
 variable "groq_api_key" {
   type        = string
   sensitive   = true

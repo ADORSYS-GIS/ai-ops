@@ -1,69 +1,49 @@
-apiVersion: argoproj.io/v1alpha1
-kind: Application
-metadata:
-  name: ollama
-  namespace: argocd
-spec:
-  project: application
-  source:
-    repoURL: https://otwld.github.io/ollama-helm
-    chart: ollama
-    targetRevision: 1.13.0
-    helm:
-      releaseName: ollama
-      valuesObject:
-        persistentVolume:
-          enabled: true
-          accessModes: [ "ReadWriteMany" ]
-          storageClass: ai-efs
-        ollama:
-          models:
-            pull:
-              - gemma3:27b-it-qat # 20Gb # vision # 128k
-            run:
-              - gemma3:27b-it-qat
-          gpu:
-            enabled: true
-  
-  destination:
-    server: https://kubernetes.default.svc
-    namespace: kivoyo
-  
-  syncPolicy:
-    automated:
-      prune: true
-      selfHeal: true
-  
-  revisionHistoryLimit: 10
 ---
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: codelama
+  name: gemma3-ollama
   namespace: argocd
 spec:
   project: application
   source:
     repoURL: https://otwld.github.io/ollama-helm
     chart: ollama
-    targetRevision: 1.13.0
+    targetRevision: 1.14.0
     helm:
-      releaseName: codelama
+      releaseName: gemma3-ollama
       valuesObject:
+        podLabels:
+          app: gemma3-ollama
+        affinity:
+          podAntiAffinity:
+            requiredDuringSchedulingIgnoredDuringExecution:
+              - labelSelector:
+                  matchExpressions:
+                    - key: app
+                      operator: In
+                      values:
+                        - gemma3-ollama
+                topologyKey: "kubernetes.io/hostname"
         persistentVolume:
           enabled: true
-          accessModes: [ "ReadWriteMany" ]
-          storageClass: ai-efs
+          existingClaim: "ollama-model"
+        tolerations:
+          - key: "ollama-node"
+            operator: "Equal"
+            value: "true"
+            effect: "NoSchedule"
+        autoscaling:
+          enabled: true
+          minReplicas: 1
+          maxReplicas: 2
+          targetCPUUtilizationPercentage: 80
         ollama:
           models:
             pull:
-              - deepseek-coder-v2:16b-lite-base-q8_0 #17GB
-              - llama3.1:8b # 4.9GB # tools
-              - nomic-embed-text # 274 # embed #
+              - gemma3:12b-it-qat # 8.1GB
             run:
-              - deepseek-coder-v2:16b-lite-base-q8_0
-              - llama3.1:8b
-              - nomic-embed-text
+              - gemma3:12b-it-qat
           gpu:
             enabled: true
   
@@ -76,4 +56,181 @@ spec:
       prune: true
       selfHeal: true
   
-  revisionHistoryLimit: 10
+  revisionHistoryLimit: 3
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: qwen2-5-coder-instruct-ollama
+  namespace: argocd
+spec:
+  project: application
+  source:
+    repoURL: https://otwld.github.io/ollama-helm
+    chart: ollama
+    targetRevision: 1.14.0
+    helm:
+      releaseName: qwen2-5-coder-instruct-ollama
+      valuesObject:
+        podLabels:
+          app: qwen2-5-coder-instruct-ollama
+        affinity:
+          podAntiAffinity:
+            requiredDuringSchedulingIgnoredDuringExecution:
+              - labelSelector:
+                  matchExpressions:
+                    - key: app
+                      operator: In
+                      values:
+                        - qwen2-5-coder-instruct-ollama
+                topologyKey: "kubernetes.io/hostname"
+        persistentVolume:
+          enabled: true
+          existingClaim: "ollama-model"
+        tolerations:
+          - key: "ollama-node"
+            operator: "Equal"
+            value: "true"
+            effect: "NoSchedule"
+        autoscaling:
+          enabled: true
+          minReplicas: 1
+          maxReplicas: 2
+          targetCPUUtilizationPercentage: 80
+        ollama:
+          models:
+            pull:
+              - qwen2.5-coder:14b-instruct-q4_K_M # 9.0GB
+            run:
+              - qwen2.5-coder:14b-instruct-q4_K_M
+          gpu:
+            enabled: true
+  
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: kivoyo
+  
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+  
+  revisionHistoryLimit: 3
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: llama3-1-ollama
+  namespace: argocd
+spec:
+  project: application
+  source:
+    repoURL: https://otwld.github.io/ollama-helm
+    chart: ollama
+    targetRevision: 1.14.0
+    helm:
+      releaseName: llama3-1-ollama
+      valuesObject:
+        podLabels:
+          app: llama3-1-ollama
+        affinity:
+          podAntiAffinity:
+            requiredDuringSchedulingIgnoredDuringExecution:
+              - labelSelector:
+                  matchExpressions:
+                    - key: app
+                      operator: In
+                      values:
+                        - llama3-1-ollama
+                topologyKey: "kubernetes.io/hostname"
+        persistentVolume:
+          enabled: true
+          existingClaim: "ollama-model"
+        tolerations:
+          - key: "ollama-node"
+            operator: "Equal"
+            value: "true"
+            effect: "NoSchedule"
+        autoscaling:
+          enabled: true
+          minReplicas: 1
+          maxReplicas: 2
+          targetCPUUtilizationPercentage: 80
+        ollama:
+          models:
+            pull:
+              - llama3.1:8b # 4.9GB
+            run:
+              - llama3.1:8b
+          gpu:
+            enabled: true
+  
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: kivoyo
+  
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+  
+  revisionHistoryLimit: 3
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: llama3-1-instruct-ollama
+  namespace: argocd
+spec:
+  project: application
+  source:
+    repoURL: https://otwld.github.io/ollama-helm
+    chart: ollama
+    targetRevision: 1.14.0
+    helm:
+      releaseName: llama3-1-instruct-ollama
+      valuesObject:
+        podLabels:
+          app: llama3-1-instruct-ollama
+        affinity:
+          podAntiAffinity:
+            requiredDuringSchedulingIgnoredDuringExecution:
+              - labelSelector:
+                  matchExpressions:
+                    - key: app
+                      operator: In
+                      values:
+                        - llama3-1-instruct-ollama
+                topologyKey: "kubernetes.io/hostname"
+        persistentVolume:
+          enabled: true
+          existingClaim: "ollama-model"
+        tolerations:
+          - key: "ollama-node"
+            operator: "Equal"
+            value: "true"
+            effect: "NoSchedule"
+        autoscaling:
+          enabled: true
+          minReplicas: 1
+          maxReplicas: 2
+          targetCPUUtilizationPercentage: 80
+        ollama:
+          models:
+            pull:
+              - llama3.1:8b-instruct-q4_K_M # 4.9GB
+            run:
+              - llama3.1:8b-instruct-q4_K_M
+          gpu:
+            enabled: true
+  
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: kivoyo
+  
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+  
+  revisionHistoryLimit: 3

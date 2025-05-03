@@ -1,7 +1,7 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: open-webui
+  name: web
   namespace: argocd
 spec:
   project: application
@@ -10,12 +10,30 @@ spec:
     chart: open-webui
     targetRevision: 0.5.1
     helm:
+      releaseName: web
       valuesObject:
+        nameOverride: web
         replicaCount: 2
+        image:
+          pullPolicy: "Always"
         persistence:
           enabled: true
           size: 10Gi
           storageClass: ai-efs
+          accessModes:
+            - ReadWriteMany
+        podLabels:
+          app: open-web-ui
+        affinity:
+          podAntiAffinity:
+            requiredDuringSchedulingIgnoredDuringExecution:
+              - labelSelector:
+                  matchExpressions:
+                    - key: app
+                      operator: In
+                      values:
+                        - open-web-ui
+                topologyKey: "kubernetes.io/hostname"
         ollama:
           enabled: false
         openaiBaseApiUrl: "http://litellm:4000"
@@ -145,15 +163,39 @@ spec:
           enabled: true
           enableSignup: true
           mergeAccountsByEmail: true
-          #enableRoleManagement: true
-          #enableGroupManagement: true
         pipelines:
+          replicaCount: 2
+          podLabels:
+            app: dep-for-pipeline
+          affinity:
+            podAntiAffinity:
+              requiredDuringSchedulingIgnoredDuringExecution:
+                - labelSelector:
+                    matchExpressions:
+                      - key: app
+                        operator: In
+                        values:
+                          - dep-for-pipeline
+                  topologyKey: "kubernetes.io/hostname"
           persistence:
             enabled: true
             size: 10Gi
-            storageClass: ai-ebs
+            storageClass: ai-efs
+            accessModes:
+              - ReadWriteMany
         tika:
           enabled: true
+          replicaCount: 2
+          affinity:
+            podAntiAffinity:
+              requiredDuringSchedulingIgnoredDuringExecution:
+                - labelSelector:
+                    matchExpressions:
+                      - key: "app.kubernetes.io/name"
+                        operator: In
+                        values:
+                          - tika
+                  topologyKey: "kubernetes.io/hostname"
         extraInitContainers:
           - name: init-db-schema
             image: alpine/psql
@@ -188,4 +230,4 @@ spec:
       prune: true
       selfHeal: true
 
-  revisionHistoryLimit: 4
+  revisionHistoryLimit: 3

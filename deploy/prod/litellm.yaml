@@ -19,8 +19,7 @@ spec:
         envVars:
           {
             USE_DDTRACE: "true",
-            OLLAMA_BASE_URL: "http://ollama:11434",
-            CODELAMA_BASE_URL: "http://codelama-ollama:11434",
+            LITELLM_MODE: "production",
           }
 
         # if set, use this secret for the master key; otherwise, autogenerate a new one
@@ -28,10 +27,21 @@ spec:
 
         # if set, use this secret key for the master key; otherwise, use the default key
         masterkeySecretKey: "master_key"
+        
+        affinity:
+          podAntiAffinity:
+            requiredDuringSchedulingIgnoredDuringExecution:
+              - labelSelector:
+                  matchExpressions:
+                    - key: "app.kubernetes.io/name"
+                      operator: In
+                      values:
+                        - litellm
+                topologyKey: "kubernetes.io/hostname"
 
         autoscaling:
           enabled: true
-          maxReplicas: 2
+          maxReplicas: 3
 
         environmentSecrets:
           - litellm-rds-secret
@@ -40,6 +50,11 @@ spec:
           - litellm-anthropic-api-key
           - litellm-groq-api-key
           - litellm-redis-secret
+          - litellm-fireworks-api-key
+          - litellm-deepgram-api-key
+          - litellm-deepseek-api-key
+          - litellm-togetherai-api-key
+          - litellm-voyage-api-key
         environmentConfigMaps:
           - litellm-db-config
 
@@ -137,17 +152,24 @@ spec:
                 model: gemini/gemini-2.0-flash-lite-preview-02-05
               model_info:
                 mode: completion
+            - model_name: gemini-embedding-exp
+              litellm_params:
+                model: gemini/gemini-embedding-exp
+            - model_name: imagen-3.0-generate-002
+              litellm_params:
+                model: gemini/imagen-3.0-generate-002
+              model_info:
+                mode: image_generation
 
-            - model_name: claude-3-5-sonnet
+            - model_name: claude-3-7-sonnet-20250219
+              litellm_params:
+                model: anthropic/claude-3-7-sonnet-20250219
+            - model_name: laude-3-5-sonnet-20240620
               litellm_params:
                 model: anthropic/claude-3-5-sonnet-20240620
-              model_info:
-                mode: completion # Assuming it's a text-based model
-            - model_name: claude-3
+            - model_name: claude-3-opus-20240229
               litellm_params:
                 model: anthropic/claude-3-opus-20240229
-              model_info:
-                mode: completion # Assuming it's a text-based model
 
             - model_name: qwen-qwq-32b
               litellm_params:
@@ -158,29 +180,108 @@ spec:
             - model_name: mistral-saba-24b
               litellm_params:
                 model: groq/mistral-saba-24b
+            - model_name: llama3.1-8b
+              litellm_params:
+                model: groq/llama-3.1-8b-instant
+            - model_name: llama3-70b
+              litellm_params:
+                model: groq/llama-3.3-70b-versatile
+            - model_name: gemma2-9b-it
+              litellm_params:
+                model: groq/gemma2-9b-it
 
-            - model_name: gemma3
+            - model_name: llama-v3p3-70b-instruct
               litellm_params:
-                model: ollama/gemma3:27b-it-qat
-                api_base: "os.environ/OLLAMA_BASE_URL"
+                model: fireworks_ai/accounts/fireworks/models/llama-v3p3-70b-instruct
+                api_key: os.environ/FIREWORKS_AI_API_KEY
+            - model_name: llama-v3p1-8b-instruct
+              litellm_params:
+                model: fireworks_ai/accounts/fireworks/models/llama-v3p1-8b-instruct
+                api_key: os.environ/FIREWORKS_AI_API_KEY
+            - model_name: llama-v3p2-3b-instruct
+              litellm_params:
+                model: fireworks_ai/accounts/fireworks/models/llama-v3p2-3b-instruct
+                api_key: os.environ/FIREWORKS_AI_API_KEY
+                
+            - model_name: nova-3
+              litellm_params:
+                model: deepgram/nova-3
+                api_key: os.environ/DEEPGRAM_API_KEY
+              model_info:
+                mode: audio_transcription
+            - model_name: nova-2
+              litellm_params:
+                model: deepgram/nova-2
+                api_key: os.environ/DEEPGRAM_API_KEY
+              model_info:
+                mode: audio_transcription
+            - model_name: aura-2
+              litellm_params:
+                model: deepgram/aura-2
+                api_key: os.environ/DEEPGRAM_API_KEY
+              model_info:
+                mode: audio_speech
+                
+            - model_name: deepseek-reasoner
+              litellm_params:
+                model: deepseek/deepseek-reasoner
+                api_key: os.environ/DEEPSEEK_API_KEY
+            - model_name: deepseek-coder
+              litellm_params:
+                model: deepseek/deepseek-coder
+                api_key: os.environ/DEEPSEEK_API_KEY
+            - model_name: deepseek-chat
+              litellm_params:
+                model: deepseek/deepseek-chat
+                api_key: os.environ/DEEPSEEK_API_KEY
 
-            - model_name: deepseek-coder-v2
+            - model_name: Salesforce/Llama-Rank-V1
               litellm_params:
-                model: ollama/deepseek-coder-v2:16b-lite-base-q8_0
-                api_base: "os.environ/CODELAMA_BASE_URL"
-            - model_name: llama3.1
+                model: together_ai/Salesforce/Llama-Rank-V1
+                api_key: os.environ/TOGETHERAI_API_KEY
+            - model_name: CodeLlama-34b-Instruct
               litellm_params:
-                model: ollama/llama3.1:8b
-                api_base: "os.environ/CODELAMA_BASE_URL"
-            - model_name: mistral
+                model: together_ai/togethercomputer/CodeLlama-34b-Instruct
+                api_key: os.environ/TOGETHERAI_API_KEY
+            - model_name: CodeLlama-34b
               litellm_params:
-                model: ollama/mistral:7b
-                api_base: "os.environ/CODELAMA_BASE_URL"
-            - model_name: nomic-embed-text
+                model: together_ai/togethercomputer/CodeLlama-34b
+                api_key: os.environ/TOGETHERAI_API_KEY
+                
+            - model_name: voyage-3-large
               litellm_params:
-                model: ollama/nomic-embed-text
-                api_base: "os.environ/CODELAMA_BASE_URL"
-
+                model: voyage/voyage-3-large
+                api_key: os.environ/VOYAGE_API_KEY
+              model_info:
+                mode: embedding
+            - model_name: voyage-code-3
+              litellm_params:
+                model: voyage/voyage-code-3
+                api_key: os.environ/VOYAGE_API_KEY
+              model_info:
+                mode: embedding
+            - model_name: voyage-3
+              litellm_params:
+                model: voyage/voyage-3
+                api_key: os.environ/VOYAGE_API_KEY
+              model_info:
+                mode: embedding
+            - model_name: voyage-3-lite
+              litellm_params:
+                model: voyage/voyage-3-lite
+                api_key: os.environ/VOYAGE_API_KEY
+              model_info:
+                mode: embedding
+            - model_name: rerank-2
+              litellm_params:
+                model: voyage/rerank-2
+                api_key: os.environ/VOYAGE_API_KEY
+            - model_name: rerank-2-lite
+              litellm_params:
+                model: voyage/rerank-2-lite
+                api_key: os.environ/VOYAGE_API_KEY
+                
+                
   destination:
     server: https://kubernetes.default.svc
     namespace: kivoyo
@@ -190,4 +291,4 @@ spec:
       prune: true
       selfHeal: true
 
-  revisionHistoryLimit: 10
+  revisionHistoryLimit: 3

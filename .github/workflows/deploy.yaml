@@ -61,6 +61,11 @@ jobs:
           echo "TF_VAR_anthropic_key=${{ secrets.ANTHROPIC_KEY }}" >> $GITHUB_ENV
           echo "TF_VAR_gemini_key=${{ secrets.GEMINI_KEY }}" >> $GITHUB_ENV
           echo "TF_VAR_openapi_key=${{ secrets.OPENAPI_KEY }}" >> $GITHUB_ENV
+          echo "TF_VAR_fireworks_ai_api_key=${{ secrets.FIREWORKS_AI_API_KEY }}" >> $GITHUB_ENV
+          echo "TF_VAR_deepgram_api_key=${{ secrets.DEEPGRAM_API_KEY }}" >> $GITHUB_ENV
+          echo "TF_VAR_deepseek_api_key=${{ secrets.DEEPSEEK_API_KEY }}" >> $GITHUB_ENV
+          echo "TF_VAR_togetherai_api_key=${{ secrets.TOGETHERAI_API_KEY }}" >> $GITHUB_ENV
+          echo "TF_VAR_voyage_api_key=${{ secrets.VOYAGE_API_KEY }}" >> $GITHUB_ENV
 
       - name: Terraform Init
         run: |
