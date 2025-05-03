@@ -247,6 +247,10 @@ spec:
               litellm_params:
                 model: together_ai/togethercomputer/CodeLlama-34b
                 api_key: os.environ/TOGETHERAI_API_KEY
+            - model_name: Qwen2.5-Coder-32B-Instruct
+              litellm_params:
+                model: together_ai/Qwen/Qwen2.5-Coder-32B-Instruct
+                api_key: os.environ/TOGETHERAI_API_KEY
                 
             - model_name: voyage-3-large
               litellm_params:
