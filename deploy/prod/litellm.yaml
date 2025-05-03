@@ -164,19 +164,34 @@ spec:
             - model_name: claude-3-7-sonnet-20250219
               litellm_params:
                 model: anthropic/claude-3-7-sonnet-20250219
+                drop_params: true
+              model_info:
+                supports_function_calling: true
             - model_name: laude-3-5-sonnet-20240620
               litellm_params:
                 model: anthropic/claude-3-5-sonnet-20240620
+                drop_params: true
+              model_info:
+                supports_function_calling: true
             - model_name: claude-3-opus-20240229
               litellm_params:
                 model: anthropic/claude-3-opus-20240229
+                drop_params: true
+              model_info:
+                supports_function_calling: true
 
             - model_name: qwen-qwq-32b
               litellm_params:
                 model: groq/qwen-qwq-32b
+                drop_params: true
+              model_info:
+                supports_function_calling: true
             - model_name: deepseek-r1-distill-llama-70b
               litellm_params:
                 model: groq/deepseek-r1-distill-llama-70b
+                drop_params: true
+              model_info:
+                supports_function_calling: true
             - model_name: mistral-saba-24b
               litellm_params:
                 model: groq/mistral-saba-24b
@@ -189,19 +204,31 @@ spec:
             - model_name: gemma2-9b-it
               litellm_params:
                 model: groq/gemma2-9b-it
+                drop_params: true
+              model_info:
+                supports_function_calling: true
 
             - model_name: llama-v3p3-70b-instruct
               litellm_params:
                 model: fireworks_ai/accounts/fireworks/models/llama-v3p3-70b-instruct
                 api_key: os.environ/FIREWORKS_AI_API_KEY
+                drop_params: true
+              model_info:
+                supports_function_calling: true
             - model_name: llama-v3p1-8b-instruct
               litellm_params:
                 model: fireworks_ai/accounts/fireworks/models/llama-v3p1-8b-instruct
                 api_key: os.environ/FIREWORKS_AI_API_KEY
+                drop_params: true
+              model_info:
+                supports_function_calling: true
             - model_name: llama-v3p2-3b-instruct
               litellm_params:
                 model: fireworks_ai/accounts/fireworks/models/llama-v3p2-3b-instruct
                 api_key: os.environ/FIREWORKS_AI_API_KEY
+                drop_params: true
+              model_info:
+                supports_function_calling: true
                 
 #            - model_name: nova-3
 #              litellm_params:
@@ -239,18 +266,13 @@ spec:
               litellm_params:
                 model: together_ai/Salesforce/Llama-Rank-V1
                 api_key: os.environ/TOGETHERAI_API_KEY
-            - model_name: CodeLlama-34b-Instruct
-              litellm_params:
-                model: together_ai/togethercomputer/CodeLlama-34b-Instruct
-                api_key: os.environ/TOGETHERAI_API_KEY
-            - model_name: CodeLlama-34b
-              litellm_params:
-                model: together_ai/togethercomputer/CodeLlama-34b
-                api_key: os.environ/TOGETHERAI_API_KEY
             - model_name: Qwen2.5-Coder-32B-Instruct
               litellm_params:
                 model: together_ai/Qwen/Qwen2.5-Coder-32B-Instruct
                 api_key: os.environ/TOGETHERAI_API_KEY
+                drop_params: true
+              model_info:
+                supports_function_calling: true
                 
             - model_name: voyage-3-large
               litellm_params:
