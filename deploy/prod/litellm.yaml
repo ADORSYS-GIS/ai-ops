@@ -215,12 +215,12 @@ spec:
 #                api_key: os.environ/DEEPGRAM_API_KEY
 #              model_info:
 #                mode: audio_transcription
-            - model_name: aura-2
-              litellm_params:
-                model: deepgram/aura-2
-                api_key: os.environ/DEEPGRAM_API_KEY
-              model_info:
-                mode: audio_speech
+#            - model_name: aura-2
+#              litellm_params:
+#                model: deepgram/aura-2
+#                api_key: os.environ/DEEPGRAM_API_KEY
+#              model_info:
+#                mode: audio_speech
                 
             - model_name: deepseek-reasoner
               litellm_params:
