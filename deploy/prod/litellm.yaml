@@ -203,12 +203,18 @@ spec:
                 model: fireworks_ai/accounts/fireworks/models/llama-v3p2-3b-instruct
                 api_key: os.environ/FIREWORKS_AI_API_KEY
                 
-            - model_name: nova-2
-              litellm_params:
-                model: deepgram/nova-2
-                api_key: os.environ/DEEPGRAM_API_KEY
-              model_info:
-                mode: audio_transcription
+#            - model_name: nova-3
+#              litellm_params:
+#                model: deepgram/nova-3
+#                api_key: os.environ/DEEPGRAM_API_KEY
+#              model_info:
+#                mode: audio_transcription
+#            - model_name: nova-2
+#              litellm_params:
+#                model: deepgram/nova-2
+#                api_key: os.environ/DEEPGRAM_API_KEY
+#              model_info:
+#                mode: audio_transcription
             - model_name: aura-2
               litellm_params:
                 model: deepgram/aura-2
