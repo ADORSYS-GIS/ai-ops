@@ -187,7 +187,7 @@ variable "togetherai_api_key" {
   sensitive   = true
   description = "TogetherAI API Key"
 }
-variable "voyage_api_key_key" {
+variable "voyage_api_key" {
   type        = string
   sensitive   = true
   description = "Voyage API Key"

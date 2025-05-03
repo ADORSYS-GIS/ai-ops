@@ -109,7 +109,7 @@ resource "kubernetes_secret" "litellm_voyage_api_key" {
     namespace = local.namespace
   }
   data = {
-    VOYAGE_API_KEY = var.voyage_api_key_key
+    VOYAGE_API_KEY = var.voyage_api_key
   }
 
   depends_on = [kubernetes_namespace.litellm_namespace]
