@@ -103,15 +103,27 @@ spec:
             - model_name: gpt-4o-mini
               litellm_params:
                 model: openai/gpt-4o-mini-2024-07-18
+                drop_params: true
+              model_info:
+                supports_function_calling: true
             - model_name: o-mini
               litellm_params:
                 model: openai/o4-mini
+                drop_params: true
+              model_info:
+                supports_function_calling: true
             - model_name: o3-mini
               litellm_params:
                 model: openai/o3-mini
+                drop_params: true
+              model_info:
+                supports_function_calling: true
             - model_name: gpt-4.1
               litellm_params:
                 model: openai/gpt-4.1
+                drop_params: true
+              model_info:
+                supports_function_calling: true
             - model_name: text-embedding-3-small
               litellm_params:
                 model: openai/text-embedding-3-small
