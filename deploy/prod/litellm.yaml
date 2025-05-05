@@ -154,6 +154,18 @@ spec:
               model_info:
                 mode: audio_speech
 
+            - model_name: gemini-2.5-flash-preview-04-17
+              litellm_params:
+                model: gemini/gemini-2.5-flash-preview-04-17
+                drop_params: true
+              model_info:
+                supports_function_calling: true
+            - model_name: gemini-2.5-pro-preview-03-25
+              litellm_params:
+                model: gemini/gemini-2.5-pro-preview-03-25
+                drop_params: true
+              model_info:
+                supports_function_calling: true
             - model_name: gemini-2.0-flash
               litellm_params:
                 model: gemini/gemini-2.0-flash
@@ -237,6 +249,20 @@ spec:
             - model_name: llama-v3p2-3b-instruct
               litellm_params:
                 model: fireworks_ai/accounts/fireworks/models/llama-v3p2-3b-instruct
+                api_key: os.environ/FIREWORKS_AI_API_KEY
+                drop_params: true
+              model_info:
+                supports_function_calling: true
+            - model_name: qwen3-235b-a22b
+              litellm_params:
+                model: fireworks_ai/accounts/fireworks/models/qwen3-235b-a22b
+                api_key: os.environ/FIREWORKS_AI_API_KEY
+                drop_params: true
+              model_info:
+                supports_function_calling: true
+            - model_name: llama4-maverick-instruct-basic
+              litellm_params:
+                model: fireworks_ai/accounts/fireworks/models/llama4-maverick-instruct-basic
                 api_key: os.environ/FIREWORKS_AI_API_KEY
                 drop_params: true
               model_info:
