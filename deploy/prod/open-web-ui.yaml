@@ -15,6 +15,7 @@ spec:
         nameOverride: web
         replicaCount: 2
         image:
+          tag: "latest"
           pullPolicy: "Always"
         persistence:
           enabled: true
