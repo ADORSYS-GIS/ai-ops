@@ -52,6 +52,21 @@ entries:
   mcpo:
   - apiVersion: v2
     appVersion: 1.16.0
+    created: "2025-05-08T11:31:23.966212334Z"
+    dependencies:
+    - alias: mcpo
+      name: app-template
+      repository: https://bjw-s-labs.github.io/helm-charts
+      version: 3.7.3
+    description: A Helm chart for Kubernetes
+    digest: 43d95c3925b4e8db9b659f1783ac21aa689792540a6d0b7713dd8703cc2bbc48
+    name: mcpo
+    type: application
+    urls:
+    - https://github.com/ADORSYS-GIS/ai-ops/releases/download/mcpo-0.1.2/mcpo-0.1.2.tgz
+    version: 0.1.2
+  - apiVersion: v2
+    appVersion: 1.16.0
     created: "2025-05-08T11:24:15.134529221Z"
     dependencies:
     - alias: mcpo
@@ -167,4 +182,4 @@ entries:
     urls:
     - https://github.com/ADORSYS-GIS/ai-ops/releases/download/pipelines-0.5.0/pipelines-0.5.0.tgz
     version: 0.5.0
-generated: "2025-05-08T11:24:15.349095968Z"
+generated: "2025-05-08T11:31:23.966227673Z"
