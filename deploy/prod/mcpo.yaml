@@ -34,7 +34,7 @@ spec:
                         "command": "uvx",
                         "args": [
                           "mcp-server-time",
-                          "--local-timezone=America/New_York"
+                          "--local-timezone=Europe/Berlin"
                         ]
                       },
                       "fetch": {
@@ -64,7 +64,7 @@ spec:
                           "@modelcontextprotocol/server-google-maps"
                         ],
                         "env": {
-                          "GOOGLE_MAPS_API_KEY": "${input:maps_api_key}"
+                          "GOOGLE_MAPS_API_KEY": "AIzaSyAHqvuM_5b4-4OcIozGgyuykuIu45zJF6c"
                         }
                       },
                       "brave-search": {
@@ -74,15 +74,14 @@ spec:
                           "@modelcontextprotocol/server-brave-search"
                         ],
                         "env": {
-                          "BRAVE_API_KEY": "YOUR_API_KEY_HERE"
+                          "BRAVE_API_KEY": "BSAjAi0VA84_MVmPOrxsWAY_q215xxL"
                         }
                       },
                       "playwright": {
                         "command": "npx",
                         "args": [
                           "@playwright/mcp@latest",
-                          "--headless",
-                          "--vision"
+                          "--config /tmp/playwright.json"
                         ]
                       },
                       "npm-search": {
@@ -108,6 +107,14 @@ spec:
               labels:
                 main: main-app
               containers:
+                playwright:
+                  resources:
+                    requests:
+                      cpu: 1000m
+                      memory: 1024Mi
+                    limits:
+                      cpu: 2000m
+                      memory: 4096Mi
                 mcpo:
                   resources:
                     requests:

@@ -34,18 +34,39 @@ mcpo:
               cpu: 400m
               memory: 512Mi
           
-          # -- ConfigMap to be loaded as environment variables
           envFrom:
-            - configMapRef:
-                name: '{{ .Release.Name }}-config'
             - secretRef:
                 name: '{{ .Release.Name }}-api-key'
+    playwright:
+      type: deployment
+      replicas: 1
+      labels:
+        playwright: playwright-app
+      containers:
+        mcpo:
+          image:
+            repository: mcr.microsoft.com/playwright
+            tag: v1.52.0-noble
+          
+          command: /bin/sh
+          
+          args:
+            - -c
+            - |
+              npx -y playwright@1.52.0 run-server --port 3000 --host 0.0.0.0
+          
+          resources:
+            requests:
+              cpu: 125m
+              memory: 256Mi
+            limits:
+              cpu: 400m
+              memory: 512Mi
   
   service:
     app:
       enabled: true
       annotations: { }
-      nameOverride: service
       type: ClusterIP
       controller: main
       ports:
@@ -53,12 +74,21 @@ mcpo:
           enabled: true
           port: 8000
           targetPort: 8000
+    playwright:
+      enabled: true
+      annotations: { }
+      type: ClusterIP
+      controller: playwright
+      ports:
+        http:
+          enabled: true
+          port: 3000
+          targetPort: 3000
   
   ingress:
     app:
       enabled: false
       annotations: { }
-      nameOverride: ingress
       #className: 'nginx'
       hosts:
         - host: mcpo.example.com
@@ -79,6 +109,16 @@ mcpo:
       annotations:
         description: 'Common configuration for the MCPo.'
       data:
+        "playwright.json": |
+          {
+            "browser": {
+              "remoteEndpoint": "{{ .Release.Name }}-playwright:3000",
+              "launchOptions": {
+                "headless": true
+              }
+            },
+            "vision": true
+          }
         "config.json": |
           {}
   
@@ -88,7 +128,7 @@ mcpo:
       annotations:
         description: 'Api-Key configuration for the MCPo.'
       stringData:
-        API_KEY: 'minio'
+        API_KEY: "minio"
   
   networkpolicies:
     main:
@@ -105,3 +145,33 @@ mcpo:
             ports:
               - protocol: TCP
                 port: 8000
+    playwright:
+      enabled: true
+      controller: playwright
+      policyTypes:
+        - Ingress
+      rules:
+        ingress:
+          - from:
+              - podSelector:
+                  matchLabels:
+                    app: playwright
+            ports:
+              - protocol: TCP
+                port: 3000
+                
+  persistence:
+    config:
+      enabled: true
+      type: configMap
+      name: '{{ .Release.Name }}-config'
+      advancedMounts:
+        main:
+          mcpo:
+            - path: /tmp/config.json
+              readOnly: true
+              subPath: config.json
+            - path: /tmp/playwright.json
+              readOnly: true
+              subPath: playwright.json
+  
