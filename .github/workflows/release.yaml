@@ -31,6 +31,7 @@ jobs:
           helm repo add ollama-helm https://otwld.github.io/ollama-helm
           helm repo add openwebui https://helm.openwebui.com
           helm repo add apache https://apache.jfrog.io/artifactory/tika
+          helm repo add bjw-s https://bjw-s-labs.github.io/helm-charts
           helm repo update
 
       - name: Run chart-releaser
