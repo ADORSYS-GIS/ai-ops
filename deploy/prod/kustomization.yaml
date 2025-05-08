@@ -7,3 +7,4 @@ resources:
   - ollama-pvc.yaml
   - open-web-ui.yaml
   - adminer.yaml
+  - mcpo.yaml

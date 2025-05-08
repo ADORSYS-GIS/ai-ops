@@ -1,0 +1,133 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: mcpo
+  namespace: argocd
+spec:
+  project: application
+  source:
+    repoURL: https://adorsys-gis.github.io/ai-ops
+    chart: mcpo
+    targetRevision: 0.1.0
+    helm:
+      releaseName: mcpo
+      valuesObject:
+        global:
+          version: "main"
+          labels:
+            team: adorsys-gis
+        mcpo:
+          configMaps:
+            config:
+              data:
+                "config.json": |
+                  {
+                    "mcpServers": {
+                      "memory": {
+                        "command": "npx",
+                        "args": [
+                          "-y",
+                          "@modelcontextprotocol/server-memory"
+                        ]
+                      },
+                      "time": {
+                        "command": "uvx",
+                        "args": [
+                          "mcp-server-time",
+                          "--local-timezone=America/New_York"
+                        ]
+                      },
+                      "fetch": {
+                        "command": "uvx",
+                        "args": [
+                          "mcp-server-fetch"
+                        ]
+                      },
+                      "puppeteer": {
+                        "command": "uvx",
+                        "args": [
+                          "-y",
+                          "@modelcontextprotocol/server-puppeteer"
+                        ]
+                      },
+                      "sequential-thinking": {
+                        "command": "npx",
+                        "args": [
+                          "-y",
+                          "@modelcontextprotocol/server-sequential-thinking"
+                        ]
+                      },
+                      "google-maps": {
+                        "command": "npx",
+                        "args": [
+                          "-y",
+                          "@modelcontextprotocol/server-google-maps"
+                        ],
+                        "env": {
+                          "GOOGLE_MAPS_API_KEY": "${input:maps_api_key}"
+                        }
+                      },
+                      "brave-search": {
+                        "command": "npx",
+                        "args": [
+                          "-y",
+                          "@modelcontextprotocol/server-brave-search"
+                        ],
+                        "env": {
+                          "BRAVE_API_KEY": "YOUR_API_KEY_HERE"
+                        }
+                      },
+                      "playwright": {
+                        "command": "npx",
+                        "args": [
+                          "@playwright/mcp@latest",
+                          "--headless",
+                          "--vision"
+                        ]
+                      },
+                      "npm-search": {
+                        "command": "uvx",
+                        "args": [
+                          "npm-search-mcp-server"
+                        ]
+                      },
+                      "mcp-server-chart": {
+                        "command": "npx",
+                        "args": [
+                          "-y",
+                          "@antv/mcp-server-chart"
+                        ]
+                      }
+                    }
+                  }
+                  
+          controllers:
+            main:
+              type: deployment
+              replicas: 1
+              labels:
+                main: main-app
+              containers:
+                mcpo:
+                  resources:
+                    requests:
+                      cpu: 1000m
+                      memory: 1024Mi
+                    limits:
+                      cpu: 2000m
+                      memory: 4096Mi
+                  secrets:
+                    api-key:
+                      stringData:
+                        API_KEY: 'TiDjuwYUwviEqEqzvSE216Tsp5ua9poN'
+
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: kivoyo
+
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+
+  revisionHistoryLimit: 3
