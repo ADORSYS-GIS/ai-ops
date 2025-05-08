@@ -114,7 +114,7 @@ mcpo:
         "playwright.json": |
           {
             "browser": {
-              "remoteEndpoint": "{{ .Release.Name }}-playwright:3000",
+              "remoteEndpoint": "ws://{{ .Release.Name }}-playwright:3000",
               "launchOptions": {
                 "headless": true
               }
