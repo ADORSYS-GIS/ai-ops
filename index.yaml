@@ -49,6 +49,22 @@ entries:
     urls:
     - https://github.com/ADORSYS-GIS/ai-ops/releases/download/litellm-0.1.0/litellm-0.1.0.tgz
     version: 0.1.0
+  mcpo:
+  - apiVersion: v2
+    appVersion: 1.16.0
+    created: "2025-05-08T11:24:15.134529221Z"
+    dependencies:
+    - alias: mcpo
+      name: app-template
+      repository: https://bjw-s-labs.github.io/helm-charts
+      version: 3.7.3
+    description: A Helm chart for Kubernetes
+    digest: f417d942835f73aea6f3026688bc14b604307a2c68271d88fbfcc7beeb46db13
+    name: mcpo
+    type: application
+    urls:
+    - https://github.com/ADORSYS-GIS/ai-ops/releases/download/mcpo-0.1.1/mcpo-0.1.1.tgz
+    version: 0.1.1
   open-webui:
   - apiVersion: v2
     appVersion: 0.6.1
@@ -151,4 +167,4 @@ entries:
     urls:
     - https://github.com/ADORSYS-GIS/ai-ops/releases/download/pipelines-0.5.0/pipelines-0.5.0.tgz
     version: 0.5.0
-generated: "2025-04-11T08:59:51.140189108Z"
+generated: "2025-05-08T11:24:15.349095968Z"
