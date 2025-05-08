@@ -1,14 +1,10 @@
 global:
-  version: "latest"
+  apiKey: "latest"
+  version: "git-e37d0eb"
   labels:
     app: mcpo
 
 mcpo:
-  defaultPodOptions:
-    securityContext:
-      runAsUser: 1000
-      runAsGroup: 1000
-  
   controllers:
     main:
       type: deployment
@@ -21,11 +17,15 @@ mcpo:
           image:
             repository: ghcr.io/open-webui/mcpo
             tag: "{{ .Values.global.version }}"
-            pullPolicy: Always
+            pullPolicy: IfNotPresent
+          
+          command: /bin/sh
           
           args:
-            - --api-key $API_KEY
-            - --config /tmp/config.json
+            - -c
+            - |
+              set -e
+              mcpo --api-key $API_KEY --config=/tmp/config.json
           
           resources:
             requests:
@@ -66,7 +66,7 @@ mcpo:
               memory: 512Mi
   
   service:
-    app:
+    mcpo:
       enabled: true
       annotations: { }
       type: ClusterIP
@@ -88,8 +88,8 @@ mcpo:
           targetPort: 3000
   
   ingress:
-    app:
-      enabled: false
+    mcpo:
+      enabled: true
       annotations: { }
       #className: 'nginx'
       hosts:
@@ -98,7 +98,7 @@ mcpo:
             - path: /
               pathType: Prefix
               service:
-                identifier: app
+                identifier: mcpo
                 port: http
       tls:
         - secretName: mcpo-example-com-secret
