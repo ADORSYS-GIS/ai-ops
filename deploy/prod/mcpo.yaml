@@ -8,7 +8,7 @@ spec:
   source:
     repoURL: https://adorsys-gis.github.io/ai-ops
     chart: mcpo
-    targetRevision: 0.1.1
+    targetRevision: 0.1.2
     helm:
       releaseName: mcpo
       valuesObject:
@@ -101,11 +101,7 @@ spec:
                   }
                   
           controllers:
-            main:
-              type: deployment
-              replicas: 1
-              labels:
-                main: main-app
+            playwright:
               containers:
                 playwright:
                   resources:
@@ -115,6 +111,8 @@ spec:
                     limits:
                       cpu: 2000m
                       memory: 4096Mi
+            main:
+              containers:
                 mcpo:
                   resources:
                     requests:

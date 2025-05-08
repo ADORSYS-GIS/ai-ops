@@ -12,6 +12,7 @@ mcpo:
   controllers:
     main:
       type: deployment
+      strategy: Recreate
       replicas: 1
       labels:
         main: main-app
@@ -39,11 +40,12 @@ mcpo:
                 name: '{{ .Release.Name }}-api-key'
     playwright:
       type: deployment
+      strategy: Recreate
       replicas: 1
       labels:
         playwright: playwright-app
       containers:
-        mcpo:
+        playwright:
           image:
             repository: mcr.microsoft.com/playwright
             tag: v1.52.0-noble
