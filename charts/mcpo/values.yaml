@@ -166,7 +166,7 @@ mcpo:
     config:
       enabled: true
       type: configMap
-      name: '{{ .Release.Name }}-config'
+      identifier: config
       advancedMounts:
         main:
           mcpo:
