@@ -126,7 +126,9 @@ module "eks_blueprints_addons" {
   karpenter = {
     chart_version = "1.4.0"
     wait          = true
-    wait_for_jobs          = true
+    wait_for_jobs = true
+    replace       = true
+    force_update  = true
   }
 
   karpenter_enable_spot_termination = true
