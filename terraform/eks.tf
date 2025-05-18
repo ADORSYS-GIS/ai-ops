@@ -120,6 +120,10 @@ module "eks_blueprints_addons" {
   enable_cluster_autoscaler           = true
   enable_aws_load_balancer_controller = true
   enable_aws_efs_csi_driver           = true
+  enable_karpenter                    = true
+  enable_ingress_nginx                = true
+
+  karpenter_enable_spot_termination = true
 
   eks_addons = {
     aws-ebs-csi-driver = {
@@ -171,12 +175,12 @@ module "eks_blueprints_addons" {
 
   argocd = {
     name          = "argocd"
-    chart_version = "7.8.19"
+    chart_version = "8.0.3"
     repository    = "https://argoproj.github.io/argo-helm"
     namespace     = "argocd"
     values = [
       templatefile("${path.module}/files/argocd-values.yaml", {
-        domain                = local.argocdDomain,
+        domain                = "${local.argocdDomain}",
         name                  = local.name,
         certArn               = var.cert_arn,
         oidc_kc_client_id     = var.oidc_kc_client_id,

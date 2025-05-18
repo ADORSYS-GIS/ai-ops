@@ -133,6 +133,104 @@ resources:
       # circumstances. Setting to zero will store no history. This will reduce storage used. Increasing will increase the
       # space used to store the history, so we do not recommend increasing it.
       revisionHistoryLimit: 3
+  
+  - apiVersion: argoproj.io/v1alpha1
+    kind: Application
+    metadata:
+      name: kubeai
+      # You'll usually want to add your resources to the argocd namespace.
+      namespace: argocd
+      # Add this finalizer ONLY if you want these to cascade delete.
+      finalizers:
+        - resources-finalizer.argocd.argoproj.io
+      annotations:
+        deployment-date: ${deployment-date}
+    spec:
+      # The project the application belongs to.
+      project: default
+    
+      # Source of the application manifests
+      source:
+        repoURL: https://www.kubeai.org
+        chart: kubeai
+        targetRevision: 0.20.0
+        helm:
+          valuesObject:
+            resources:
+              # We usually recommend not to specify default resources and to leave this as a conscious
+              # choice for the user. This also increases chances charts run on environments with little
+              # resources, such as Minikube. If you do want to specify resources, uncomment the following
+              # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+              limits:
+                cpu: 100m
+                memory: 128Mi
+              requests:
+                cpu: 100m
+                memory: 128Mi
+            secrets:
+              alibaba:
+                create: false
+              aws:
+                create: false
+              gcp:
+                create: false
+              huggingface:
+                create: true
+                name: ${hf-secret-name}
+            open-webui:
+              enabled: false
+            resourceProfiles:
+              nvidia-gpu-l4:
+                nodeSelector:
+                  karpenter.k8s.aws/instance-gpu-name: "l4"
+              nvidia-gpu-l40s:
+                nodeSelector:
+                  karpenter.k8s.aws/instance-gpu-name: "l40s"
+              nvidia-gpu-h100:
+                nodeSelector:
+                  karpenter.k8s.aws/instance-gpu-name: "h100"
+              nvidia-gpu-a100-80gb:
+                nodeSelector:
+                  karpenter.k8s.aws/instance-gpu-name: "a100"
+                  karpenter.k8s.aws/instance-gpu-memory: "81920"
+              nvidia-gpu-a100-40gb:
+                nodeSelector:
+                  karpenter.k8s.aws/instance-gpu-name: "a100"
+                  karpenter.k8s.aws/instance-gpu-memory: "40960"
+    
+            cacheProfiles:
+              efs-dynamic:
+                sharedFilesystem:
+                  storageClassName: "ai-efs"
+              efs-static:
+                sharedFilesystem:
+                  storageClassName: "ai-efs"
+    
+      # Destination cluster and namespace to deploy the application
+      destination:
+        server: https://kubernetes.default.svc
+        namespace: ${kubeai_ns}
+    
+      # Sync policy
+      syncPolicy:
+        automated: # automated sync by default retries failed attempts 5 times with following delays between attempts ( 5s, 10s, 20s, 40s, 80s ); retry controlled using `retry` field.
+          prune: true # Specifies if resources should be pruned during auto-syncing ( false by default ).
+          selfHeal: true # Specifies if partial app sync should be executed when resources are changed only in target Kubernetes cluster and no git change detected ( false by default ).
+          allowEmpty: false # Allows deleting all application resources during automatic syncing ( false by default ).
+    
+        # The retry feature is available since v1.7
+        retry:
+          limit: 5 # number of failed sync attempt retries; unlimited number of attempts if less than 0
+          backoff:
+            duration: 5s # the amount to back off. Default unit is seconds, but could also be a duration (e.g. "2m", "1h")
+            factor: 2 # a factor to multiply the base duration after each failed retry
+            maxDuration: 3m # the maximum amount of time allowed for the backoff strategy
+    
+      # RevisionHistoryLimit limits the number of items kept in the application's revision history, which is used for
+      # informational purposes as well as for rollbacks to previous versions. This should only be changed in exceptional
+      # circumstances. Setting to zero will store no history. This will reduce storage used. Increasing will increase the
+      # space used to store the history, so we do not recommend increasing it.
+      revisionHistoryLimit: 3
 
   - apiVersion: storage.k8s.io/v1
     kind: StorageClass

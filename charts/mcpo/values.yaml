@@ -1,6 +1,6 @@
 global:
   apiKey: "latest"
-  version: "git-e37d0eb"
+  version: "git-27af7a6"
   labels:
     app: mcpo
 

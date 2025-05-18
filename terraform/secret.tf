@@ -237,3 +237,15 @@ resource "kubernetes_secret" "open_web_ui_config" {
 
   depends_on = [kubernetes_namespace.litellm_namespace]
 }
+
+resource "kubernetes_secret" "kubeai-hg" {
+  metadata {
+    name      = "kubeai-hg"
+    namespace = local.kubeai_namespace
+  }
+  data = {
+    token = var.hg_api_key
+  }
+
+  depends_on = [kubernetes_namespace.kubeai_namespace]
+}

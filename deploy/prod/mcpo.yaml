@@ -57,26 +57,6 @@ spec:
                           "@modelcontextprotocol/server-sequential-thinking"
                         ]
                       },
-                      "google-maps": {
-                        "command": "npx",
-                        "args": [
-                          "-y",
-                          "@modelcontextprotocol/server-google-maps"
-                        ],
-                        "env": {
-                          "GOOGLE_MAPS_API_KEY": "AIzaSyAHqvuM_5b4-4OcIozGgyuykuIu45zJF6c"
-                        }
-                      },
-                      "brave-search": {
-                        "command": "npx",
-                        "args": [
-                          "-y",
-                          "@modelcontextprotocol/server-brave-search"
-                        ],
-                        "env": {
-                          "BRAVE_API_KEY": "BSAjAi0VA84_MVmPOrxsWAY_q215xxL"
-                        }
-                      },
                       "playwright": {
                         "command": "npx",
                         "args": [

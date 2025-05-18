@@ -198,6 +198,18 @@ variable "groq_api_key" {
   description = "Groq API Key"
 }
 
+variable "hg_api_key" {
+  type        = string
+  sensitive   = true
+  description = "Hugging's Face API Key"
+}
+
+variable "kubeai_ns" {
+  type        = string
+  description = "kubeai namespace"
+  default = "kubeai"
+}
+
 variable "capacity_type" {
   default = null
   description = "EC2 Capacity type"

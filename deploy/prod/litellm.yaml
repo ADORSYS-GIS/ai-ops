@@ -41,6 +41,7 @@ spec:
 
         autoscaling:
           enabled: true
+          minReplicas: 2
           maxReplicas: 3
 
         environmentSecrets:

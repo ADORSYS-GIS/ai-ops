@@ -7,6 +7,7 @@ locals {
 
   app_name  = "kivoyo"
   namespace = local.app_name
+  kubeai_namespace = var.kubeai_ns
 
   db_name = replace(local.name, "-", "_")
 
