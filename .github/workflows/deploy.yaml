@@ -66,6 +66,7 @@ jobs:
           echo "TF_VAR_deepseek_api_key=${{ secrets.DEEPSEEK_API_KEY }}" >> $GITHUB_ENV
           echo "TF_VAR_togetherai_api_key=${{ secrets.TOGETHERAI_API_KEY }}" >> $GITHUB_ENV
           echo "TF_VAR_voyage_api_key=${{ secrets.VOYAGE_API_KEY }}" >> $GITHUB_ENV
+          echo "TF_VAR_hg_api_key=${{ secrets.HF_TOKEN }}" >> $GITHUB_ENV
 
       - name: Terraform Init
         run: |
