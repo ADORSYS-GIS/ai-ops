@@ -3,3 +3,4 @@ kind: Kustomization
 
 resources:
   - models.yaml
+  - node-pool.yaml
