@@ -1,4 +1,4 @@
-apiVersion: karpenter.sh/v1beta1
+apiVersion: karpenter.sh/v1
 kind: NodePool
 metadata:
   name: gpu
@@ -24,5 +24,5 @@ spec:
   limits:
     cpu: 1000
   disruption:
-    consolidationPolicy: WhenEmpty | WhenEmpty
+    consolidationPolicy: WhenUnderutilized
     consolidateAfter: 1m

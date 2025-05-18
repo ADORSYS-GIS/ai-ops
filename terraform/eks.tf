@@ -122,6 +122,10 @@ module "eks_blueprints_addons" {
   enable_aws_efs_csi_driver           = true
   enable_karpenter                    = true
   enable_ingress_nginx                = true
+  
+  karpenter = {
+    chart_version = "1.4.0"
+  }
 
   karpenter_enable_spot_termination = true
 
