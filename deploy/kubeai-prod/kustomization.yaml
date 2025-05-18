@@ -5,3 +5,4 @@ resources:
   - models.yaml
   - node-pool.yaml
   - ec2-nodeclass.yaml
+  - aws-node-pool.yaml
