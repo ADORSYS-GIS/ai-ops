@@ -1,0 +1,50 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: gemma3-ollama
+  namespace: argocd
+spec:
+  project: application
+  source:
+    repoURL: https://www.kubeai.org
+    chart: models
+    targetRevision: 0.20.0
+    helm:
+      valuesObject:
+        catalog:
+          gemma-3-27b-ollama-l4:
+            enabled: true
+            #engine: VLLM
+            #resourceProfile: nvidia-gpu-l4:1
+            #minReplicas: 1 # by default this is 0
+          llama-3.1-8b-instruct-fp8-l4:
+            enabled: true
+          llama-4-maverick-430k-h100:
+            enabled: true
+          qwen3-235b-a22b-h100:
+            enabled: true
+            features: [ TextGeneration ]
+            url: hf://Qwen/Qwen3-235B-A22B
+            engine: VLLM
+            env:
+              VLLM_DISABLE_COMPILE_CACHE: "1"
+            args:
+              - --max-model-len=257000
+              - --tensor-parallel-size=8
+              - --enable-prefix-caching
+              - --disable-log-requests
+            resourceProfile: nvidia-gpu-h100:8
+          qwen2.5-coder-1.5b-rtx4070-8gb:
+            enabled: true
+  
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: kubeai
+  
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+  
+  revisionHistoryLimit: 3
