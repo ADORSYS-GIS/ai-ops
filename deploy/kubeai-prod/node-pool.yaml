@@ -1,7 +1,7 @@
 apiVersion: karpenter.sh/v1
 kind: NodePool
 metadata:
-  name: gpu
+  name: gpu-aws
 spec:
   template:
     spec:
