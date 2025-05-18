@@ -302,6 +302,14 @@ resources:
         repoURL: https://nvidia.github.io/k8s-device-plugin
         chart: nvidia-device-plugin
         targetRevision: 0.17.1
+        helm:
+          valuesObject:
+            gfd:
+              enabled: true
+            nfd:
+              enableNodeFeatureApi: true
+            devicePlugin:
+              enabled: true
     
       # Destination cluster and namespace to deploy the application
       destination:
