@@ -4,7 +4,7 @@ metadata:
   name: gpu
 spec:
   amiFamily: AL2 # Amazon Linux 2
-  role: "ai-prod-env-cluster-eks-cluster-20250408133810184000000002"
+  role: "karpenter-ai-prod-env-cluster-eks-20250518145939415500000002"
   subnetSelectorTerms:
     - tags:
         karpenter.sh/discovery: "ai-prod-env-cluster-eks"
