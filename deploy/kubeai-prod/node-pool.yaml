@@ -14,9 +14,7 @@ spec:
           values: ["g", "p"]
         - key: karpenter.k8s.aws/instance-gpu-name
           operator: In
-          values: 
-            - "rtx4070-8gb"
-            - "h100"
+          values: [ "rtx4070-8gb" ]
       nodeClassRef:
         group: karpenter.k8s.aws
         kind: EC2NodeClass
