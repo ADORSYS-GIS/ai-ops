@@ -300,7 +300,7 @@ resources:
       # Source of the application manifests
       source:
         repoURL: https://nvidia.github.io/k8s-device-plugin
-        chart: nvdp
+        chart: nvidia-device-plugin
         targetRevision: 0.17.1
     
       # Destination cluster and namespace to deploy the application
