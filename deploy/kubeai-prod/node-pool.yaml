@@ -6,20 +6,12 @@ spec:
   template:
     spec:
       requirements:
-        - key: karpenter.k8s.aws/instance-gpu
-          operator: Exists
+        - key: karpenter.sh/capacity-type
+          operator: In
+          values: [ "spot", "on-demand" ]
         - key: karpenter.k8s.aws/instance-category
           operator: In
           values: [ "g", "p" ]
-        - key: karpenter.k8s.aws/instance-generation
-          operator: Gt
-          values: [ "3" ]
-        - key: "cpu"
-          operator: Gt
-          values: [ "4" ]
-        - key: "memory"
-          operator: Gt
-          values: [ "16Gi" ]
       nodeClassRef:
         group: karpenter.k8s.aws
         kind: EC2NodeClass
