@@ -120,11 +120,13 @@ module "eks_blueprints_addons" {
   enable_cluster_autoscaler           = true
   enable_aws_load_balancer_controller = true
   enable_aws_efs_csi_driver           = true
-  enable_karpenter                    = true
+  enable_karpenter                    = false
   enable_ingress_nginx                = true
-  
+
   karpenter = {
     chart_version = "1.4.0"
+    wait          = true
+    wait_for_jobs          = true
   }
 
   karpenter_enable_spot_termination = true
