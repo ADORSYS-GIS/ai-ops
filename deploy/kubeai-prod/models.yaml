@@ -36,7 +36,7 @@ spec:
               - --disable-log-requests
             resourceProfile: nvidia-gpu-h100:8
           qwen2.5-coder-1.5b-rtx4070-8gb:
-            enabled: true
+            enabled: false
   
   destination:
     server: https://kubernetes.default.svc
