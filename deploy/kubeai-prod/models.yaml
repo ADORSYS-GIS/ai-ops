@@ -2,7 +2,7 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: gemma3-ollama
+  name: kubeai-models
   namespace: argocd
 spec:
   project: application
