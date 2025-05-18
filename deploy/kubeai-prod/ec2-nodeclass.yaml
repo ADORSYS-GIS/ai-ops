@@ -8,13 +8,9 @@ spec:
   subnetSelectorTerms:
     - tags:
         karpenter.sh/discovery: "ai-prod-env-cluster-eks"
-    - tags:
-        "Owner": "ai-prod-env-cluster"
   securityGroupSelectorTerms:
     - tags:
         karpenter.sh/discovery: "ai-prod-env-cluster-eks"
-    - tags:
-        "Owner": "ai-prod-env-cluster"
   amiSelectorTerms:
     - id: "ami-0684f6bedc6401b13" 
   blockDeviceMappings:
