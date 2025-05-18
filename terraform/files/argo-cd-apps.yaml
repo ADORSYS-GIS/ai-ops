@@ -305,7 +305,7 @@ resources:
         helm:
           valuesObject:
             gfd:
-              enabled: true
+              enabled: false
             nfd:
               enableNodeFeatureApi: true
             devicePlugin:
