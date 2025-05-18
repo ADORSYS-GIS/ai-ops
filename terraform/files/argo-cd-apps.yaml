@@ -216,13 +216,13 @@ resources:
                 memory: 128Mi
             secrets:
               alibaba:
-                create: false
-              aws:
-                create: false
-              gcp:
-                create: false
-              huggingface:
                 create: true
+              aws:
+                create: true
+              gcp:
+                create: true
+              huggingface:
+                create: false
                 name: ${hf-secret-name}
             open-webui:
               enabled: false
