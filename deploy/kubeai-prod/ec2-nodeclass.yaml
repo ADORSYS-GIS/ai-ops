@@ -7,12 +7,16 @@ spec:
   role: "eksctl-KarpenterNodeRole-ai-prod-env-cluster-eks"
   subnetSelectorTerms:
     - tags:
-        karpenter.sh/discovery: "ai-prod-env-cluster-eks" # replace with your cluster name
+        karpenter.sh/discovery: "ai-prod-env-cluster-eks"
+    - tags:
+        "Owner": "ai-prod-env-cluster"
   securityGroupSelectorTerms:
     - tags:
-        karpenter.sh/discovery: "ai-prod-env-cluster-eks" # replace with your cluster name
+        karpenter.sh/discovery: "ai-prod-env-cluster-eks"
+    - tags:
+        "Owner": "ai-prod-env-cluster"
   amiSelectorTerms:
-    - id: "ami-0684f6bedc6401b13" # <- GPU Optimized AMD AMI 
+    - id: "ami-0684f6bedc6401b13" 
   blockDeviceMappings:
     - deviceName: /dev/xvda
       ebs:
