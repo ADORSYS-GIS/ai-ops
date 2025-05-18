@@ -4,3 +4,4 @@ kind: Kustomization
 resources:
   - models.yaml
   - node-pool.yaml
+  - ec2-nodeclass.yaml
