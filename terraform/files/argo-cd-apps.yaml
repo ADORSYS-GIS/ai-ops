@@ -227,9 +227,17 @@ resources:
             open-webui:
               enabled: false
             resourceProfiles:
-              nvidia-gpu-rtx4070-8gb:
+              nvidia-gpu-a10-24gb:
                 nodeSelector:
-                  karpenter.k8s.aws/instance-gpu-name: "rtx4070-8gb"
+                  karpenter.k8s.aws/instance-gpu-name: "a10"
+                imageName: "nvidia-gpu"
+                limits:
+                  nvidia.com/gpu: "1"
+                tolerations:
+                  - key: "nvidia.com/gpu"
+                    operator: "Equal"
+                    value: "present"
+                    effect: "NoSchedule"  
               nvidia-gpu-l4:
                 nodeSelector:
                   karpenter.k8s.aws/instance-gpu-name: "l4"

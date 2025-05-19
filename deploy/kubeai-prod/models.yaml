@@ -35,8 +35,20 @@ spec:
               - --enable-prefix-caching
               - --disable-log-requests
             resourceProfile: nvidia-gpu-h100:8
-          qwen2.5-coder-1.5b-rtx4070-8gb:
+          qwen2.5-coder-1.5b-a10:
             enabled: true
+            features: [ "TextGeneration" ]
+            url: "hf://Qwen/Qwen2.5-Coder-1.5B-Instruct"
+            engine: VLLM
+            env:
+              VLLM_ATTENTION_BACKEND: FLASHINFER
+            args:
+              - --max-model-len=2048
+              - --max-num-seqs=16
+              - --quantization=fp8
+              - --kv-cache-dtype=fp8
+            resourceProfile: nvidia-gpu-a10-24gb:8
+            minReplicas: 0
   
   destination:
     server: https://kubernetes.default.svc
