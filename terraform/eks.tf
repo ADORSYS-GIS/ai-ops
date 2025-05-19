@@ -2,6 +2,7 @@ module "eks" {
   source  = "terraform-aws-modules/eks/aws"
   version = "~> 20.0"
 
+  cluster_version                          = "1.32"
   cluster_name                             = "${local.name}-eks"
   cluster_endpoint_public_access           = true
   enable_efa_support                       = true
@@ -93,6 +94,52 @@ module "eks" {
         }
       )
     }
+    karpenter-ng = {
+      name         = "karpenter-gpus"
+      ami_type     = "BOTTLEROCKET_x86_64_NVIDIA"
+      min_size     = 0
+      max_size     = 20
+      desired_size = 0
+      instance_types = [
+        "g6.xlarge",
+        "g6.2xlarge",
+        "g6.4xlarge",
+        "g6e.xlarge",
+        "g6e.2xlarge",
+        "g6e.8xlarge",
+        "p4d.24xlarge",
+        "p5.48xlarge",
+      ]
+      capacity_type = var.capacity_type
+      iam_role_additional_policies = {
+        ebs = "arn:aws:iam::aws:policy/service-role/AmazonEBSCSIDriverPolicy"
+      }
+      labels = {
+        gpu-node : "true"
+        karpenter-node : "true"
+        "karpenter.sh/controller" = "true"
+      }
+      taints = [
+        {
+          key    = "karpenter-node"
+          value  = "true"
+          effect = "NO_SCHEDULE"
+        }
+      ]
+      tags = merge(
+        local.tags,
+        {
+          "gpu-node"       = "true",
+          "karpenter-node" = "true",
+        }
+      )
+      node_security_group_tags = merge(local.tags, {
+        # NOTE - if creating multiple security groups with this module, only tag the
+        # security group that Karpenter should utilize with the following tag
+        # (i.e. - at most, only one security group should have this tag in your account)
+        "karpenter.sh/discovery" = local.eks_name
+      })
+    }
   }
 
   tags = merge(
@@ -121,8 +168,11 @@ module "eks_blueprints_addons" {
   enable_aws_load_balancer_controller = true
   enable_aws_efs_csi_driver           = true
   enable_ingress_nginx                = true
-  
+
   eks_addons = {
+    eks-pod-identity-agent = {
+      most_recent = true
+    }
     aws-ebs-csi-driver = {
       most_recent              = true
       service_account_role_arn = module.ebs_csi_driver_irsa.iam_role_arn
@@ -177,7 +227,7 @@ module "eks_blueprints_addons" {
     namespace     = "argocd"
     values = [
       templatefile("${path.module}/files/argocd-values.yaml", {
-        domain                = "${local.argocdDomain}",
+        domain                = local.argocdDomain,
         name                  = local.name,
         certArn               = var.cert_arn,
         oidc_kc_client_id     = var.oidc_kc_client_id,

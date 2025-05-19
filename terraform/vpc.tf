@@ -33,7 +33,7 @@ module "vpc" {
   tags = merge(
     local.tags,
     {
-      "kubernetes.io/cluster/${local.name}-eks" = "shared"
+      "kubernetes.io/cluster/${local.eks_name}" = "shared"
     }
   )
 }
