@@ -5,5 +5,4 @@ resources:
   - models.yaml
   - node-pool.yaml
   - ec2-nodeclass.yaml
-  - aws-node-pool.yaml
   - https://raw.githubusercontent.com/NVIDIA/k8s-device-plugin/v0.16.1/deployments/static/nvidia-device-plugin.yml
