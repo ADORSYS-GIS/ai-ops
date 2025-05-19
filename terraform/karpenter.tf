@@ -23,7 +23,7 @@ module "karpenter" {
   )
 }
 
-module "ops" {
+module "karpenter-helm" {
   source  = "blackbird-cloud/deployment/helm"
   version = "~> 1.0"
 
