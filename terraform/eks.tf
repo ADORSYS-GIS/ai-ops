@@ -101,12 +101,36 @@ module "eks" {
       max_size     = 20
       desired_size = 0
       instance_types = [
+        # a10g
+        "g5.xlarge",
+        "g5.2xlarge",
+        "g5.4xlarge",
+        "g5.8xlarge",
+        "g5.12xlarge",
+        "g5.16xlarge",
+        "g5.24xlarge",
+        
+        # l4
         "g6.xlarge",
         "g6.2xlarge",
         "g6.4xlarge",
+        "g6.8xlarge",
+        "g6.12xlarge",
+        "g6.16xlarge",
+        "g6.24xlarge",
+        "g6.48xlarge",
+        
+        # l40s
         "g6e.xlarge",
         "g6e.2xlarge",
+        "g6e.4xlarge",
         "g6e.8xlarge",
+        "g6e.12xlarge",
+        "g6e.16xlarge",
+        "g6e.24xlarge",
+        "g6e.48xlarge",
+        
+        # h100
         "p4d.24xlarge",
         "p5.48xlarge",
       ]

@@ -4,7 +4,5 @@ kind: Kustomization
 resources:
   - https://raw.githubusercontent.com/NVIDIA/k8s-device-plugin/v0.16.1/deployments/static/nvidia-device-plugin.yml
   - models.yaml
-  - test-ec2-nodeclass.yaml
-  - test-node-pool.yaml
-#  - node-pool.yaml
-#  - ec2-nodeclass.yaml
+  - node-pool.yaml
+  - ec2-nodeclass.yaml

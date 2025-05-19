@@ -20,6 +20,7 @@ spec:
           {
             USE_DDTRACE: "true",
             LITELLM_MODE: "production",
+            KUBEAI_BASE_URL: "http://kubeai.kubeai.svc/openai/v1",
           }
 
         # if set, use this secret for the master key; otherwise, autogenerate a new one
@@ -269,25 +270,6 @@ spec:
               model_info:
                 supports_function_calling: true
                 
-#            - model_name: nova-3
-#              litellm_params:
-#                model: deepgram/nova-3
-#                api_key: os.environ/DEEPGRAM_API_KEY
-#              model_info:
-#                mode: audio_transcription
-#            - model_name: nova-2
-#              litellm_params:
-#                model: deepgram/nova-2
-#                api_key: os.environ/DEEPGRAM_API_KEY
-#              model_info:
-#                mode: audio_transcription
-#            - model_name: aura-2
-#              litellm_params:
-#                model: deepgram/aura-2
-#                api_key: os.environ/DEEPGRAM_API_KEY
-#              model_info:
-#                mode: audio_speech
-                
             - model_name: deepseek-reasoner
               litellm_params:
                 model: deepseek/deepseek-reasoner
@@ -300,52 +282,25 @@ spec:
               litellm_params:
                 model: deepseek/deepseek-chat
                 api_key: os.environ/DEEPSEEK_API_KEY
-
-            - model_name: Salesforce/Llama-Rank-V1
+                
+            - model_name: gemma-3-27b-ollama-l4
               litellm_params:
-                model: together_ai/Salesforce/Llama-Rank-V1
-                api_key: os.environ/TOGETHERAI_API_KEY
-            - model_name: Qwen2.5-Coder-32B-Instruct
+                model: openai/gemma-3-27b-ollama-l4
+                api_base: "os.environ/KUBEAI_BASE_URL"
+            - model_name: llama-3.1-70b-instruct-fp8-l4
               litellm_params:
-                model: together_ai/Qwen/Qwen2.5-Coder-32B-Instruct
-                api_key: os.environ/TOGETHERAI_API_KEY
+                model: openai/llama-3.1-70b-instruct-fp8-l4
+                api_base: "os.environ/KUBEAI_BASE_URL"
                 drop_params: true
               model_info:
                 supports_function_calling: true
-                
-            - model_name: voyage-3-large
+            - model_name: llama-3.1-8b-instruct-fp8-l4
               litellm_params:
-                model: voyage/voyage-3-large
-                api_key: os.environ/VOYAGE_API_KEY
+                model: openai/llama-3.1-8b-instruct-fp8-l4
+                api_base: "os.environ/KUBEAI_BASE_URL"
+                drop_params: true
               model_info:
-                mode: embedding
-            - model_name: voyage-code-3
-              litellm_params:
-                model: voyage/voyage-code-3
-                api_key: os.environ/VOYAGE_API_KEY
-              model_info:
-                mode: embedding
-            - model_name: voyage-3
-              litellm_params:
-                model: voyage/voyage-3
-                api_key: os.environ/VOYAGE_API_KEY
-              model_info:
-                mode: embedding
-            - model_name: voyage-3-lite
-              litellm_params:
-                model: voyage/voyage-3-lite
-                api_key: os.environ/VOYAGE_API_KEY
-              model_info:
-                mode: embedding
-            - model_name: rerank-2
-              litellm_params:
-                model: voyage/rerank-2
-                api_key: os.environ/VOYAGE_API_KEY
-            - model_name: rerank-2-lite
-              litellm_params:
-                model: voyage/rerank-2-lite
-                api_key: os.environ/VOYAGE_API_KEY
-                
+                supports_function_calling: true
                 
   destination:
     server: https://kubernetes.default.svc

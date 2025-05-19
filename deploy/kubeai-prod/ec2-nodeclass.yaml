@@ -3,8 +3,7 @@ kind: EC2NodeClass
 metadata:
   name: gpu
 spec:
-  amiFamily: AL2023 # Amazon Linux 2
-  role: "karpenter-ai-prod-env-cluster-eks-20250518145939415500000002"
+  role: "karpenter-gpus-eks-node-group-20250519110042661800000001"
   subnetSelectorTerms:
     - tags:
         karpenter.sh/discovery: "ai-prod-env-cluster-eks"
@@ -12,10 +11,7 @@ spec:
     - tags:
         karpenter.sh/discovery: "ai-prod-env-cluster-eks"
   amiSelectorTerms:
-    - id: "ami-0684f6bedc6401b13" 
-    - id: "ami-02b7d5b1e55a7b5f1" 
-    - name: "amazon-eks-gpu-node-1.32-v2025051"
-    - name: "amazon-eks-node-*-nvidia-*"
+    - alias: al2023@latest # Amazon Linux 2023
   blockDeviceMappings:
     - deviceName: /dev/xvda
       ebs:

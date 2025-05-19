@@ -18,12 +18,14 @@ spec:
             #engine: VLLM
             #resourceProfile: nvidia-gpu-l4:1
             #minReplicas: 1 # by default this is 0
+          llama-3.1-70b-instruct-fp8-l4:
+            enabled: true
           llama-3.1-8b-instruct-fp8-l4:
             enabled: true
           llama-4-maverick-430k-h100:
-            enabled: true
+            enabled: false
           qwen3-235b-a22b-h100:
-            enabled: true
+            enabled: false
             features: [ TextGeneration ]
             url: hf://Qwen/Qwen3-235B-A22B
             engine: VLLM
@@ -36,7 +38,7 @@ spec:
               - --disable-log-requests
             resourceProfile: nvidia-gpu-h100:8
           qwen2.5-coder-1.5b-a10:
-            enabled: true
+            enabled: false
             features: [ "TextGeneration" ]
             url: "hf://Qwen/Qwen2.5-Coder-1.5B-Instruct"
             engine: VLLM
@@ -47,8 +49,25 @@ spec:
               - --max-num-seqs=16
               - --quantization=fp8
               - --kv-cache-dtype=fp8
-            resourceProfile: nvidia-gpu-a10-24gb:8
+            resourceProfile: nvidia-gpu-a10-24gb:1
             minReplicas: 0
+          llama-3.1-405b-instruct-fp8-h100:
+            enabled: false
+            features: [ TextGeneration ]
+            url: hf://neuralmagic/Meta-Llama-3.1-405B-Instruct-FP8
+            engine: VLLM
+            args:
+              - --max-model-len=65536
+              - --max-num-batched-token=65536
+              - --gpu-memory-utilization=0.9
+              - --tensor-parallel-size=8
+              - --enable-prefix-caching
+              - --disable-log-requests
+              - --max-num-seqs=1024
+              - --kv-cache-dtype=fp8
+            # You can also use nvidia-gpu-a100-80gb:8
+            resourceProfile: nvidia-gpu-h100:8
+            targetRequests: 500
   
   destination:
     server: https://kubernetes.default.svc
