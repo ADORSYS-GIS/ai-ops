@@ -5,7 +5,7 @@ module "karpenter" {
 
   create_node_iam_role = false
 
-  # node_iam_role_arn = module.eks.eks_managed_node_groups["cpu-ng"].iam_role_arn
+  node_iam_role_arn = module.eks.eks_managed_node_groups["cpu-ng"].iam_role_arn
 
   # Since the node group role will already have an access entry
   create_access_entry = false
