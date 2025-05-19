@@ -6,7 +6,7 @@ spec:
   role: "karpenter-ai-prod-env-cluster-eks-20250518145939415500000002"
   subnetSelectorTerms:
     - tags:
-        kubernetes.io/role/internal-elb: 1
+        karpenter.sh/discovery: "ai-prod-env-cluster-eks"
   securityGroupSelectorTerms:
     - tags:
         karpenter.sh/discovery: "ai-prod-env-cluster-eks"
