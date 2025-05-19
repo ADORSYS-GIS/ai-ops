@@ -9,7 +9,7 @@ spec:
         karpenter.sh/discovery: "ai-prod-env-cluster-eks"
   securityGroupSelectorTerms:
     - tags:
-        kubernetes.io/cluster/ai-prod-env-cluster-eks: "ai-prod-env-cluster-eks"
+        kubernetes.io/cluster/ai-prod-env-cluster-eks: "shared"
   amiSelectorTerms:
     - alias: al2023@latest # Amazon Linux 2023
   blockDeviceMappings:
