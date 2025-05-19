@@ -132,14 +132,15 @@ module "eks" {
           "karpenter-node" = "true",
         }
       )
-      node_security_group_tags = merge(local.tags, {
-        # NOTE - if creating multiple security groups with this module, only tag the
-        # security group that Karpenter should utilize with the following tag
-        # (i.e. - at most, only one security group should have this tag in your account)
-        "karpenter.sh/discovery" = local.eks_name
-      })
     }
   }
+  
+  node_security_group_tags = merge(local.tags, {
+    # NOTE - if creating multiple security groups with this module, only tag the
+    # security group that Karpenter should utilize with the following tag
+    # (i.e. - at most, only one security group should have this tag in your account)
+    "karpenter.sh/discovery" = local.eks_name
+  })
 
   tags = merge(
     local.tags,
