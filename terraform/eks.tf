@@ -135,7 +135,7 @@ module "eks" {
     }
   }
   
-  node_security_group_name = "sg-${local.app_name}"
+  node_security_group_name = "sg_${local.eks_name}"
   
   node_security_group_tags = merge(local.tags, {
     # NOTE - if creating multiple security groups with this module, only tag the
