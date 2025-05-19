@@ -22,8 +22,7 @@ module "vpc" {
   enable_dns_support           = true
 
   public_subnet_tags = {
-    "kubernetes.io/role/elb" = 1,
-    "karpenter.sh/discovery" = local.eks_name
+    "kubernetes.io/role/elb" = 1
   }
 
   private_subnet_tags = {
