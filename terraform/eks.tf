@@ -118,13 +118,13 @@ module "eks" {
         karpenter-node : "true"
         "karpenter.sh/controller" = "true"
       }
-      taints = [
-        {
-          key    = "karpenter-node"
-          value  = "true"
-          effect = "NO_SCHEDULE"
-        }
-      ]
+      # taints = [
+      #   {
+      #     key    = "karpenter-node"
+      #     value  = "true"
+      #     effect = "NO_SCHEDULE"
+      #   }
+      # ]
       tags = merge(
         local.tags,
         {
