@@ -12,11 +12,11 @@ module "ops" {
 
   values = [
     templatefile("${path.module}/files/argo-cd-apps.yaml", {
-      environment     = var.environment
-      fileSystemId    = module.efs.id
-      kubeai_ns       = local.kubeai_namespace
-      hf-secret-name  = "kubeai-hg"
-      deployment-date = "${timestamp()}"
+      environment    = var.environment
+      fileSystemId   = module.efs.id
+      kubeai_ns      = local.kubeai_namespace
+      hf-secret-name = "kubeai-hg"
+      deployment-date = timestamp()
     })
   ]
 

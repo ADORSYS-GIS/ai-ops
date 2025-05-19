@@ -107,7 +107,8 @@ module "eks" {
         "g6e.xlarge",
         "g6e.2xlarge",
         "g6e.8xlarge",
-        "p4d.24xlarge"
+        "p4d.24xlarge",
+        "p5.48xlarge",
       ]
       capacity_type = var.capacity_type
       iam_role_additional_policies = {

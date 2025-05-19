@@ -9,13 +9,7 @@ module "karpenter" {
 
   node_iam_role_arn = module.eks.eks_managed_node_groups["karpenter-ng"].iam_role_arn
 
-  # Since the node group role will already have an access entry
   create_access_entry = false
-  
-  # Attach additional IAM policies to the Karpenter node IAM role
-  # node_iam_role_additional_policies = {
-  #   AmazonSSMManagedInstanceCore = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
-  # }
 
   tags = merge(
     local.tags,
@@ -43,6 +37,6 @@ module "karpenter-helm" {
     })
   ]
 
-  # cleanup_on_fail = false
+  cleanup_on_fail = false
   wait            = false
 }
