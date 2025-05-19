@@ -131,8 +131,8 @@ module "eks" {
         "g6e.48xlarge",
         
         # h100
-        # "p4d.24xlarge",
-        "p5.48xlarge",
+        "p4d.24xlarge",
+        # "p5.48xlarge",
       ]
       capacity_type = var.capacity_type
       iam_role_additional_policies = {
