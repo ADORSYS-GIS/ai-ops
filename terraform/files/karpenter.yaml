@@ -1,5 +1,5 @@
-nodeSelector:
-  karpenter.sh/controller: 'true'
+#nodeSelector:
+#  karpenter.sh/controller: 'true'
 dnsPolicy: Default
 settings:
   clusterName: ${clusterName}
