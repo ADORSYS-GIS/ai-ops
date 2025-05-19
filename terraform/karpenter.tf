@@ -32,7 +32,7 @@ module "karpenter-helm" {
   create_namespace = false
 
   repository    = "oci://public.ecr.aws/karpenter"
-  chart         = "rakarpenterw"
+  chart         = "karpenter"
   chart_version = "1.4.0"
 
   values = [
