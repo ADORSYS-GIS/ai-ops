@@ -4,7 +4,7 @@ locals {
   azs          = var.azs
   argocdDomain = "${local.name}-argocd.${var.zone_name}"
   sg           = "${local.name}-sg"
-  karpenter_sg = "karpenter_sg-${local.sg}"
+  karpenter_sg = "karpenter-${local.sg}"
   azs_count = length(var.azs)
 
   app_name         = "kivoyo"
