@@ -3,7 +3,7 @@ kind: EC2NodeClass
 metadata:
   name: test-gpu
 spec:
-  role: "karpenter-ai-prod-env-cluster-eks-20250518145939415500000002"
+  role: "karpenter-gpus-eks-node-group-20250519110042661800000001"
   subnetSelectorTerms:
     - tags:
         karpenter.sh/discovery: "ai-prod-env-cluster-eks"
