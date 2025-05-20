@@ -24,7 +24,7 @@ spec:
       nodeClassRef:
         group: karpenter.k8s.aws
         kind: EC2NodeClass
-        name: test-gpu
+        name: gpu
       expireAfter: 720h # 30 * 24h = 720h
       taints:
         - key: nvidia.com/gpu
@@ -54,7 +54,7 @@ spec:
       nodeClassRef:
         group: karpenter.k8s.aws
         kind: EC2NodeClass
-        name: test-gpu
+        name: gpu
       expireAfter: 720h # 30 * 24h = 720h
       taints:
         - key: nvidia.com/gpu
