@@ -20,10 +20,48 @@ spec:
             #minReplicas: 1 # by default this is 0
           llama-3.1-70b-instruct-fp8-l4:
             enabled: true
+          llama-3.3-70b-instruct-fp8-l4:
+            enabled: true
+            features: [TextGeneration]
+            url: hf://meta-llama/Llama-3.3-70B-Instruct
+            engine: VLLM
+            env:
+              VLLM_ATTENTION_BACKEND: FLASHINFER
+            args:
+              - --max-model-len=32768
+              - --max-num-batched-token=32768
+              - --max-num-seqs=512
+              - --gpu-memory-utilization=0.9
+              # Pipeline parallelism performs better than tensor over PCI.
+              - --pipeline-parallel-size=4
+              # A minimum of tensor parallel 2 was needed to not have OOM errors.
+              # We use 8 GPUs so parallelism strategy of 4 x 2 works well.
+              - --tensor-parallel-size=2
+              - --enable-prefix-caching
+              - --enable-chunked-prefill=false
+              - --disable-log-requests
+              - --kv-cache-dtype=fp8
+              # Enforce eager wasn't supported with FLASHINFER.
+              - --enforce-eager
+            resourceProfile: nvidia-gpu-l4:8
+            targetRequests: 500
           llama-3.1-8b-instruct-fp8-l4:
             enabled: true
           llama-4-maverick-430k-h100:
             enabled: false
+          llama-4-maverick-384k-l40s:
+            enabled: true
+            features: [ TextGeneration ]
+            url: hf://meta-llama/Llama-4-Maverick-17B-128E-Instruct-FP8
+            engine: VLLM
+            env:
+              VLLM_DISABLE_COMPILE_CACHE: "1"
+            args:
+              - --max-model-len=384000
+              - --tensor-parallel-size=8
+              - --enable-prefix-caching
+              - --disable-log-requests
+            resourceProfile: nvidia-gpu-l40s:8
           qwen3-235b-a22b-h100:
             enabled: false
             features: [ TextGeneration ]

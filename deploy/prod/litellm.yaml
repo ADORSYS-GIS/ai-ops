@@ -49,14 +49,14 @@ spec:
           - litellm-rds-secret
           - litellm-openai-api-key
           - litellm-gemini-api-key
-          - litellm-anthropic-api-key
-          - litellm-groq-api-key
+#          - litellm-anthropic-api-key
+#          - litellm-groq-api-key
           - litellm-redis-secret
           - litellm-fireworks-api-key
-          - litellm-deepgram-api-key
-          - litellm-deepseek-api-key
-          - litellm-togetherai-api-key
-          - litellm-voyage-api-key
+#          - litellm-deepgram-api-key
+#          - litellm-deepseek-api-key
+#          - litellm-togetherai-api-key
+#          - litellm-voyage-api-key
         environmentConfigMaps:
           - litellm-db-config
 
@@ -102,30 +102,30 @@ spec:
               namespace: "litellm.caching.caching"
           model_list:
             # At least one model must exist for the proxy to start.
-            - model_name: gpt-4o-mini
-              litellm_params:
-                model: openai/gpt-4o-mini-2024-07-18
-                drop_params: true
-              model_info:
-                supports_function_calling: true
-            - model_name: o-mini
+#            - model_name: gpt-4o-mini
+#              litellm_params:
+#                model: openai/gpt-4o-mini-2024-07-18
+#                drop_params: true
+#              model_info:
+#                supports_function_calling: true
+            - model_name: o4-mini
               litellm_params:
                 model: openai/o4-mini
                 drop_params: true
               model_info:
                 supports_function_calling: true
-            - model_name: o3-mini
-              litellm_params:
-                model: openai/o3-mini
-                drop_params: true
-              model_info:
-                supports_function_calling: true
-            - model_name: gpt-4.1
-              litellm_params:
-                model: openai/gpt-4.1
-                drop_params: true
-              model_info:
-                supports_function_calling: true
+#            - model_name: o3-mini
+#              litellm_params:
+#                model: openai/o3-mini
+#                drop_params: true
+#              model_info:
+#                supports_function_calling: true
+#            - model_name: gpt-4.1
+#              litellm_params:
+#                model: openai/gpt-4.1
+#                drop_params: true
+#              model_info:
+#                supports_function_calling: true
             - model_name: text-embedding-3-small
               litellm_params:
                 model: openai/text-embedding-3-small
@@ -162,12 +162,12 @@ spec:
                 drop_params: true
               model_info:
                 supports_function_calling: true
-            - model_name: gemini-2.5-pro-preview-03-25
-              litellm_params:
-                model: gemini/gemini-2.5-pro-preview-03-25
-                drop_params: true
-              model_info:
-                supports_function_calling: true
+#            - model_name: gemini-2.5-pro-preview-03-25
+#              litellm_params:
+#                model: gemini/gemini-2.5-pro-preview-03-25
+#                drop_params: true
+#              model_info:
+#                supports_function_calling: true
             - model_name: gemini-2.0-flash
               litellm_params:
                 model: gemini/gemini-2.0-flash
@@ -178,83 +178,83 @@ spec:
                 model: gemini/gemini-2.0-flash-lite-preview-02-05
               model_info:
                 mode: completion
-            - model_name: gemini-embedding-exp
-              litellm_params:
-                model: gemini/gemini-embedding-exp
-            - model_name: imagen-3.0-generate-002
-              litellm_params:
-                model: gemini/imagen-3.0-generate-002
-              model_info:
-                mode: image_generation
+#            - model_name: gemini-embedding-exp
+#              litellm_params:
+#                model: gemini/gemini-embedding-exp
+#            - model_name: imagen-3.0-generate-002
+#              litellm_params:
+#                model: gemini/imagen-3.0-generate-002
+#              model_info:
+#                mode: image_generation
 
-            - model_name: claude-3-7-sonnet-20250219
-              litellm_params:
-                model: anthropic/claude-3-7-sonnet-20250219
-                drop_params: true
-              model_info:
-                supports_function_calling: true
-            - model_name: claude-3-5-sonnet-20240620
-              litellm_params:
-                model: anthropic/claude-3-5-sonnet-20240620
-                drop_params: true
-              model_info:
-                supports_function_calling: true
-            - model_name: claude-3-opus-20240229
-              litellm_params:
-                model: anthropic/claude-3-opus-20240229
-                drop_params: true
-              model_info:
-                supports_function_calling: true
+#            - model_name: claude-3-7-sonnet-20250219
+#              litellm_params:
+#                model: anthropic/claude-3-7-sonnet-20250219
+#                drop_params: true
+#              model_info:
+#                supports_function_calling: true
+#            - model_name: claude-3-5-sonnet-20240620
+#              litellm_params:
+#                model: anthropic/claude-3-5-sonnet-20240620
+#                drop_params: true
+#              model_info:
+#                supports_function_calling: true
+#            - model_name: claude-3-opus-20240229
+#              litellm_params:
+#                model: anthropic/claude-3-opus-20240229
+#                drop_params: true
+#              model_info:
+#                supports_function_calling: true
 
-            - model_name: qwen-qwq-32b
-              litellm_params:
-                model: groq/qwen-qwq-32b
-                drop_params: true
-              model_info:
-                supports_function_calling: true
-            - model_name: deepseek-r1-distill-llama-70b
-              litellm_params:
-                model: groq/deepseek-r1-distill-llama-70b
-                drop_params: true
-              model_info:
-                supports_function_calling: true
-            - model_name: mistral-saba-24b
-              litellm_params:
-                model: groq/mistral-saba-24b
-            - model_name: llama3.1-8b
-              litellm_params:
-                model: groq/llama-3.1-8b-instant
-            - model_name: llama3-70b
-              litellm_params:
-                model: groq/llama-3.3-70b-versatile
-            - model_name: gemma2-9b-it
-              litellm_params:
-                model: groq/gemma2-9b-it
-                drop_params: true
-              model_info:
-                supports_function_calling: true
+#            - model_name: qwen-qwq-32b
+#              litellm_params:
+#                model: groq/qwen-qwq-32b
+#                drop_params: true
+#              model_info:
+#                supports_function_calling: true
+#            - model_name: deepseek-r1-distill-llama-70b
+#              litellm_params:
+#                model: groq/deepseek-r1-distill-llama-70b
+#                drop_params: true
+#              model_info:
+#                supports_function_calling: true
+#            - model_name: mistral-saba-24b
+#              litellm_params:
+#                model: groq/mistral-saba-24b
+#            - model_name: llama3.1-8b
+#              litellm_params:
+#                model: groq/llama-3.1-8b-instant
+#            - model_name: llama3-70b
+#              litellm_params:
+#                model: groq/llama-3.3-70b-versatile
+#            - model_name: gemma2-9b-it
+#              litellm_params:
+#                model: groq/gemma2-9b-it
+#                drop_params: true
+#              model_info:
+#                supports_function_calling: true
 
-            - model_name: llama-v3p3-70b-instruct
-              litellm_params:
-                model: fireworks_ai/accounts/fireworks/models/llama-v3p3-70b-instruct
-                api_key: os.environ/FIREWORKS_AI_API_KEY
-                drop_params: true
-              model_info:
-                supports_function_calling: true
-            - model_name: llama-v3p1-8b-instruct
-              litellm_params:
-                model: fireworks_ai/accounts/fireworks/models/llama-v3p1-8b-instruct
-                api_key: os.environ/FIREWORKS_AI_API_KEY
-                drop_params: true
-              model_info:
-                supports_function_calling: true
-            - model_name: llama-v3p2-3b-instruct
-              litellm_params:
-                model: fireworks_ai/accounts/fireworks/models/llama-v3p2-3b-instruct
-                api_key: os.environ/FIREWORKS_AI_API_KEY
-                drop_params: true
-              model_info:
-                supports_function_calling: true
+#            - model_name: llama-v3p3-70b-instruct
+#              litellm_params:
+#                model: fireworks_ai/accounts/fireworks/models/llama-v3p3-70b-instruct
+#                api_key: os.environ/FIREWORKS_AI_API_KEY
+#                drop_params: true
+#              model_info:
+#                supports_function_calling: true
+#            - model_name: llama-v3p1-8b-instruct
+#              litellm_params:
+#                model: fireworks_ai/accounts/fireworks/models/llama-v3p1-8b-instruct
+#                api_key: os.environ/FIREWORKS_AI_API_KEY
+#                drop_params: true
+#              model_info:
+#                supports_function_calling: true
+#            - model_name: llama-v3p2-3b-instruct
+#              litellm_params:
+#                model: fireworks_ai/accounts/fireworks/models/llama-v3p2-3b-instruct
+#                api_key: os.environ/FIREWORKS_AI_API_KEY
+#                drop_params: true
+#              model_info:
+#                supports_function_calling: true
             - model_name: qwen3-235b-a22b
               litellm_params:
                 model: fireworks_ai/accounts/fireworks/models/qwen3-235b-a22b
@@ -270,33 +270,47 @@ spec:
               model_info:
                 supports_function_calling: true
                 
-            - model_name: deepseek-reasoner
-              litellm_params:
-                model: deepseek/deepseek-reasoner
-                api_key: os.environ/DEEPSEEK_API_KEY
-            - model_name: deepseek-coder
-              litellm_params:
-                model: deepseek/deepseek-coder
-                api_key: os.environ/DEEPSEEK_API_KEY
-            - model_name: deepseek-chat
-              litellm_params:
-                model: deepseek/deepseek-chat
-                api_key: os.environ/DEEPSEEK_API_KEY
+#            - model_name: deepseek-reasoner
+#              litellm_params:
+#                model: deepseek/deepseek-reasoner
+#                api_key: os.environ/DEEPSEEK_API_KEY
+#            - model_name: deepseek-coder
+#              litellm_params:
+#                model: deepseek/deepseek-coder
+#                api_key: os.environ/DEEPSEEK_API_KEY
+#            - model_name: deepseek-chat
+#              litellm_params:
+#                model: deepseek/deepseek-chat
+#                api_key: os.environ/DEEPSEEK_API_KEY
                 
-            - model_name: gemma-3-27b-ollama-l4
+            - model_name: gemma-3-27b-ollama
               litellm_params:
                 model: openai/gemma-3-27b-ollama-l4
                 api_base: "os.environ/KUBEAI_BASE_URL"
-            - model_name: llama-3.1-70b-instruct-fp8-l4
+            - model_name: llama-3.1-70b-instruct
               litellm_params:
                 model: openai/llama-3.1-70b-instruct-fp8-l4
                 api_base: "os.environ/KUBEAI_BASE_URL"
                 drop_params: true
               model_info:
                 supports_function_calling: true
-            - model_name: llama-3.1-8b-instruct-fp8-l4
+            - model_name: llama-3.1-8b-instruct
               litellm_params:
                 model: openai/llama-3.1-8b-instruct-fp8-l4
+                api_base: "os.environ/KUBEAI_BASE_URL"
+                drop_params: true
+              model_info:
+                supports_function_calling: true
+            - model_name: llama-4-maverick
+              litellm_params:
+                model: openai/llama-4-maverick-384k-l40s
+                api_base: "os.environ/KUBEAI_BASE_URL"
+                drop_params: true
+              model_info:
+                supports_function_calling: true
+            - model_name: llama-3.3-70b-instruct
+              litellm_params:
+                model: openai/llama-3.3-70b-instruct-fp8-l4
                 api_base: "os.environ/KUBEAI_BASE_URL"
                 drop_params: true
               model_info:
