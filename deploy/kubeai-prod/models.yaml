@@ -31,7 +31,7 @@ spec:
               - --max-model-len=32768
               - --max-num-batched-token=32768
               - --max-num-seqs=512
-              - --gpu-memory-utilization=0.9
+              - --gpu-memory-utilization=0.98
               # Pipeline parallelism performs better than tensor over PCI.
               - --pipeline-parallel-size=4
               # A minimum of tensor parallel 2 was needed to not have OOM errors.
