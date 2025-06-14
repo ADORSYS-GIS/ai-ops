@@ -15,11 +15,8 @@ spec:
         catalog:
           gemma-3-27b-ollama-l4:
             enabled: true
-            #engine: VLLM
-            #resourceProfile: nvidia-gpu-l4:1
-            #minReplicas: 1 # by default this is 0
-          llama-3.1-70b-instruct-fp8-l4:
-            enabled: true
+            engine: VLLM
+            resourceProfile: nvidia-gpu-l4:4
           llama-3.3-70b-instruct-fp8-l4:
             enabled: true
             features: [TextGeneration]
@@ -67,7 +64,6 @@ spec:
               # Enforce eager wasn't supported with FLASHINFER.
               - --enforce-eager
             resourceProfile: nvidia-gpu-l4:4
-            targetRequests: 500
           devstral-small-2505-fp16-l4:
             enabled: true
             features: [TextGeneration]
@@ -76,8 +72,8 @@ spec:
             env:
               VLLM_ATTENTION_BACKEND: FLASHINFER
             args:
-              - --max-model-len=67584
-              - --max-num-batched-token=67584
+              - --max-model-len=48128
+              - --max-num-batched-token=48128
               - --max-num-seqs=512
               - --gpu-memory-utilization=0.98
               # Pipeline parallelism performs better than tensor over PCI.
@@ -92,37 +88,8 @@ spec:
               # Enforce eager wasn't supported with FLASHINFER.
               - --enforce-eager
             resourceProfile: nvidia-gpu-l4:4
-            targetRequests: 500
           llama-3.1-8b-instruct-fp8-l4:
             enabled: true
-          llama-4-maverick-430k-h100:
-            enabled: false
-          llama-4-maverick-384k-l40s:
-            enabled: true
-            features: [ TextGeneration ]
-            url: hf://meta-llama/Llama-4-Maverick-17B-128E-Instruct-FP8
-            engine: VLLM
-            env:
-              VLLM_DISABLE_COMPILE_CACHE: "1"
-            args:
-              - --max-model-len=384000
-              - --tensor-parallel-size=8
-              - --enable-prefix-caching
-              - --disable-log-requests
-            resourceProfile: nvidia-gpu-l40s:8
-          qwen3-235b-a22b-h100:
-            enabled: false
-            features: [ TextGeneration ]
-            url: hf://Qwen/Qwen3-235B-A22B
-            engine: VLLM
-            env:
-              VLLM_DISABLE_COMPILE_CACHE: "1"
-            args:
-              - --max-model-len=257000
-              - --tensor-parallel-size=8
-              - --enable-prefix-caching
-              - --disable-log-requests
-            resourceProfile: nvidia-gpu-h100:8
           qwen2.5-coder-1.5b-a10:
             enabled: true
             features: [ "TextGeneration" ]
@@ -137,23 +104,30 @@ spec:
               - --kv-cache-dtype=fp8
             resourceProfile: nvidia-gpu-l4:1
             minReplicas: 0
-          llama-3.1-405b-instruct-fp8-h100:
-            enabled: false
-            features: [ TextGeneration ]
-            url: hf://neuralmagic/Meta-Llama-3.1-405B-Instruct-FP8
+          qwen2-5-coder-7b-instruct-fp16-l4:
+            enabled: true
+            features: [TextGeneration]
+            url: hf://Qwen/Qwen2.5-Coder-7B-Instruct
             engine: VLLM
+            env:
+              VLLM_ATTENTION_BACKEND: FLASHINFER
             args:
-              - --max-model-len=65536
-              - --max-num-batched-token=65536
-              - --gpu-memory-utilization=0.9
-              - --tensor-parallel-size=8
+              - --max-model-len=15360
+              - --max-num-batched-token=15360
+              - --max-num-seqs=512
+              - --gpu-memory-utilization=0.98
+              # Pipeline parallelism performs better than tensor over PCI.
+              - --pipeline-parallel-size=2
+              # A minimum of tensor parallel 2 was needed to not have OOM errors.
+              # We use 8 GPUs so parallelism strategy of 2 x 2 works well.
+              - --tensor-parallel-size=1
               - --enable-prefix-caching
+              - --enable-chunked-prefill=false
               - --disable-log-requests
-              - --max-num-seqs=1024
               - --kv-cache-dtype=fp8
-            # You can also use nvidia-gpu-a100-80gb:8
-            resourceProfile: nvidia-gpu-h100:8
-            targetRequests: 500
+              # Enforce eager wasn't supported with FLASHINFER.
+              - --enforce-eager
+            resourceProfile: nvidia-gpu-l4:2
           nomic-embed-text-cpu:
             enabled: true
   

@@ -287,9 +287,23 @@ spec:
               litellm_params:
                 model: openai/gemma-3-27b-ollama-l4
                 api_base: "os.environ/KUBEAI_BASE_URL"
-            - model_name: llama-3.1-70b-instruct
+            - model_name: llama-3.3-70b-instruct
               litellm_params:
-                model: openai/llama-3.1-70b-instruct-fp8-l4
+                model: openai/llama-3.3-70b-instruct-fp8-l4
+                api_base: "os.environ/KUBEAI_BASE_URL"
+                drop_params: true
+              model_info:
+                supports_function_calling: true
+            - model_name: qwen2-5-coder-32b-instruct
+              litellm_params:
+                model: openai/qwen2-5-coder-32b-instruct-fp16-l4
+                api_base: "os.environ/KUBEAI_BASE_URL"
+                drop_params: true
+              model_info:
+                supports_function_calling: true
+            - model_name: devstral-small-2505
+              litellm_params:
+                model: openai/devstral-small-2505-fp16-l4
                 api_base: "os.environ/KUBEAI_BASE_URL"
                 drop_params: true
               model_info:
@@ -301,16 +315,16 @@ spec:
                 drop_params: true
               model_info:
                 supports_function_calling: true
-            - model_name: llama-4-maverick
+            - model_name: qwen2.5-coder-1.5b
               litellm_params:
-                model: openai/llama-4-maverick-384k-l40s
+                model: openai/qwen2.5-coder-1.5b-a10
                 api_base: "os.environ/KUBEAI_BASE_URL"
                 drop_params: true
               model_info:
                 supports_function_calling: true
-            - model_name: llama-3.3-70b-instruct
+            - model_name: qwen2-5-coder-7b-instruct
               litellm_params:
-                model: openai/llama-3.3-70b-instruct-fp8-l4
+                model: openai/qwen2-5-coder-7b-instruct-fp16-l4
                 api_base: "os.environ/KUBEAI_BASE_URL"
                 drop_params: true
               model_info:
