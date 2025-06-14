@@ -8,7 +8,7 @@ spec:
   source:
     repoURL: https://adorsys-gis.github.io/ai-ops
     chart: litellm
-    targetRevision: 0.1.3
+    targetRevision: 0.1.0
     helm:
       releaseName: litellm
       valuesObject:
