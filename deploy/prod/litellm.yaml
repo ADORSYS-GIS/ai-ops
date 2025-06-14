@@ -8,7 +8,7 @@ spec:
   source:
     repoURL: https://adorsys-gis.github.io/ai-ops
     chart: litellm
-    targetRevision: 0.1.0
+    targetRevision: 0.1.1
     helm:
       releaseName: litellm
       valuesObject:
@@ -168,11 +168,11 @@ spec:
 #                drop_params: true
 #              model_info:
 #                supports_function_calling: true
-            - model_name: gemini-2.0-flash
-              litellm_params:
-                model: gemini/gemini-2.0-flash
-              model_info:
-                mode: completion
+#            - model_name: gemini-2.0-flash
+#              litellm_params:
+#                model: gemini/gemini-2.0-flash
+#              model_info:
+#                mode: completion
             - model_name: gemini-2.0-flash-lite
               litellm_params:
                 model: gemini/gemini-2.0-flash-lite-preview-02-05
@@ -315,6 +315,12 @@ spec:
                 drop_params: true
               model_info:
                 supports_function_calling: true
+            - model_name: nomic-embed-text
+              litellm_params:
+                model: openai/nomic-embed-text-cpu
+                api_base: "os.environ/KUBEAI_BASE_URL"
+              model_info:
+                mode: embedding
                 
   destination:
     server: https://kubernetes.default.svc
