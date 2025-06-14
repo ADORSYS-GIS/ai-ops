@@ -55,7 +55,7 @@ spec:
               # Pipeline parallelism performs better than tensor over PCI.
               - --pipeline-parallel-size=2
               # A minimum of tensor parallel 2 was needed to not have OOM errors.
-              # We use 8 GPUs so parallelism strategy of 2 x 2 works well.
+              # We use 4 GPUs so parallelism strategy of 2 x 2 works well.
               - --tensor-parallel-size=2
               - --enable-prefix-caching
               - --enable-chunked-prefill=false
