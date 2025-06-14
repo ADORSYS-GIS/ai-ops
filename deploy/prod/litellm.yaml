@@ -13,7 +13,7 @@ spec:
       releaseName: litellm
       valuesObject:
         image:
-          tag: main-latest
+          tag: main-v1.72.2-stable
           
         db:
           deployStandalone: false
