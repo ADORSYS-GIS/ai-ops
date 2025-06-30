@@ -47,7 +47,6 @@ module "rds" {
   deletion_protection = !var.db_skip_final_snapshot
 
   create_db_subnet_group = false
-  create_random_password = false
 
   create_cloudwatch_log_group = false
   apply_immediately           = true
