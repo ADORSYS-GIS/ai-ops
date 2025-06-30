@@ -25,11 +25,10 @@ module "security_group" {
 
 module "rds" {
   source  = "terraform-aws-modules/rds/aws"
-  version = "~> 5.0"
+  version = "~> 6.0"
 
   identifier          = "${local.name}-db"
   engine              = "postgres"
-  engine_version      = "17.2"
   instance_class      = var.db_instance
   allocated_storage   = 10
   db_name             = local.db_name

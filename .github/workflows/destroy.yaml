@@ -51,12 +51,21 @@ jobs:
           echo "TF_VAR_oidc_kc_client_secret=${{ secrets.OIDC_KC_CLIENT_SECRET }}" >> $GITHUB_ENV
           echo "TF_VAR_oidc_kc_issuer_url=${{ vars.OIDC_KC_ISSUER_URL }}" >> $GITHUB_ENV
 
+          echo "TF_VAR_webui_secret_key=${{ secrets.WEBUI_SECRET_KEY }}" >> $GITHUB_ENV
+          echo "TF_VAR_brave_api_key=${{ secrets.BRAVE_API_KEY }}" >> $GITHUB_ENV
+
           echo "TF_VAR_groq_api_key=${{ secrets.GROQ_API_KEY }}" >> $GITHUB_ENV
           echo "TF_VAR_pipeline_key=${{ secrets.PIPELINE_KEY }}" >> $GITHUB_ENV
           echo "TF_VAR_litelllm_masterkey=${{ secrets.LITELLLM_MASTERKEY }}" >> $GITHUB_ENV
           echo "TF_VAR_anthropic_key=${{ secrets.ANTHROPIC_KEY }}" >> $GITHUB_ENV
-          echo "TF_VAR_gemini_key=${{ secrets.gemini_key }}" >> $GITHUB_ENV
+          echo "TF_VAR_gemini_key=${{ secrets.GEMINI_KEY }}" >> $GITHUB_ENV
           echo "TF_VAR_openapi_key=${{ secrets.OPENAPI_KEY }}" >> $GITHUB_ENV
+          echo "TF_VAR_fireworks_ai_api_key=${{ secrets.FIREWORKS_AI_API_KEY }}" >> $GITHUB_ENV
+          echo "TF_VAR_deepgram_api_key=${{ secrets.DEEPGRAM_API_KEY }}" >> $GITHUB_ENV
+          echo "TF_VAR_deepseek_api_key=${{ secrets.DEEPSEEK_API_KEY }}" >> $GITHUB_ENV
+          echo "TF_VAR_togetherai_api_key=${{ secrets.TOGETHERAI_API_KEY }}" >> $GITHUB_ENV
+          echo "TF_VAR_voyage_api_key=${{ secrets.VOYAGE_API_KEY }}" >> $GITHUB_ENV
+          echo "TF_VAR_hg_api_key=${{ secrets.HF_TOKEN }}" >> $GITHUB_ENV
 
       - name: Terraform Init
         run: |
