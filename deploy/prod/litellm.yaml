@@ -13,7 +13,7 @@ spec:
       releaseName: litellm
       valuesObject:
         migrationJob:
-          enabled: true
+          enabled: false
           environmentSecrets:
             - litellm-rds-secret
         litellm:
