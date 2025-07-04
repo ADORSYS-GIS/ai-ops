@@ -30,7 +30,7 @@ module "rds" {
   identifier          = "${local.name}-db"
   engine              = "postgres"
   instance_class      = var.db_instance
-  allocated_storage   = 10
+  allocated_storage   = 30
   db_name             = local.db_name
   username            = var.db_username
   password            = var.db_password
