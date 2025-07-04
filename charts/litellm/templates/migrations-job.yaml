@@ -1,9 +1,13 @@
 {{- if .Values.migrationJob.enabled }}
+{{ if not .Values.litellm.image.tag }}
+{{ fail "cannot run migrations without a specific version for the migration" }}
+{{ end }}
+
 # This job runs the prisma migrations for the LiteLLM DB.
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: {{ include "litellm.fullname" . }}-migrations
+  name: {{ include "common.names.fullname" . }}-migrations
   annotations:
     argocd.argoproj.io/hook: PreSync
     argocd.argoproj.io/hook-delete-policy: BeforeHookCreation # delete old migration on a new deploy in case the migration needs to make updates
@@ -13,39 +17,20 @@ spec:
     metadata:
       annotations:
         {{- with .Values.migrationJob.annotations }}
-        {{- toYaml . | nindent 8 }}
+        {{ toYaml . | nindent 8 }}
         {{- end }}
     spec:
+      serviceAccountName: {{ include "litellm.migration.serviceAccountName" . }}
       containers:
         - name: prisma-migrations
-          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default (printf "main-%s" .Chart.AppVersion) }}"
-          imagePullPolicy: {{ .Values.image.pullPolicy }}
+
+          image: "{{ .Values.litellm.image.repository }}:{{ .Values.litellm.image.tag }}"
+          imagePullPolicy: {{ .Values.litellm.image.pullPolicy }}
           securityContext:
-            {{- toYaml .Values.securityContext | nindent 12 }}
-          command: ["python", "litellm/proxy/prisma_migration.py"]
+            {{ toYaml .Values.litellm.securityContext | nindent 12 }}
+          command: [ "python", "litellm/proxy/prisma_migration.py" ]
           workingDir: "/app"
           env:
-            {{- if .Values.db.useExisting }}
-            - name: DATABASE_USERNAME
-              valueFrom:
-                secretKeyRef:
-                  name: {{ .Values.db.secret.name }}
-                  key: {{ .Values.db.secret.usernameKey }}
-            - name: DATABASE_PASSWORD
-              valueFrom:
-                secretKeyRef:
-                  name: {{ .Values.db.secret.name }}
-                  key: {{ .Values.db.secret.passwordKey }}
-            - name: DATABASE_HOST
-              value: {{ .Values.db.endpoint }}
-            - name: DATABASE_NAME
-              value: {{ .Values.db.database }}
-            - name: DATABASE_URL
-              value: {{ .Values.db.url | quote }}
-            {{- else if .Values.db.deployStandalone }}
-            - name: DATABASE_URL
-              value: postgresql://{{ .Values.postgresql.auth.username }}:{{ .Values.postgresql.auth.password }}@{{ .Release.Name }}-postgresql/{{ .Values.postgresql.auth.database }}
-            {{- end }}
             - name: DISABLE_SCHEMA_UPDATE
               value: "false" # always run the migration from the Helm PreSync hook, override the value set
             {{- if .Values.migrationJob.envVars }}
@@ -64,23 +49,23 @@ spec:
             - configMapRef:
                 name: {{ . }}
           {{- end }}
-          
-          {{- with .Values.volumeMounts }}
+
+          {{- with .Values.litellm.volumeMounts }}
           volumeMounts:
-            {{- toYaml . | nindent 12 }}
+            {{ toYaml . | nindent 12 }}
           {{- end }}
-      {{- with .Values.volumes }}
+      {{- with .Values.litellm.volumes }}
       volumes:
-        {{- toYaml . | nindent 8 }}
+        {{ toYaml . | nindent 8 }}
       {{- end }}
       restartPolicy: OnFailure
-      {{- with .Values.affinity }}
+      {{- with .Values.litellm.affinity }}
       affinity:
-        {{- toYaml . | nindent 8 }}
+        {{ toYaml . | nindent 8 }}
       {{- end }}
-      {{- with .Values.tolerations }}
+      {{- with .Values.litellm.tolerations }}
       tolerations:
-        {{- toYaml . | nindent 8 }}
+        {{ toYaml . | nindent 8 }}
       {{- end }}
   ttlSecondsAfterFinished: {{ .Values.migrationJob.ttlSecondsAfterFinished }}
   backoffLimit: {{ .Values.migrationJob.backoffLimit }}

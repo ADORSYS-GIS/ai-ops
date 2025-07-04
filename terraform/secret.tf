@@ -7,6 +7,7 @@ resource "kubernetes_secret" "litellm_rds_secret" {
     DATABASE_USERNAME = var.db_username
     DATABASE_PASSWORD = var.db_password
     DATABASE_HOST     = split(":", module.rds.db_instance_endpoint)[0]
+    # DATABASE_HOST     = module.rds.db_instance_endpoint
     DATABASE_ENDPOINT = module.rds.db_instance_endpoint
     DATABASE_NAME     = module.rds.db_instance_name
     DATABASE_URL      = module.rds.db_instance_endpoint

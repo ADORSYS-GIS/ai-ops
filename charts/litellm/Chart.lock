@@ -1,12 +1,9 @@
 dependencies:
+- name: litellm-helm
+  repository: oci://ghcr.io/berriai
+  version: 0.1.717
 - name: common
   repository: oci://registry-1.docker.io/bitnamicharts
-  version: 2.30.0
-- name: postgresql
-  repository: oci://registry-1.docker.io/bitnamicharts
-  version: 16.6.2
-- name: redis
-  repository: oci://registry-1.docker.io/bitnamicharts
-  version: 20.11.4
-digest: sha256:2260230495cb89d474a51700907cd76b200d4cb62b6e7267d90e4a8a75a2ff25
-generated: "2025-04-09T07:23:31.828379+01:00"
+  version: 2.31.3
+digest: sha256:cef4e989f2b53fabf6add28131822fcc1497912aa94577d2f561f4eb7491c3d8
+generated: "2025-07-04T20:36:05.444987+02:00"

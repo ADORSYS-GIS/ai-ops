@@ -48,14 +48,14 @@ mcpo:
         playwright:
           image:
             repository: mcr.microsoft.com/playwright
-            tag: v1.52.0-noble
+            tag: v1.53.0-noble
           
           command: /bin/sh
           
           args:
             - -c
             - |
-              npx -y playwright@1.53.0-alpha-1746832516000 run-server --port 3000 --host 0.0.0.0
+              npx -y playwright@1.53.0 run-server --port 3000 --host 0.0.0.0
           
           resources:
             requests:
@@ -122,7 +122,52 @@ mcpo:
             "vision": true
           }
         "config.json": |
-          {}
+          {
+            "mcpServers": {
+              "memory": {
+                "command": "npx",
+                "args": [
+                  "-y",
+                  "@modelcontextprotocol/server-memory"
+                ]
+              },
+              "time": {
+                "command": "uvx",
+                "args": [
+                  "mcp-server-time",
+                  "--local-timezone=Europe/Berlin"
+                ]
+              },
+              "fetch": {
+                "command": "uvx",
+                "args": [
+                  "mcp-server-fetch"
+                ]
+              },
+              "puppeteer": {
+                "command": "npx",
+                "args": [
+                  "-y",
+                  "@modelcontextprotocol/server-puppeteer"
+                ]
+              },
+              "sequential-thinking": {
+                "command": "npx",
+                "args": [
+                  "-y",
+                  "@modelcontextprotocol/server-sequential-thinking"
+                ]
+              },
+              "playwright": {
+                "command": "npx",
+                "args": [
+                  "-y",
+                  "@playwright/mcp@latest",
+                  "--config=/tmp/playwright.json"
+                ]
+              }
+            }
+          }
   
   secrets:
     api-key:

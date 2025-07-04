@@ -12,333 +12,330 @@ spec:
     helm:
       releaseName: litellm
       valuesObject:
-        image:
-          tag: main-v1.72.2-stable
-          
-        db:
-          deployStandalone: false
-          useExisting: false
-
-        envVars:
-          {
-            USE_DDTRACE: "true",
-            LITELLM_MODE: "production",
-            KUBEAI_BASE_URL: "http://kubeai.kubeai.svc/openai/v1",
-          }
-
-        # if set, use this secret for the master key; otherwise, autogenerate a new one
-        masterkeySecretName: "litellm-master-key"
-
-        # if set, use this secret key for the master key; otherwise, use the default key
-        masterkeySecretKey: "master_key"
-        
-        affinity:
-          podAntiAffinity:
-            requiredDuringSchedulingIgnoredDuringExecution:
-              - labelSelector:
-                  matchExpressions:
-                    - key: "app.kubernetes.io/name"
-                      operator: In
-                      values:
-                        - litellm
-                topologyKey: "kubernetes.io/hostname"
-
-        autoscaling:
-          enabled: true
-          minReplicas: 2
-          maxReplicas: 3
-
-        environmentSecrets:
-          - litellm-rds-secret
-          - litellm-openai-api-key
-          - litellm-gemini-api-key
-#          - litellm-anthropic-api-key
-#          - litellm-groq-api-key
-          - litellm-redis-secret
-          - litellm-fireworks-api-key
-#          - litellm-deepgram-api-key
-#          - litellm-deepseek-api-key
-#          - litellm-togetherai-api-key
-#          - litellm-voyage-api-key
-        environmentConfigMaps:
-          - litellm-db-config
-
         migrationJob:
+          enabled: true
           environmentSecrets:
             - litellm-rds-secret
-
-        ingress:
-          enabled: true
-          hosts:
-            - host: api.ai.kivoyo.com
-              paths:
-                - path: /
-                  pathType: Prefix
-          className: alb
-          annotations:
-            alb.ingress.kubernetes.io/tags: Environment=dev,Owner=adorsys-gis
-            alb.ingress.kubernetes.io/load-balancer-name: ai-adorsys-gis
-            alb.ingress.kubernetes.io/listen-ports: |
-              [
-                {
-                  "HTTP":80
-                },
-                {
-                  "HTTPS": 443
-                }
-              ]
-            alb.ingress.kubernetes.io/ssl-redirect: "443"
-            alb.ingress.kubernetes.io/scheme: "internet-facing"
-            alb.ingress.kubernetes.io/target-type: "ip"
-            alb.ingress.kubernetes.io/certificate-arn: "arn:aws:acm:eu-central-1:571075516563:certificate/980a6ebb-a87e-4cfb-b8bf-3d0e5da5acf5"
-            external-dns.alpha.kubernetes.io/hostname: "api.ai.kivoyo.com"
-            alb.ingress.kubernetes.io/healthcheck-interval-seconds: "15"
-            alb.ingress.kubernetes.io/healthcheck-timeout-seconds: "5"
-            alb.ingress.kubernetes.io/healthy-threshold-count: "2"
-            alb.ingress.kubernetes.io/unhealthy-threshold-count: "2"
-
-        proxy_config:
-          litellm_settings:
-            cache: True
-            cache_params: # set cache params for redis
-              type: redis
-              namespace: "litellm.caching.caching"
-          model_list:
-            # At least one model must exist for the proxy to start.
-#            - model_name: gpt-4o-mini
-#              litellm_params:
-#                model: openai/gpt-4o-mini-2024-07-18
-#                drop_params: true
-#              model_info:
-#                supports_function_calling: true
-            - model_name: o4-mini
-              litellm_params:
-                model: openai/o4-mini
-                drop_params: true
-              model_info:
-                supports_function_calling: true
-#            - model_name: o3-mini
-#              litellm_params:
-#                model: openai/o3-mini
-#                drop_params: true
-#              model_info:
-#                supports_function_calling: true
-#            - model_name: gpt-4.1
-#              litellm_params:
-#                model: openai/gpt-4.1
-#                drop_params: true
-#              model_info:
-#                supports_function_calling: true
-            - model_name: text-embedding-3-small
-              litellm_params:
-                model: openai/text-embedding-3-small
-
-            - model_name: dall-e-3
-              litellm_params:
-                model: openai/dall-e-3
-              model_info:
-                mode: image_generation
-            - model_name: whisper-1
-              litellm_params:
-                model: openai/whisper-1
-              model_info:
-                mode: audio_transcription
-            - model_name: gpt-4o-mini-audio
-              litellm_params:
-                model: openai/gpt-4o-mini-audio-preview-2024-12-17
-              model_info:
-                mode: audio_transcription
-            - model_name: gpt-4o-transcribe
-              litellm_params:
-                model: openai/gpt-4o-transcribe
-              model_info:
-                mode: audio_transcription
-            - model_name: gpt-4o-mini-tts
-              litellm_params:
-                model: openai/gpt-4o-mini-tts
-              model_info:
-                mode: audio_speech
-
-            - model_name: gemini-2.5-flash-preview-04-17
-              litellm_params:
-                model: gemini/gemini-2.5-flash-preview-04-17
-                drop_params: true
-              model_info:
-                supports_function_calling: true
-#            - model_name: gemini-2.5-pro-preview-03-25
-#              litellm_params:
-#                model: gemini/gemini-2.5-pro-preview-03-25
-#                drop_params: true
-#              model_info:
-#                supports_function_calling: true
-#            - model_name: gemini-2.0-flash
-#              litellm_params:
-#                model: gemini/gemini-2.0-flash
-#              model_info:
-#                mode: completion
-            - model_name: gemini-2.0-flash-lite
-              litellm_params:
-                model: gemini/gemini-2.0-flash-lite-preview-02-05
-              model_info:
-                mode: completion
-#            - model_name: gemini-embedding-exp
-#              litellm_params:
-#                model: gemini/gemini-embedding-exp
-#            - model_name: imagen-3.0-generate-002
-#              litellm_params:
-#                model: gemini/imagen-3.0-generate-002
-#              model_info:
-#                mode: image_generation
-
-#            - model_name: claude-3-7-sonnet-20250219
-#              litellm_params:
-#                model: anthropic/claude-3-7-sonnet-20250219
-#                drop_params: true
-#              model_info:
-#                supports_function_calling: true
-#            - model_name: claude-3-5-sonnet-20240620
-#              litellm_params:
-#                model: anthropic/claude-3-5-sonnet-20240620
-#                drop_params: true
-#              model_info:
-#                supports_function_calling: true
-#            - model_name: claude-3-opus-20240229
-#              litellm_params:
-#                model: anthropic/claude-3-opus-20240229
-#                drop_params: true
-#              model_info:
-#                supports_function_calling: true
-
-#            - model_name: qwen-qwq-32b
-#              litellm_params:
-#                model: groq/qwen-qwq-32b
-#                drop_params: true
-#              model_info:
-#                supports_function_calling: true
-#            - model_name: deepseek-r1-distill-llama-70b
-#              litellm_params:
-#                model: groq/deepseek-r1-distill-llama-70b
-#                drop_params: true
-#              model_info:
-#                supports_function_calling: true
-#            - model_name: mistral-saba-24b
-#              litellm_params:
-#                model: groq/mistral-saba-24b
-#            - model_name: llama3.1-8b
-#              litellm_params:
-#                model: groq/llama-3.1-8b-instant
-#            - model_name: llama3-70b
-#              litellm_params:
-#                model: groq/llama-3.3-70b-versatile
-#            - model_name: gemma2-9b-it
-#              litellm_params:
-#                model: groq/gemma2-9b-it
-#                drop_params: true
-#              model_info:
-#                supports_function_calling: true
-
-#            - model_name: llama-v3p3-70b-instruct
-#              litellm_params:
-#                model: fireworks_ai/accounts/fireworks/models/llama-v3p3-70b-instruct
-#                api_key: os.environ/FIREWORKS_AI_API_KEY
-#                drop_params: true
-#              model_info:
-#                supports_function_calling: true
-#            - model_name: llama-v3p1-8b-instruct
-#              litellm_params:
-#                model: fireworks_ai/accounts/fireworks/models/llama-v3p1-8b-instruct
-#                api_key: os.environ/FIREWORKS_AI_API_KEY
-#                drop_params: true
-#              model_info:
-#                supports_function_calling: true
-#            - model_name: llama-v3p2-3b-instruct
-#              litellm_params:
-#                model: fireworks_ai/accounts/fireworks/models/llama-v3p2-3b-instruct
-#                api_key: os.environ/FIREWORKS_AI_API_KEY
-#                drop_params: true
-#              model_info:
-#                supports_function_calling: true
-            - model_name: qwen3-235b-a22b
-              litellm_params:
-                model: fireworks_ai/accounts/fireworks/models/qwen3-235b-a22b
-                api_key: os.environ/FIREWORKS_AI_API_KEY
-                drop_params: true
-              model_info:
-                supports_function_calling: true
-            - model_name: llama4-maverick-instruct-basic
-              litellm_params:
-                model: fireworks_ai/accounts/fireworks/models/llama4-maverick-instruct-basic
-                api_key: os.environ/FIREWORKS_AI_API_KEY
-                drop_params: true
-              model_info:
-                supports_function_calling: true
-                
-#            - model_name: deepseek-reasoner
-#              litellm_params:
-#                model: deepseek/deepseek-reasoner
-#                api_key: os.environ/DEEPSEEK_API_KEY
-#            - model_name: deepseek-coder
-#              litellm_params:
-#                model: deepseek/deepseek-coder
-#                api_key: os.environ/DEEPSEEK_API_KEY
-#            - model_name: deepseek-chat
-#              litellm_params:
-#                model: deepseek/deepseek-chat
-#                api_key: os.environ/DEEPSEEK_API_KEY
-                
-            - model_name: gemma-3-27b-ollama
-              litellm_params:
-                model: openai/gemma-3-27b-ollama-l4
-                api_base: "os.environ/KUBEAI_BASE_URL"
-            - model_name: llama-3.3-70b-instruct
-              litellm_params:
-                model: openai/llama-3.3-70b-instruct-fp8-l4
-                api_base: "os.environ/KUBEAI_BASE_URL"
-                drop_params: true
-              model_info:
-                supports_function_calling: true
-            - model_name: qwen2-5-coder-32b-instruct
-              litellm_params:
-                model: openai/qwen2-5-coder-32b-instruct-fp16-l4
-                api_base: "os.environ/KUBEAI_BASE_URL"
-                drop_params: true
-              model_info:
-                supports_function_calling: true
-            - model_name: devstral-small-2505
-              litellm_params:
-                model: openai/devstral-small-2505-fp16-l4
-                api_base: "os.environ/KUBEAI_BASE_URL"
-                drop_params: true
-              model_info:
-                supports_function_calling: true
-            - model_name: llama-3.1-8b-instruct
-              litellm_params:
-                model: openai/llama-3.1-8b-instruct-fp8-l4
-                api_base: "os.environ/KUBEAI_BASE_URL"
-                drop_params: true
-              model_info:
-                supports_function_calling: true
-            - model_name: qwen2.5-coder-1.5b
-              litellm_params:
-                model: openai/qwen2.5-coder-1.5b-a10
-                api_base: "os.environ/KUBEAI_BASE_URL"
-                drop_params: true
-              model_info:
-                supports_function_calling: true
-            - model_name: qwen2-5-coder-7b-instruct
-              litellm_params:
-                model: openai/qwen2-5-coder-7b-instruct-fp16-l4
-                api_base: "os.environ/KUBEAI_BASE_URL"
-                drop_params: true
-              model_info:
-                supports_function_calling: true
-            - model_name: nomic-embed-text
-              litellm_params:
-                model: openai/nomic-embed-text-cpu
-                api_base: "os.environ/KUBEAI_BASE_URL"
-              model_info:
-                mode: embedding
-                
+        litellm:
+          image:
+            tag: "main-v1.73.6.rc.1"
+  
+          envVars:
+            {
+              USE_DDTRACE: "true",
+              LITELLM_MODE: "production",
+              KUBEAI_BASE_URL: "http://kubeai.kubeai.svc/openai/v1",
+            }
+  
+          # if set, use this secret for the master key; otherwise, autogenerate a new one
+          masterkeySecretName: "litellm-master-key"
+  
+          # if set, use this secret key for the master key; otherwise, use the default key
+          masterkeySecretKey: "master_key"
+          
+          affinity:
+            podAntiAffinity:
+              requiredDuringSchedulingIgnoredDuringExecution:
+                - labelSelector:
+                    matchExpressions:
+                      - key: "app.kubernetes.io/name"
+                        operator: In
+                        values:
+                          - litellm
+                  topologyKey: "kubernetes.io/hostname"
+  
+          autoscaling:
+            enabled: true
+            minReplicas: 2
+            maxReplicas: 3
+  
+          environmentSecrets:
+            - litellm-rds-secret
+            - litellm-openai-api-key
+            - litellm-gemini-api-key
+  #          - litellm-anthropic-api-key
+  #          - litellm-groq-api-key
+            - litellm-redis-secret
+            - litellm-fireworks-api-key
+  #          - litellm-deepgram-api-key
+  #          - litellm-deepseek-api-key
+  #          - litellm-togetherai-api-key
+  #          - litellm-voyage-api-key
+          environmentConfigMaps:
+            - litellm-db-config
+  
+          ingress:
+            enabled: true
+            hosts:
+              - host: api.ai.kivoyo.com
+                paths:
+                  - path: /
+                    pathType: Prefix
+            className: alb
+            annotations:
+              alb.ingress.kubernetes.io/tags: Environment=dev,Owner=adorsys-gis
+              alb.ingress.kubernetes.io/load-balancer-name: ai-adorsys-gis
+              alb.ingress.kubernetes.io/listen-ports: |
+                [
+                  {
+                    "HTTP":80
+                  },
+                  {
+                    "HTTPS": 443
+                  }
+                ]
+              alb.ingress.kubernetes.io/ssl-redirect: "443"
+              alb.ingress.kubernetes.io/scheme: "internet-facing"
+              alb.ingress.kubernetes.io/target-type: "ip"
+              alb.ingress.kubernetes.io/certificate-arn: "arn:aws:acm:eu-central-1:571075516563:certificate/980a6ebb-a87e-4cfb-b8bf-3d0e5da5acf5"
+              external-dns.alpha.kubernetes.io/hostname: "api.ai.kivoyo.com"
+              alb.ingress.kubernetes.io/healthcheck-interval-seconds: "15"
+              alb.ingress.kubernetes.io/healthcheck-timeout-seconds: "5"
+              alb.ingress.kubernetes.io/healthy-threshold-count: "2"
+              alb.ingress.kubernetes.io/unhealthy-threshold-count: "2"
+  
+          proxy_config:
+            litellm_settings:
+              cache: True
+              cache_params: # set cache params for redis
+                type: redis
+                namespace: "litellm.caching.caching"
+            model_list:
+              # At least one model must exist for the proxy to start.
+  #            - model_name: gpt-4o-mini
+  #              litellm_params:
+  #                model: openai/gpt-4o-mini-2024-07-18
+  #                drop_params: true
+  #              model_info:
+  #                supports_function_calling: true
+              - model_name: o4-mini
+                litellm_params:
+                  model: openai/o4-mini
+                  drop_params: true
+                model_info:
+                  supports_function_calling: true
+  #            - model_name: o3-mini
+  #              litellm_params:
+  #                model: openai/o3-mini
+  #                drop_params: true
+  #              model_info:
+  #                supports_function_calling: true
+  #            - model_name: gpt-4.1
+  #              litellm_params:
+  #                model: openai/gpt-4.1
+  #                drop_params: true
+  #              model_info:
+  #                supports_function_calling: true
+              - model_name: text-embedding-3-small
+                litellm_params:
+                  model: openai/text-embedding-3-small
+  
+              - model_name: dall-e-3
+                litellm_params:
+                  model: openai/dall-e-3
+                model_info:
+                  mode: image_generation
+              - model_name: whisper-1
+                litellm_params:
+                  model: openai/whisper-1
+                model_info:
+                  mode: audio_transcription
+              - model_name: gpt-4o-mini-audio
+                litellm_params:
+                  model: openai/gpt-4o-mini-audio-preview-2024-12-17
+                model_info:
+                  mode: audio_transcription
+              - model_name: gpt-4o-transcribe
+                litellm_params:
+                  model: openai/gpt-4o-transcribe
+                model_info:
+                  mode: audio_transcription
+              - model_name: gpt-4o-mini-tts
+                litellm_params:
+                  model: openai/gpt-4o-mini-tts
+                model_info:
+                  mode: audio_speech
+  
+              - model_name: gemini-2.5-flash-preview-04-17
+                litellm_params:
+                  model: gemini/gemini-2.5-flash-preview-04-17
+                  drop_params: true
+                model_info:
+                  supports_function_calling: true
+  #            - model_name: gemini-2.5-pro-preview-03-25
+  #              litellm_params:
+  #                model: gemini/gemini-2.5-pro-preview-03-25
+  #                drop_params: true
+  #              model_info:
+  #                supports_function_calling: true
+  #            - model_name: gemini-2.0-flash
+  #              litellm_params:
+  #                model: gemini/gemini-2.0-flash
+  #              model_info:
+  #                mode: completion
+              - model_name: gemini-2.0-flash-lite
+                litellm_params:
+                  model: gemini/gemini-2.0-flash-lite-preview-02-05
+                model_info:
+                  mode: completion
+  #            - model_name: gemini-embedding-exp
+  #              litellm_params:
+  #                model: gemini/gemini-embedding-exp
+  #            - model_name: imagen-3.0-generate-002
+  #              litellm_params:
+  #                model: gemini/imagen-3.0-generate-002
+  #              model_info:
+  #                mode: image_generation
+  
+  #            - model_name: claude-3-7-sonnet-20250219
+  #              litellm_params:
+  #                model: anthropic/claude-3-7-sonnet-20250219
+  #                drop_params: true
+  #              model_info:
+  #                supports_function_calling: true
+  #            - model_name: claude-3-5-sonnet-20240620
+  #              litellm_params:
+  #                model: anthropic/claude-3-5-sonnet-20240620
+  #                drop_params: true
+  #              model_info:
+  #                supports_function_calling: true
+  #            - model_name: claude-3-opus-20240229
+  #              litellm_params:
+  #                model: anthropic/claude-3-opus-20240229
+  #                drop_params: true
+  #              model_info:
+  #                supports_function_calling: true
+  
+  #            - model_name: qwen-qwq-32b
+  #              litellm_params:
+  #                model: groq/qwen-qwq-32b
+  #                drop_params: true
+  #              model_info:
+  #                supports_function_calling: true
+  #            - model_name: deepseek-r1-distill-llama-70b
+  #              litellm_params:
+  #                model: groq/deepseek-r1-distill-llama-70b
+  #                drop_params: true
+  #              model_info:
+  #                supports_function_calling: true
+  #            - model_name: mistral-saba-24b
+  #              litellm_params:
+  #                model: groq/mistral-saba-24b
+  #            - model_name: llama3.1-8b
+  #              litellm_params:
+  #                model: groq/llama-3.1-8b-instant
+  #            - model_name: llama3-70b
+  #              litellm_params:
+  #                model: groq/llama-3.3-70b-versatile
+  #            - model_name: gemma2-9b-it
+  #              litellm_params:
+  #                model: groq/gemma2-9b-it
+  #                drop_params: true
+  #              model_info:
+  #                supports_function_calling: true
+  
+  #            - model_name: llama-v3p3-70b-instruct
+  #              litellm_params:
+  #                model: fireworks_ai/accounts/fireworks/models/llama-v3p3-70b-instruct
+  #                api_key: os.environ/FIREWORKS_AI_API_KEY
+  #                drop_params: true
+  #              model_info:
+  #                supports_function_calling: true
+  #            - model_name: llama-v3p1-8b-instruct
+  #              litellm_params:
+  #                model: fireworks_ai/accounts/fireworks/models/llama-v3p1-8b-instruct
+  #                api_key: os.environ/FIREWORKS_AI_API_KEY
+  #                drop_params: true
+  #              model_info:
+  #                supports_function_calling: true
+  #            - model_name: llama-v3p2-3b-instruct
+  #              litellm_params:
+  #                model: fireworks_ai/accounts/fireworks/models/llama-v3p2-3b-instruct
+  #                api_key: os.environ/FIREWORKS_AI_API_KEY
+  #                drop_params: true
+  #              model_info:
+  #                supports_function_calling: true
+              - model_name: qwen3-235b-a22b
+                litellm_params:
+                  model: fireworks_ai/accounts/fireworks/models/qwen3-235b-a22b
+                  api_key: os.environ/FIREWORKS_AI_API_KEY
+                  drop_params: true
+                model_info:
+                  supports_function_calling: true
+              - model_name: llama4-maverick-instruct-basic
+                litellm_params:
+                  model: fireworks_ai/accounts/fireworks/models/llama4-maverick-instruct-basic
+                  api_key: os.environ/FIREWORKS_AI_API_KEY
+                  drop_params: true
+                model_info:
+                  supports_function_calling: true
+                  
+  #            - model_name: deepseek-reasoner
+  #              litellm_params:
+  #                model: deepseek/deepseek-reasoner
+  #                api_key: os.environ/DEEPSEEK_API_KEY
+  #            - model_name: deepseek-coder
+  #              litellm_params:
+  #                model: deepseek/deepseek-coder
+  #                api_key: os.environ/DEEPSEEK_API_KEY
+  #            - model_name: deepseek-chat
+  #              litellm_params:
+  #                model: deepseek/deepseek-chat
+  #                api_key: os.environ/DEEPSEEK_API_KEY
+                  
+              - model_name: gemma-3-27b-ollama
+                litellm_params:
+                  model: openai/gemma-3-27b-ollama-l4
+                  api_base: "os.environ/KUBEAI_BASE_URL"
+              - model_name: llama-3.3-70b-instruct
+                litellm_params:
+                  model: openai/llama-3.3-70b-instruct-fp8-l4
+                  api_base: "os.environ/KUBEAI_BASE_URL"
+                  drop_params: true
+                model_info:
+                  supports_function_calling: true
+              - model_name: qwen2-5-coder-32b-instruct
+                litellm_params:
+                  model: openai/qwen2-5-coder-32b-instruct-fp16-l4
+                  api_base: "os.environ/KUBEAI_BASE_URL"
+                  drop_params: true
+                model_info:
+                  supports_function_calling: true
+              - model_name: devstral-small-2505
+                litellm_params:
+                  model: openai/devstral-small-2505-fp16-l4
+                  api_base: "os.environ/KUBEAI_BASE_URL"
+                  drop_params: true
+                model_info:
+                  supports_function_calling: true
+              - model_name: llama-3.1-8b-instruct
+                litellm_params:
+                  model: openai/llama-3.1-8b-instruct-fp8-l4
+                  api_base: "os.environ/KUBEAI_BASE_URL"
+                  drop_params: true
+                model_info:
+                  supports_function_calling: true
+              - model_name: qwen2.5-coder-1.5b
+                litellm_params:
+                  model: openai/qwen2.5-coder-1.5b-a10
+                  api_base: "os.environ/KUBEAI_BASE_URL"
+                  drop_params: true
+                model_info:
+                  supports_function_calling: true
+              - model_name: qwen2-5-coder-7b-instruct
+                litellm_params:
+                  model: openai/qwen2-5-coder-7b-instruct-fp16-l4
+                  api_base: "os.environ/KUBEAI_BASE_URL"
+                  drop_params: true
+                model_info:
+                  supports_function_calling: true
+              - model_name: nomic-embed-text
+                litellm_params:
+                  model: openai/nomic-embed-text-cpu
+                  api_base: "os.environ/KUBEAI_BASE_URL"
+                model_info:
+                  mode: embedding
+                  
   destination:
     server: https://kubernetes.default.svc
     namespace: kivoyo

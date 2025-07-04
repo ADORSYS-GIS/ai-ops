@@ -17,57 +17,6 @@ spec:
           labels:
             team: adorsys-gis
         mcpo:
-          configMaps:
-            config:
-              data:
-                "config.json": |
-                  {
-                    "mcpServers": {
-                      "memory": {
-                        "command": "npx",
-                        "args": [
-                          "-y",
-                          "@modelcontextprotocol/server-memory"
-                        ]
-                      },
-                      "time": {
-                        "command": "uvx",
-                        "args": [
-                          "mcp-server-time",
-                          "--local-timezone=Europe/Berlin"
-                        ]
-                      },
-                      "fetch": {
-                        "command": "uvx",
-                        "args": [
-                          "mcp-server-fetch"
-                        ]
-                      },
-                      "puppeteer": {
-                        "command": "npx",
-                        "args": [
-                          "-y",
-                          "@modelcontextprotocol/server-puppeteer"
-                        ]
-                      },
-                      "sequential-thinking": {
-                        "command": "npx",
-                        "args": [
-                          "-y",
-                          "@modelcontextprotocol/server-sequential-thinking"
-                        ]
-                      },
-                      "playwright": {
-                        "command": "npx",
-                        "args": [
-                          "-y",
-                          "@playwright/mcp@latest",
-                          "--config=/tmp/playwright.json"
-                        ]
-                      }
-                    }
-                  }
-                  
           controllers:
             playwright:
               strategy: RollingUpdate
