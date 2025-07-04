@@ -17,7 +17,7 @@ spec:
           type: ClusterIP
 
         config:
-          plugins: tables-filter tinymce login-ssl
+          plugins: tables-filter tinymce
           design: dracula
 
         ingress:
