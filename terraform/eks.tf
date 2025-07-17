@@ -186,10 +186,7 @@ module "eks_blueprints_addons" {
       most_recent = true
     }
   }
-
-  enable_kube_prometheus_stack = true
-  kube_prometheus_stack = {}
-
+  
   aws_load_balancer_controller = {
     set = [
       {
