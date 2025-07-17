@@ -50,6 +50,10 @@ owu:
         secretKeyRef:
           name: open-web-ui-redis-secret
           key: redis-url
+    - name: ENABLE_WEBSOCKET_SUPPORT
+      value: "True"
+    - name: WEBSOCKET_MANAGER
+      value: "redis"
     - name: WEBSOCKET_REDIS_URL
       valueFrom:
         secretKeyRef:
@@ -275,7 +279,7 @@ owu:
       alb.ingress.kubernetes.io/healthy-threshold-count: "2"
       alb.ingress.kubernetes.io/unhealthy-threshold-count: "2"
   websocket:
-    enabled: true
+    enabled: false
     url: null
     redis:
       enabled: false

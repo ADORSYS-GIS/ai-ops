@@ -76,6 +76,10 @@ jobs:
           -backend-config="region=${{ vars.AWS_REGION }}" \
           -backend-config="bucket=kivoyo-${{ inputs.environment }}-terraform-state" \
           -backend-config="dynamodb_table=kivoyo-${{ inputs.environment }}-terraform-state-lock"
+          
+      - name: Terraform destroy EKS
+        run: |
+          terraform destroy -target=module.eks -var-file=${{ inputs.environment }}.tfvars -auto-approve
 
       - name: Terraform Plan
         run: |

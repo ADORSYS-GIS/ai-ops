@@ -9,3 +9,9 @@ resource "kubernetes_namespace" "chat_ui_namespace" {
     name = "chat-ui"
   }
 }
+
+resource "kubernetes_namespace" "mcpo_namespace" {
+  metadata {
+    name = "mcpo"
+  }
+}

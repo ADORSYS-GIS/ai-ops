@@ -51,7 +51,7 @@ mcpo:
     mcpo:
       enabled: false
       annotations: { }
-      #className: 'nginx'
+      #className: 'alb'
       hosts:
         - host: mcpo.example.com
           paths:
