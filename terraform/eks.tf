@@ -65,7 +65,7 @@ module "eks" {
       )
     }
     knative-ng = {
-      name           = "karpenter-gpus"
+      name           = "knative-gpus"
       ami_type       = "BOTTLEROCKET_x86_64_NVIDIA"
       min_size       = var.knative_min_instance
       max_size       = var.knative_max_instance
