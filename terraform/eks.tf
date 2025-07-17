@@ -2,7 +2,7 @@ module "eks" {
   source  = "terraform-aws-modules/eks/aws"
   version = "~> 20.0"
 
-  cluster_version                          = "1.33"
+  cluster_version                          = var.cluster_version
   cluster_name                             = "${local.name}-eks"
   cluster_endpoint_public_access           = true
   enable_efa_support                       = true

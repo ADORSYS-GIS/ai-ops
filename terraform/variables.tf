@@ -4,6 +4,12 @@ variable "region" {
   default     = "eu-west-1"
 }
 
+variable "cluster_version" {
+  description = "The version of the cluster"
+  type        = string
+  default     = "1.32"
+}
+
 variable "name" {
   description = "The name of the cluster"
   type        = string
