@@ -57,7 +57,7 @@ jobs:
           echo "TF_VAR_litelllm_masterkey=${{ secrets.LITELLLM_MASTERKEY }}" >> $GITHUB_ENV
           echo "TF_VAR_anthropic_key=${{ secrets.ANTHROPIC_KEY }}" >> $GITHUB_ENV
           echo "TF_VAR_gemini_key=${{ secrets.GEMINI_KEY }}" >> $GITHUB_ENV
-          echo "TF_VAR_openapi_key=${{ secrets.OPENAPI_KEY }}" >> $GITHUB_ENV
+          echo "TF_VAR_openai_key=${{ secrets.OPENAPI_KEY }}" >> $GITHUB_ENV
 
       - name: Adding backend
         run: |

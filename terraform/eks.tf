@@ -15,11 +15,11 @@ module "eks" {
   eks_managed_node_groups = {
     cpu-ng = {
       name           = "cpu"
-      min_size       = var.eks_min_instance
-      max_size       = var.eks_max_instance
-      desired_size   = var.eks_desired_instance
-      instance_types = var.eks_ec2_instance_types
-      capacity_type  = var.capacity_type
+      min_size       = var.cpu_min_instance
+      max_size       = var.cpu_max_instance
+      desired_size   = var.cpu_desired_instance
+      instance_types = var.cpu_ec2_instance_types
+      capacity_type  = var.cpu_capacity_type
 
       iam_role_additional_policies = {
         ebs = "arn:aws:iam::aws:policy/service-role/AmazonEBSCSIDriverPolicy"
@@ -37,11 +37,11 @@ module "eks" {
     mlflow-ng = {
       name           = "mlflow-gpus"
       ami_type       = "BOTTLEROCKET_x86_64_NVIDIA"
-      min_size       = var.eks_gpu_min_instance
-      max_size       = var.eks_gpu_max_instance
-      desired_size   = var.eks_gpu_desired_instance
-      instance_types = var.eks_gpu_ec2_instance_types
-      capacity_type  = var.capacity_type
+      min_size       = var.mlflow_min_instance
+      max_size       = var.mlflow_max_instance
+      desired_size   = var.mlflow_desired_instance
+      instance_types = var.mlflow_ec2_instance_types
+      capacity_type  = var.mlflow_capacity_type
       iam_role_additional_policies = {
         ebs = "arn:aws:iam::aws:policy/service-role/AmazonEBSCSIDriverPolicy"
       }
@@ -64,12 +64,14 @@ module "eks" {
         }
       )
     }
-    karpenter-ng = {
-      name         = "karpenter-gpus"
-      ami_type     = "BOTTLEROCKET_x86_64_NVIDIA"
-      min_size     = 0
-      max_size     = 20
-      desired_size = 0
+    knative-ng = {
+      name           = "karpenter-gpus"
+      ami_type       = "BOTTLEROCKET_x86_64_NVIDIA"
+      min_size       = var.knative_min_instance
+      max_size       = var.knative_max_instance
+      desired_size   = var.knative_desired_instance
+      instance_types = var.knative_ec2_instance_types
+      capacity_type  = var.knative_capacity_type
       instance_types = [
         # a10g
         "g5.xlarge",
@@ -79,7 +81,7 @@ module "eks" {
         "g5.12xlarge",
         "g5.16xlarge",
         "g5.24xlarge",
-        
+
         # l4
         "g6.xlarge",
         "g6.2xlarge",
@@ -89,7 +91,7 @@ module "eks" {
         "g6.16xlarge",
         "g6.24xlarge",
         "g6.48xlarge",
-        
+
         # l40s
         "g6e.xlarge",
         "g6e.2xlarge",
@@ -99,12 +101,7 @@ module "eks" {
         "g6e.16xlarge",
         "g6e.24xlarge",
         "g6e.48xlarge",
-        
-        # h100
-        "p4d.24xlarge",
-        # "p5.48xlarge",
       ]
-      capacity_type = "ON_DEMAND"
       iam_role_additional_policies = {
         ebs = "arn:aws:iam::aws:policy/service-role/AmazonEBSCSIDriverPolicy"
       }
@@ -129,9 +126,9 @@ module "eks" {
       )
     }
   }
-  
+
   node_security_group_name = "sg_${local.eks_name}"
-  
+
   node_security_group_tags = merge(local.tags, {
     # NOTE - if creating multiple security groups with this module, only tag the
     # security group that Karpenter should utilize with the following tag
@@ -149,7 +146,7 @@ module "eks" {
 }
 
 module "eks_blueprints_addons" {
-  source  = "aws-ia/eks-blueprints-addons/aws"
+  source = "aws-ia/eks-blueprints-addons/aws"
 
   depends_on = [module.eks]
 
@@ -189,7 +186,7 @@ module "eks_blueprints_addons" {
       most_recent = true
     }
   }
-  
+
   enable_kube_prometheus_stack = true
   kube_prometheus_stack = {}
 
@@ -247,7 +244,7 @@ module "eks_blueprints_addons" {
 }
 
 module "ebs_csi_driver_irsa" {
-  source  = "terraform-aws-modules/iam/aws//modules/iam-role-for-service-accounts-eks"
+  source = "terraform-aws-modules/iam/aws//modules/iam-role-for-service-accounts-eks"
 
   role_name_prefix = "${local.name}-ebs-csi-driver-"
 
@@ -264,7 +261,7 @@ module "ebs_csi_driver_irsa" {
 }
 
 module "eks_data_addons" {
-  source  = "aws-ia/eks-data-addons/aws"
+  source = "aws-ia/eks-data-addons/aws"
 
   oidc_provider_arn = module.eks.oidc_provider_arn
 
@@ -294,7 +291,7 @@ module "eks_data_addons" {
       }
     ]
   }
-  
+
 
   #---------------------------------------------------------------
   # MLflow Tracking (Using Local Helm Chart)

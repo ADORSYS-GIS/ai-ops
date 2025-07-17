@@ -7,19 +7,55 @@ azs = [
 
 environment = "prod"
 
-eks_ec2_instance_types = [
-  "t2.medium",
+cpu_ec2_instance_types = [
+  "t3.medium",
+  "c5.xlarge"
 ]
-eks_min_instance     = 0
-eks_max_instance     = 10
-eks_desired_instance = 1
+cpu_min_instance     = 3
+cpu_max_instance     = 10
+cpu_desired_instance = 5
+cpu_capacity_type    = "SPOT"
 
-eks_gpu_ec2_instance_types = [
+mlflow_ec2_instance_types = [
   "g6.2xlarge",
 ]
-eks_gpu_min_instance     = 0
-eks_gpu_max_instance     = 10
-eks_gpu_desired_instance = 1
+mlflow_min_instance     = 0
+mlflow_max_instance     = 10
+mlflow_desired_instance = 0
+mlflow_capacity_type    = "ON_DEMAND"
 
-db_backup_retention_period = null
+knative_ec2_instance_types = [
+  # a10g
+  "g5.xlarge",
+  "g5.2xlarge",
+  "g5.4xlarge",
+  "g5.8xlarge",
+  "g5.12xlarge",
+  "g5.16xlarge",
+  "g5.24xlarge",
+
+  # l4
+  "g6.xlarge",
+  "g6.2xlarge",
+  "g6.4xlarge",
+  "g6.8xlarge",
+  "g6.12xlarge",
+  "g6.16xlarge",
+  "g6.24xlarge",
+  "g6.48xlarge",
+
+  # l40s
+  "g6e.xlarge",
+  "g6e.2xlarge",
+  "g6e.4xlarge",
+  "g6e.8xlarge",
+  "g6e.12xlarge",
+  "g6e.16xlarge",
+  "g6e.24xlarge",
+  "g6e.48xlarge",
+]
+knative_min_instance     = 0
+knative_max_instance     = 10
+knative_desired_instance = 0
+knative_capacity_type    = "ON_DEMAND"
 

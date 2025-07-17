@@ -6,7 +6,7 @@ locals {
 resource "kubernetes_secret" "litellm_redis_secret" {
   metadata {
     name      = "litellm-redis-secret"
-    namespace = kubernetes_namespace.litellm_namespace.metadata.name
+    namespace = kubernetes_namespace.litellm_namespace.metadata[0].name
   }
   data = {
     REDIS_URL = local.redis_url
@@ -18,10 +18,10 @@ resource "kubernetes_secret" "litellm_redis_secret" {
 resource "kubernetes_secret" "litellm_openai_api_key" {
   metadata {
     name      = "litellm-openai-api-key"
-    namespace = kubernetes_namespace.litellm_namespace.metadata.name
+    namespace = kubernetes_namespace.litellm_namespace.metadata[0].name
   }
   data = {
-    OPENAI_API_KEY = var.openapi_key
+    OPENAI_API_KEY = var.openai_key
   }
 
   depends_on = [kubernetes_namespace.litellm_namespace]
@@ -30,7 +30,7 @@ resource "kubernetes_secret" "litellm_openai_api_key" {
 resource "kubernetes_secret" "litellm_gemini_api_key" {
   metadata {
     name      = "litellm-gemini-api-key"
-    namespace = kubernetes_namespace.litellm_namespace.metadata.name
+    namespace = kubernetes_namespace.litellm_namespace.metadata[0].name
   }
   data = {
     GEMINI_API_KEY = var.gemini_key
@@ -42,7 +42,7 @@ resource "kubernetes_secret" "litellm_gemini_api_key" {
 resource "kubernetes_secret" "litellm_anthropic_api_key" {
   metadata {
     name      = "litellm-anthropic-api-key"
-    namespace = kubernetes_namespace.litellm_namespace.metadata.name
+    namespace = kubernetes_namespace.litellm_namespace.metadata[0].name
   }
   data = {
     ANTHROPIC_API_KEY = var.anthropic_key
@@ -54,7 +54,7 @@ resource "kubernetes_secret" "litellm_anthropic_api_key" {
 resource "kubernetes_secret" "litellm_master_key" {
   metadata {
     name      = "litellm-master-key"
-    namespace = kubernetes_namespace.litellm_namespace.metadata.name
+    namespace = kubernetes_namespace.litellm_namespace.metadata[0].name
   }
   data = {
     master_key = var.litelllm_masterkey
@@ -67,7 +67,7 @@ resource "kubernetes_secret" "litellm_master_key" {
 resource "kubernetes_secret" "open_web_ui_keys" {
   metadata {
     name      = "open-web-ui-keys"
-    namespace = kubernetes_namespace.chat_ui_namespace.metadata.name
+    namespace = kubernetes_namespace.chat_ui_namespace.metadata[0].name
   }
   data = {
     openai-api-keys        = "${var.pipeline_key};${var.litelllm_masterkey}"
@@ -80,7 +80,7 @@ resource "kubernetes_secret" "open_web_ui_keys" {
 resource "kubernetes_secret" "open_web_ui_oidc" {
   metadata {
     name      = "open-web-ui-oidc"
-    namespace = kubernetes_namespace.chat_ui_namespace.metadata.name
+    namespace = kubernetes_namespace.chat_ui_namespace.metadata[0].name
   }
   data = {
     oauth_client_id     = var.oidc_kc_client_id
@@ -94,7 +94,7 @@ resource "kubernetes_secret" "open_web_ui_oidc" {
 resource "kubernetes_secret" "open_web_ui_s3" {
   metadata {
     name      = "open-web-ui-s3"
-    namespace = kubernetes_namespace.chat_ui_namespace.metadata.name
+    namespace = kubernetes_namespace.chat_ui_namespace.metadata[0].name
   }
   data = {
     STORAGE_PROVIDER     = "s3"
@@ -110,7 +110,7 @@ resource "kubernetes_secret" "open_web_ui_s3" {
 resource "kubernetes_secret" "open_web_ui_config" {
   metadata {
     name      = "open-web-ui-config"
-    namespace = kubernetes_namespace.chat_ui_namespace.metadata.name
+    namespace = kubernetes_namespace.chat_ui_namespace.metadata[0].name
   }
   data = {
     webui-secret-key     = var.webui_secret_key
@@ -123,7 +123,7 @@ resource "kubernetes_secret" "open_web_ui_config" {
 resource "kubernetes_secret" "open_web_ui_redis_secret" {
   metadata {
     name      = "open-web-ui-redis-secret"
-    namespace = kubernetes_namespace.chat_ui_namespace.metadata.name
+    namespace = kubernetes_namespace.chat_ui_namespace.metadata[0].name
   }
   data = {
     redis-url = local.redis_url

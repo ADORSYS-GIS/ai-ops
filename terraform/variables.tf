@@ -28,56 +28,88 @@ variable "environment" {
   default     = "dev"
 }
 
-variable "eks_ec2_instance_types" {
-  description = "The EC2 instance type for the EKS server"
+variable "cpu_ec2_instance_types" {
+  description = "The EC2 instance type for the CPU server"
   type = list(string)
 }
 
-variable "eks_min_instance" {
-  description = "The minimum number of instances for the EKS cluster"
-  type        = number
-  default     = 1
-}
-
-variable "eks_max_instance" {
-  description = "The maximum number of instances for the EKS cluster"
-  type        = number
-  default     = 3
-}
-
-variable "eks_gpu_ec2_instance_types" {
-  description = "The EC2 instance type for the EKS GPU server"
-  type = list(string)
-}
-
-variable "eks_gpu_min_instance" {
-  description = "The minimum number of instances for the EKS GPU cluster"
+variable "cpu_min_instance" {
+  description = "The minimum number of instances for the CPU cluster"
   type        = number
   default     = 0
 }
 
-variable "eks_gpu_max_instance" {
-  description = "The maximum number of instances for the EKS GPU cluster"
+variable "cpu_max_instance" {
+  description = "The maximum number of instances for the CPU cluster"
   type        = number
   default     = 2
 }
 
-variable "eks_gpu_desired_instance" {
-  description = "The desired number of instances for the EKS GPU cluster"
+variable "cpu_desired_instance" {
+  description = "The desired number of instances for the CPU cluster"
   type        = number
   default     = 0
 }
 
-variable "eks_desired_instance" {
-  description = "The desired number of instances for the EKS cluster"
+variable "cpu_capacity_type" {
+  default     = "SPOT"
+  description = "MLFlow EC2 Capacity type"
+}
+
+variable "mlflow_ec2_instance_types" {
+  description = "The EC2 instance type for the MLFlow server"
+  type = list(string)
+}
+
+variable "mlflow_min_instance" {
+  description = "The minimum number of instances for the MLFlow cluster"
+  type        = number
+  default     = 0
+}
+
+variable "mlflow_max_instance" {
+  description = "The maximum number of instances for the MLFlow cluster"
   type        = number
   default     = 2
 }
 
-variable "db_backup_retention_period" {
-  description = "The number of days to retain backups for"
+variable "mlflow_desired_instance" {
+  description = "The desired number of instances for the MLFlow cluster"
   type        = number
-  default     = null
+  default     = 0
+}
+
+variable "mlflow_capacity_type" {
+  default     = "ON_DEMAND"
+  description = "MLFlow EC2 Capacity type"
+}
+
+variable "knative_ec2_instance_types" {
+  description = "The EC2 instance type for the Knative server"
+  type = list(string)
+}
+
+variable "knative_min_instance" {
+  description = "The minimum number of instances for the Knative cluster"
+  type        = number
+  default     = 0
+}
+
+variable "knative_max_instance" {
+  description = "The maximum number of instances for the Knative cluster"
+  type        = number
+  default     = 2
+}
+
+variable "knative_desired_instance" {
+  description = "The desired number of instances for the Knative cluster"
+  type        = number
+  default     = 0
+}
+
+variable "knative_capacity_type" {
+  default     = "ON_DEMAND"
+  description = "Knative EC2 Capacity type"
 }
 
 variable "zone_name" {
@@ -144,13 +176,8 @@ variable "gemini_key" {
   description = "Gemini API Key"
 }
 
-variable "openapi_key" {
+variable "openai_key" {
   type        = string
   sensitive   = true
   description = "OpenAI API Key"
-}
-
-variable "capacity_type" {
-  default     = null
-  description = "EC2 Capacity type"
 }
