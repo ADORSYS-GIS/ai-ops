@@ -1,5 +1,5 @@
 locals {
-  name         = "kivoyo-${var.name}-cluster"
+  name         = "kivoyo-${var.name}"
   eks_name     = "${local.name}-eks"
   azs          = var.azs
   argocdDomain = "${local.name}-argocd.${var.zone_name}"
