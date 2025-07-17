@@ -169,6 +169,7 @@ resources:
             karpenter.sh/discovery: "${cluster_name}"
       amiSelectorTerms:
         - alias: bottlerocket@latest
+        #- name: amazon-eks-gpu-node-1.32-v20250704
       blockDeviceMappings:
         - deviceName: /dev/xvda
           ebs:
@@ -184,6 +185,16 @@ resources:
     spec:
       template:
         spec:
+          requirements:
+            - key: karpenter.sh/capacity-type
+              operator: In
+              values: ["spot", "on-demand"]
+            - key: "karpenter.k8s.aws/instance-cpu"
+              operator: Gt
+              values: ["4"]
+            - key: "karpenter.k8s.aws/instance-memory"
+              operator: Gt
+              values: ["8191"]
           nodeClassRef:
             group: karpenter.k8s.aws
             kind: EC2NodeClass
