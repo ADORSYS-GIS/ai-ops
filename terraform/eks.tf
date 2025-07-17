@@ -2,7 +2,7 @@ module "eks" {
   source  = "terraform-aws-modules/eks/aws"
   version = "~> 20.0"
 
-  cluster_version                          = "1.32"
+  cluster_version                          = "1.33"
   cluster_name                             = "${local.name}-eks"
   cluster_endpoint_public_access           = true
   enable_efa_support                       = true
@@ -217,7 +217,7 @@ module "eks_blueprints_addons" {
 
   argocd = {
     name          = "argocd"
-    chart_version = "8.0.3"
+    chart_version = "8.1.3"
     repository    = "https://argoproj.github.io/argo-helm"
     namespace     = "argocd"
     values = [
@@ -289,22 +289,6 @@ module "eks_data_addons" {
         name  = "resources.memory.memory"
         value = "100Mi"
       }
-    ]
-  }
-
-
-  #---------------------------------------------------------------
-  # MLflow Tracking (Using Local Helm Chart)
-  #---------------------------------------------------------------
-  enable_mlflow_tracking = true
-  mlflow_tracking_helm_config = {
-    namespace   = "mlflow-system"
-    description = "MLflow Tracking add-on Helm Chart config"
-    set = [
-      {
-        name  = "clusterName"
-        value = local.eks_name
-      },
     ]
   }
 }
