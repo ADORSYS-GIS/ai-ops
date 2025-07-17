@@ -18,26 +18,8 @@ variable "vpc_cidr" {
 
 variable "azs" {
   description = "Availability Zones for the VPC"
-  type        = list(string)
-  default     = ["eu-west-1a", "eu-west-1b"]
-}
-
-variable "db_username" {
-  description = "Username for the RDS database"
-  type        = string
-  sensitive   = true
-}
-
-variable "db_password" {
-  description = "Password for the RDS database"
-  type        = string
-  sensitive   = true
-}
-
-variable "db_instance" {
-  description = "The instance type for the RDS database"
-  type        = string
-  default     = "db.t3.medium"
+  type = list(string)
+  default = ["eu-west-1a", "eu-west-1b"]
 }
 
 variable "environment" {
@@ -48,7 +30,7 @@ variable "environment" {
 
 variable "eks_ec2_instance_types" {
   description = "The EC2 instance type for the EKS server"
-  type        = list(string)
+  type = list(string)
 }
 
 variable "eks_min_instance" {
@@ -65,7 +47,7 @@ variable "eks_max_instance" {
 
 variable "eks_gpu_ec2_instance_types" {
   description = "The EC2 instance type for the EKS GPU server"
-  type        = list(string)
+  type = list(string)
 }
 
 variable "eks_gpu_min_instance" {
@@ -96,12 +78,6 @@ variable "db_backup_retention_period" {
   description = "The number of days to retain backups for"
   type        = number
   default     = null
-}
-
-variable "db_skip_final_snapshot" {
-  description = "Whether to skip the final snapshot when deleting the RDS database"
-  type        = bool
-  default     = true
 }
 
 variable "zone_name" {
@@ -137,80 +113,44 @@ variable "pipeline_key" {
   sensitive   = true
   description = "Pipeline Key"
 }
+
 variable "litelllm_masterkey" {
   type        = string
   sensitive   = true
   description = "LiteLLM Master Key"
 }
+
 variable "webui_secret_key" {
   type        = string
   sensitive   = true
   description = "WebUI Secret Key"
 }
+
 variable "brave_api_key" {
   type        = string
   sensitive   = true
   description = "Brave API Key"
 }
+
 variable "anthropic_key" {
   type        = string
   sensitive   = true
   description = "Anthropic API Key"
 }
+
 variable "gemini_key" {
   type        = string
   sensitive   = true
   description = "Gemini API Key"
 }
+
 variable "openapi_key" {
   type        = string
   sensitive   = true
   description = "OpenAI API Key"
 }
-variable "fireworks_ai_api_key" {
-  type        = string
-  sensitive   = true
-  description = "Firework API Key"
-}
-variable "deepgram_api_key" {
-  type        = string
-  sensitive   = true
-  description = "Deepgram API Key"
-}
-variable "deepseek_api_key" {
-  type        = string
-  sensitive   = true
-  description = "DeepSeek API Key"
-}
-variable "togetherai_api_key" {
-  type        = string
-  sensitive   = true
-  description = "TogetherAI API Key"
-}
-variable "voyage_api_key" {
-  type        = string
-  sensitive   = true
-  description = "Voyage API Key"
-}
-variable "groq_api_key" {
-  type        = string
-  sensitive   = true
-  description = "Groq API Key"
-}
-
-variable "hg_api_key" {
-  type        = string
-  sensitive   = true
-  description = "Hugging's Face API Key"
-}
-
-variable "kubeai_ns" {
-  type        = string
-  description = "kubeai namespace"
-  default = "kubeai"
-}
 
 variable "capacity_type" {
-  default = null
+  default     = null
   description = "EC2 Capacity type"
 }

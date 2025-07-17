@@ -1,0 +1,22 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: chat-ui
+  namespace: argocd
+spec:
+  project: application
+  source:
+    repoURL: https://github.com/adorsys-gis/ai-ops
+    targetRevision: HEAD
+    path: charts/chat-ui
+
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: chat-ui
+
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+
+  revisionHistoryLimit: 2

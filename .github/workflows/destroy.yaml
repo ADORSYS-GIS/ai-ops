@@ -28,7 +28,7 @@ jobs:
       - name: Set up Terraform
         uses: hashicorp/setup-terraform@v2
         with:
-          terraform_version: 1.9.8
+          terraform_version: 1.12.2
 
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4
@@ -41,8 +41,6 @@ jobs:
         run: |
           echo "TF_VAR_name=${{ inputs.environment }}-env" >> $GITHUB_ENV
           echo "TF_VAR_region=${{ vars.AWS_REGION }}" >> $GITHUB_ENV
-          echo "TF_VAR_db_username=${{ vars.DB_USERNAME }}" >> $GITHUB_ENV
-          echo "TF_VAR_db_password=${{ secrets.DB_PASSWORD }}" >> $GITHUB_ENV
 
           echo "TF_VAR_zone_name=${{ vars.DOMAIN_NAME }}" >> $GITHUB_ENV
           echo "TF_VAR_cert_arn=${{ vars.CERT_ARN }}" >> $GITHUB_ENV
@@ -54,25 +52,29 @@ jobs:
           echo "TF_VAR_webui_secret_key=${{ secrets.WEBUI_SECRET_KEY }}" >> $GITHUB_ENV
           echo "TF_VAR_brave_api_key=${{ secrets.BRAVE_API_KEY }}" >> $GITHUB_ENV
 
-          echo "TF_VAR_groq_api_key=${{ secrets.GROQ_API_KEY }}" >> $GITHUB_ENV
           echo "TF_VAR_pipeline_key=${{ secrets.PIPELINE_KEY }}" >> $GITHUB_ENV
           echo "TF_VAR_litelllm_masterkey=${{ secrets.LITELLLM_MASTERKEY }}" >> $GITHUB_ENV
           echo "TF_VAR_anthropic_key=${{ secrets.ANTHROPIC_KEY }}" >> $GITHUB_ENV
           echo "TF_VAR_gemini_key=${{ secrets.GEMINI_KEY }}" >> $GITHUB_ENV
           echo "TF_VAR_openapi_key=${{ secrets.OPENAPI_KEY }}" >> $GITHUB_ENV
-          echo "TF_VAR_fireworks_ai_api_key=${{ secrets.FIREWORKS_AI_API_KEY }}" >> $GITHUB_ENV
-          echo "TF_VAR_deepgram_api_key=${{ secrets.DEEPGRAM_API_KEY }}" >> $GITHUB_ENV
-          echo "TF_VAR_deepseek_api_key=${{ secrets.DEEPSEEK_API_KEY }}" >> $GITHUB_ENV
-          echo "TF_VAR_togetherai_api_key=${{ secrets.TOGETHERAI_API_KEY }}" >> $GITHUB_ENV
-          echo "TF_VAR_voyage_api_key=${{ secrets.VOYAGE_API_KEY }}" >> $GITHUB_ENV
-          echo "TF_VAR_hg_api_key=${{ secrets.HF_TOKEN }}" >> $GITHUB_ENV
 
+      - name: Adding backend
+        run: |
+          cat <<EOF > backend.tf
+          terraform {
+            backend "s3" {
+              key     = "do.not.delete.ai-terraform.tfstate"
+              encrypt = true
+            }
+          }
+          EOF
+          
       - name: Terraform Init
         run: |
           terraform init -var-file=${{ inputs.environment }}.tfvars \
           -backend-config="region=${{ vars.AWS_REGION }}" \
-          -backend-config="bucket=adorsys-ai-prod-terraform-state" \
-          -backend-config="dynamodb_table=adorsys-ai-prod-terraform-state-lock"
+          -backend-config="bucket=kivoyo-${{ inputs.environment }}-terraform-state" \
+          -backend-config="dynamodb_table=kivoyo-${{ inputs.environment }}-terraform-state-lock"
 
       - name: Terraform Plan
         run: |

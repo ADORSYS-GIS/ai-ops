@@ -1,0 +1,22 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: litellm
+  namespace: argocd
+spec:
+  project: application
+  source:
+    repoURL: https://github.com/adorsys-gis/ai-ops
+    targetRevision: HEAD
+    path: charts/litellm
+    
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: kivoyo
+
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+
+  revisionHistoryLimit: 2

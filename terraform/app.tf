@@ -14,9 +14,8 @@ module "ops" {
     templatefile("${path.module}/files/argo-cd-apps.yaml", {
       environment    = var.environment
       fileSystemId   = module.efs.id
-      kubeai_ns      = local.kubeai_namespace
-      hf-secret-name = "kubeai-hg"
-      deployment-date = timestamp()
+      cluster_name   = local.eks_name
+      karpenter_role = module.eks.eks_managed_node_groups["karpenter-ng"].iam_role_name
     })
   ]
 

@@ -5,7 +5,6 @@ azs = [
   "eu-central-1c"
 ]
 
-db_instance = "db.t3.medium"
 environment = "prod"
 
 eks_ec2_instance_types = [
@@ -23,5 +22,4 @@ eks_gpu_max_instance     = 10
 eks_gpu_desired_instance = 1
 
 db_backup_retention_period = null
-db_skip_final_snapshot     = true
 

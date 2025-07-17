@@ -1,12 +1,11 @@
 resource "kubernetes_namespace" "litellm_namespace" {
   metadata {
-    name = local.namespace
+    name = "litellm"
   }
 }
 
-resource "kubernetes_namespace" "kubeai_namespace" {
+resource "kubernetes_namespace" "chat_ui_namespace" {
   metadata {
-    name = local.kubeai_namespace
+    name = "chat-ui"
   }
 }
-

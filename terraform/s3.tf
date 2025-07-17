@@ -43,10 +43,7 @@ module "s3_bucket" {
           AWS = aws_iam_user.s3_user.arn
         },
         Action = [
-          "s3:PutObject",
-          "s3:GetObject",
-          "s3:DeleteObject",
-          "s3:ListBucket"
+          "s3:*",
         ],
         Resource = [
           "arn:aws:s3:::${local.s3_bucket_name}",

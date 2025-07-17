@@ -1,8 +1,8 @@
 global:
-  apiKey: "latest"
-  version: "git-27af7a6"
+  version: "main"
   labels:
     app: mcpo
+    team: adorsys-gis
 
 mcpo:
   controllers:
@@ -25,45 +25,15 @@ mcpo:
             - -c
             - |
               set -e
-              mcpo --api-key $API_KEY --config=/tmp/config.json
+              mcpo --config=/tmp/config.json
           
           resources:
             requests:
-              cpu: 125m
-              memory: 256Mi
+              cpu: 1000m
+              memory: 1024Mi
             limits:
-              cpu: 400m
-              memory: 512Mi
-          
-          envFrom:
-            - secretRef:
-                identifier: api-key
-    playwright:
-      type: deployment
-      strategy: Recreate
-      replicas: 1
-      labels:
-        playwright: playwright-app
-      containers:
-        playwright:
-          image:
-            repository: mcr.microsoft.com/playwright
-            tag: v1.53.0-noble
-          
-          command: /bin/sh
-          
-          args:
-            - -c
-            - |
-              npx -y playwright@1.53.0 run-server --port 3000 --host 0.0.0.0
-          
-          resources:
-            requests:
-              cpu: 125m
-              memory: 256Mi
-            limits:
-              cpu: 400m
-              memory: 512Mi
+              cpu: 2000m
+              memory: 4096Mi
   
   service:
     mcpo:
@@ -76,20 +46,10 @@ mcpo:
           enabled: true
           port: 8000
           targetPort: 8000
-    playwright:
-      enabled: true
-      annotations: { }
-      type: ClusterIP
-      controller: playwright
-      ports:
-        http:
-          enabled: true
-          port: 3000
-          targetPort: 3000
   
   ingress:
     mcpo:
-      enabled: true
+      enabled: false
       annotations: { }
       #className: 'nginx'
       hosts:
@@ -111,16 +71,6 @@ mcpo:
       annotations:
         description: 'Common configuration for the MCPo.'
       data:
-        "playwright.json": |
-          {
-            "browser": {
-              "remoteEndpoint": "ws://{{ .Release.Name }}-playwright:3000",
-              "launchOptions": {
-                "headless": true
-              }
-            },
-            "vision": true
-          }
         "config.json": |
           {
             "mcpServers": {
@@ -157,25 +107,10 @@ mcpo:
                   "-y",
                   "@modelcontextprotocol/server-sequential-thinking"
                 ]
-              },
-              "playwright": {
-                "command": "npx",
-                "args": [
-                  "-y",
-                  "@playwright/mcp@latest",
-                  "--config=/tmp/playwright.json"
-                ]
               }
             }
           }
   
-  secrets:
-    api-key:
-      enabled: true
-      annotations:
-        description: 'Api-Key configuration for the MCPo.'
-      stringData:
-        API_KEY: "minio"
   
   networkpolicies:
     main:
@@ -192,21 +127,6 @@ mcpo:
             ports:
               - protocol: TCP
                 port: 8000
-    playwright:
-      enabled: true
-      controller: playwright
-      policyTypes:
-        - Ingress
-      rules:
-        ingress:
-          - from:
-              - podSelector:
-                  matchLabels:
-                    app: playwright
-            ports:
-              - protocol: TCP
-                port: 3000
-                
   persistence:
     config:
       enabled: true
@@ -218,7 +138,4 @@ mcpo:
             - path: /tmp/config.json
               readOnly: true
               subPath: config.json
-            - path: /tmp/playwright.json
-              readOnly: true
-              subPath: playwright.json
   

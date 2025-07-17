@@ -64,36 +64,6 @@ module "eks" {
         }
       )
     }
-    ollama-ng = {
-      name           = "ollama-gpus"
-      ami_type       = "BOTTLEROCKET_x86_64_NVIDIA"
-      min_size       = var.eks_gpu_min_instance
-      max_size       = var.eks_gpu_max_instance
-      desired_size   = var.eks_gpu_desired_instance
-      instance_types = var.eks_gpu_ec2_instance_types
-      capacity_type  = var.capacity_type
-      iam_role_additional_policies = {
-        ebs = "arn:aws:iam::aws:policy/service-role/AmazonEBSCSIDriverPolicy"
-      }
-      labels = {
-        gpu-node : "true"
-        ollama-node : "true"
-      }
-      taints = [
-        {
-          key    = "ollama-node"
-          value  = "true"
-          effect = "NO_SCHEDULE"
-        }
-      ]
-      tags = merge(
-        local.tags,
-        {
-          "gpu-node"    = "true",
-          "ollama-node" = "true",
-        }
-      )
-    }
     karpenter-ng = {
       name         = "karpenter-gpus"
       ami_type     = "BOTTLEROCKET_x86_64_NVIDIA"
@@ -134,7 +104,7 @@ module "eks" {
         "p4d.24xlarge",
         # "p5.48xlarge",
       ]
-      capacity_type = var.capacity_type
+      capacity_type = "ON_DEMAND"
       iam_role_additional_policies = {
         ebs = "arn:aws:iam::aws:policy/service-role/AmazonEBSCSIDriverPolicy"
       }
@@ -180,7 +150,6 @@ module "eks" {
 
 module "eks_blueprints_addons" {
   source  = "aws-ia/eks-blueprints-addons/aws"
-  version = "~> 1.0"
 
   depends_on = [module.eks]
 
@@ -220,6 +189,9 @@ module "eks_blueprints_addons" {
       most_recent = true
     }
   }
+  
+  enable_kube_prometheus_stack = true
+  kube_prometheus_stack = {}
 
   aws_load_balancer_controller = {
     set = [
@@ -276,7 +248,6 @@ module "eks_blueprints_addons" {
 
 module "ebs_csi_driver_irsa" {
   source  = "terraform-aws-modules/iam/aws//modules/iam-role-for-service-accounts-eks"
-  version = "~> 5.0"
 
   role_name_prefix = "${local.name}-ebs-csi-driver-"
 
@@ -290,4 +261,53 @@ module "ebs_csi_driver_irsa" {
   attach_ebs_csi_policy = true
 
   tags = merge(local.tags, {})
+}
+
+module "eks_data_addons" {
+  source  = "aws-ia/eks-data-addons/aws"
+
+  oidc_provider_arn = module.eks.oidc_provider_arn
+
+  #---------------------------------------------------------------
+  # CloudNative PG Add-on
+  #---------------------------------------------------------------
+  enable_cnpg_operator = true
+  cnpg_operator_helm_config = {
+    namespace   = "cnpg-system"
+    description = "CloudNativePG Operator Helm chart deployment configuration"
+    set = [
+      {
+        name  = "resources.limits.memory"
+        value = "200Mi"
+      },
+      {
+        name  = "resources.limits.cpu"
+        value = "100m"
+      },
+      {
+        name  = "resources.requests.cpu"
+        value = "100m"
+      },
+      {
+        name  = "resources.memory.memory"
+        value = "100Mi"
+      }
+    ]
+  }
+  
+
+  #---------------------------------------------------------------
+  # MLflow Tracking (Using Local Helm Chart)
+  #---------------------------------------------------------------
+  enable_mlflow_tracking = true
+  mlflow_tracking_helm_config = {
+    namespace   = "mlflow-system"
+    description = "MLflow Tracking add-on Helm Chart config"
+    set = [
+      {
+        name  = "clusterName"
+        value = local.eks_name
+      },
+    ]
+  }
 }

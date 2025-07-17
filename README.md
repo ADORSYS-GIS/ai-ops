@@ -7,7 +7,6 @@ AI Ops is an infrastructure-as-code project that provides a robust, scalable pla
 The platform consists of the following main components:
 
 - Amazon EKS for container orchestration
-- Amazon RDS for database services
 - AWS Secrets Manager for secure secrets handling
 - Custom Helm charts for AI application deployments
 - Terraform for infrastructure provisioning

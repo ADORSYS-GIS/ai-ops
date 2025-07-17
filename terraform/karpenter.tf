@@ -31,7 +31,7 @@ module "karpenter-helm" {
 
   values = [
     templatefile("${path.module}/files/karpenter.yaml", {
-      clusterName: module.eks.cluster_name
+      clusterName: local.eks_name
       clusterEndpoint: module.eks.cluster_endpoint
       interruptionQueue: module.karpenter.queue_name
     })
