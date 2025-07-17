@@ -324,3 +324,4 @@ owu:
                   operator: In
                   values:
                     - tika
+            topologyKey: "kubernetes.io/hostname"
