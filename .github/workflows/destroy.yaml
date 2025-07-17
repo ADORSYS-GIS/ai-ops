@@ -73,8 +73,8 @@ jobs:
         run: |
           terraform init -var-file=${{ inputs.environment }}.tfvars \
           -backend-config="region=${{ vars.AWS_REGION }}" \
-          -backend-config="bucket=kivoyo-${{ inputs.environment }}-terraform-state" \
-          -backend-config="dynamodb_table=kivoyo-${{ inputs.environment }}-terraform-state-lock"
+          -backend-config="bucket=kivoyo-v2-${{ inputs.environment }}-terraform-state" \
+          -backend-config="dynamodb_table=kivoyo-v2-${{ inputs.environment }}-terraform-state-lock"
 
       - name: Terraform Plan
         run: |
