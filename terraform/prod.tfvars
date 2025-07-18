@@ -9,11 +9,13 @@ environment = "prod"
 
 cpu_ec2_instance_types = [
   "t3.medium",
+  
+  "c5.large",
   "c5.xlarge"
 ]
 cpu_min_instance     = 3
 cpu_max_instance     = 10
-cpu_desired_instance = 5
+cpu_desired_instance = 4
 cpu_capacity_type    = "SPOT"
 
 mlflow_ec2_instance_types = [
