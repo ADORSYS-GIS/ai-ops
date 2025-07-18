@@ -324,6 +324,7 @@ owu:
         - ReadWriteMany
 
 tika:
+  fullnameOverride: tika
   enabled: true
   replicaCount: 2
   affinity:
