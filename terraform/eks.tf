@@ -269,7 +269,7 @@ module "eks_data_addons" {
   cnpg_operator_helm_config = {
     namespace   = "cnpg-system"
     description = "CloudNativePG Operator Helm chart deployment configuration"
-    version     = "1.17.1"
+    version     = "0.24.0"
     values = [
       templatefile("${path.module}/files/cnpg.values.yaml", {})
     ]
