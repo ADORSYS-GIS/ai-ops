@@ -186,7 +186,7 @@ module "eks_blueprints_addons" {
       most_recent = true
     }
   }
-  
+
   aws_load_balancer_controller = {
     set = [
       {
@@ -269,23 +269,9 @@ module "eks_data_addons" {
   cnpg_operator_helm_config = {
     namespace   = "cnpg-system"
     description = "CloudNativePG Operator Helm chart deployment configuration"
-    set = [
-      {
-        name  = "resources.limits.memory"
-        value = "200Mi"
-      },
-      {
-        name  = "resources.limits.cpu"
-        value = "100m"
-      },
-      {
-        name  = "resources.requests.cpu"
-        value = "100m"
-      },
-      {
-        name  = "resources.memory.memory"
-        value = "100Mi"
-      }
+    version     = "1.17.1"
+    values = [
+      templatefile("${path.module}/files/cnpg.values.yaml", {})
     ]
   }
 }
