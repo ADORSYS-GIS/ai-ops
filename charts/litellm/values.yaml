@@ -146,15 +146,15 @@ litellm:
         model_info:
           mode: audio_speech
 
-      - model_name: gemini-2.5-flash
+      - model_name: gemini-2.5-flash-preview
         litellm_params:
-          model: gemini/gemini-2.5-flash-preview-04-17
+          model: gemini/gemini-2.5-flash-preview-05-20
           drop_params: true
         model_info:
           supports_function_calling: true
-      - model_name: gemini-2.5-pro-preview-03-25
+      - model_name: gemini-2.5-pro-preview
         litellm_params:
-          model: gemini/gemini-2.5-pro-preview-03-25
+          model: gemini/gemini-2.5-pro-preview-05-06
           drop_params: true
         model_info:
           supports_function_calling: true
