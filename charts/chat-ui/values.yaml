@@ -43,7 +43,7 @@ owu:
       value: "gemini-2.5-flash"
 
     - name: WEBUI_URL
-      value: "https://ai.kivoyo.me"
+      value: "https://ai.kivoyo.com"
 
     - name: REDIS_URL
       valueFrom:
