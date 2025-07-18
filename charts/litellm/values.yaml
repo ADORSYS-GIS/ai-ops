@@ -18,8 +18,8 @@ litellm:
   replicaCount: 1
   
   db:
-    useExisting: "true"
-    deployStandalone: "false"
+    useExisting: true
+    deployStandalone: false
     endpoint: "litellm-pg-rw"
     database: app
     secret:
@@ -56,7 +56,6 @@ litellm:
     maxReplicas: 3
   
   environmentSecrets:
-    - litellm-rds-secret
     - litellm-openai-api-key
     - litellm-gemini-api-key
     - litellm-anthropic-api-key
