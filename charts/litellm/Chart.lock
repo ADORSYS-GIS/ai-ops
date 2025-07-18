@@ -1,9 +1,9 @@
 dependencies:
 - name: litellm-helm
   repository: oci://ghcr.io/berriai
-  version: 0.1.717
+  version: 0.1.730
 - name: common
   repository: oci://registry-1.docker.io/bitnamicharts
   version: 2.31.3
-digest: sha256:cef4e989f2b53fabf6add28131822fcc1497912aa94577d2f561f4eb7491c3d8
-generated: "2025-07-04T20:36:05.444987+02:00"
+digest: sha256:01147d921a14e5034b73682d2dbc09eef23ed5809c5e528c4c40bce563d1e92f
+generated: "2025-07-17T13:12:08.033397+02:00"

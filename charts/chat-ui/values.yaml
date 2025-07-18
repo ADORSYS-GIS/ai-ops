@@ -34,7 +34,7 @@ owu:
           topologyKey: "kubernetes.io/hostname"
   ollama:
     enabled: false
-  openaiBaseApiUrl: "http://litellm:4000"
+  openaiBaseApiUrl: "http://litellm.litellm.svc.cluster.local:4000"
   extraEnvVars:
     - name: RESET_CONFIG_ON_START
       value: "True"
