@@ -47,7 +47,7 @@ owu:
     - name: VECTOR_DB
       value: "chroma"
     - name: CHROMA_HTTP_HOST
-      value: "chromadb.chromadb"
+      value: "chromadb"
 
     - name: DEFAULT_MODELS
       value: "gemini-2.5-flash"
