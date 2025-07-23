@@ -147,6 +147,7 @@ module "eks" {
 
 module "eks_blueprints_addons" {
   source = "aws-ia/eks-blueprints-addons/aws"
+  version = "~> 1.0"
 
   depends_on = [module.eks]
 
@@ -242,6 +243,7 @@ module "eks_blueprints_addons" {
 
 module "ebs_csi_driver_irsa" {
   source = "terraform-aws-modules/iam/aws//modules/iam-role-for-service-accounts-eks"
+  version = "~> 5.0"
 
   role_name_prefix = "${local.name}-ebs-csi-driver-"
 
@@ -259,6 +261,7 @@ module "ebs_csi_driver_irsa" {
 
 module "eks_data_addons" {
   source = "aws-ia/eks-data-addons/aws"
+  version = "~> 1.0"
 
   oidc_provider_arn = module.eks.oidc_provider_arn
 

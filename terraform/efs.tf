@@ -1,5 +1,6 @@
 module "efs" {
   source = "terraform-aws-modules/efs/aws"
+  version = "~> 1.0"
 
   # File system
   name           = "${local.name}-efs"
