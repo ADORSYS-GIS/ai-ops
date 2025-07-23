@@ -50,7 +50,7 @@ owu:
       value: "chromadb"
 
     - name: DEFAULT_MODELS
-      value: "gemini-2.5-flash-preview"
+      value: "qwen3-30b-a3b"
 
     - name: WEBUI_URL
       value: "https://ai.kivoyo.com"
@@ -122,9 +122,9 @@ owu:
     - name: DEFAULT_USER_ROLE
       value: "user"
     - name: TASK_MODEL
-      value: "gemini-2.5-flash-preview"
+      value: "qwen3-30b-a3b"
     - name: TASK_MODEL_EXTERNAL
-      value: "gemini-2.5-flash-preview"
+      value: "qwen3-30b-a3b"
     - name: ENABLE_AUTOCOMPLETE_GENERATION
       value: "False"
     - name: AUTOCOMPLETE_GENERATION_INPUT_MAX_LENGTH
