@@ -9,6 +9,16 @@ spec:
     repoURL: https://github.com/adorsys-gis/ai-ops
     targetRevision: HEAD
     path: charts/litellm
+  
+  helm:
+    valuesObject:
+      configMaps:
+        config:
+          enabled: false
+      mcpo:
+        persistence: 
+          config:
+            name: mcpo-config-gen
     
   destination:
     server: https://kubernetes.default.svc

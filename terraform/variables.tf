@@ -164,6 +164,12 @@ variable "webui_secret_key" {
   description = "WebUI Secret Key"
 }
 
+variable "tool_api_key" {
+  type        = string
+  sensitive   = true
+  description = "Tool API Key"
+}
+
 variable "brave_api_key" {
   type        = string
   sensitive   = true

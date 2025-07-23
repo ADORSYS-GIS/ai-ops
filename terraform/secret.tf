@@ -143,3 +143,43 @@ resource "kubernetes_secret" "open_web_ui_redis_secret" {
 
   depends_on = [kubernetes_namespace.chat_ui_namespace]
 }
+
+resource "kubernetes_secret" "open_web_ui_tools" {
+  metadata {
+    name      = "open-web-ui-tools"
+    namespace = kubernetes_namespace.chat_ui_namespace.metadata[0].name
+  }
+  data = {
+    "tools.json" = templatefile("${path.module}/files/tools.json", {
+      tool_api_key = var.tool_api_key,
+    })
+  }
+
+  depends_on = [kubernetes_namespace.chat_ui_namespace]
+}
+
+resource "kubernetes_secret" "mcpo_env" {
+  metadata {
+    name      = "mcpo-api-key-env"
+    namespace = kubernetes_namespace.mcpo_namespace.metadata[0].name
+  }
+  data = {
+    API_KEY = var.tool_api_key
+  }
+
+  depends_on = [kubernetes_namespace.mcpo_namespace]
+}
+
+resource "kubernetes_secret" "mcpo_config" {
+  metadata {
+    name      = "mcpo-config-gen"
+    namespace = kubernetes_namespace.mcpo_namespace.metadata[0].name
+  }
+  data = {
+    "config.json" = templatefile("${path.module}/files/mcp-servers.json", {
+      brave_api_key = var.brave_api_key,
+    })
+  }
+
+  depends_on = [kubernetes_namespace.mcpo_namespace]
+}

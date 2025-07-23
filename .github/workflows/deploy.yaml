@@ -59,6 +59,7 @@ jobs:
           echo "TF_VAR_gemini_key=${{ secrets.GEMINI_KEY }}" >> $GITHUB_ENV
           echo "TF_VAR_openai_key=${{ secrets.OPENAI_API_KEY }}" >> $GITHUB_ENV
           echo "TF_VAR_fireworks_key=${{ secrets.FIREWORKS_KEY }}" >> $GITHUB_ENV
+          echo "TF_VAR_tool_api_key=${{ secrets.TOOL_API_KEY }}" >> $GITHUB_ENV
 
       - name: Adding backend
         run: |

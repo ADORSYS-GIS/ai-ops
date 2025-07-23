@@ -25,7 +25,7 @@ mcpo:
             - -c
             - |
               set -e
-              mcpo --config=/tmp/config.json
+              mcpo --api-key $API_KEY --config=/tmp/config.json
           
           resources:
             requests:
@@ -35,6 +35,10 @@ mcpo:
               cpu: 2000m
               memory: 4096Mi
   
+          envFrom:
+            - secretRef:
+                name: mcpo-api-key-env
+                
   service:
     mcpo:
       enabled: true

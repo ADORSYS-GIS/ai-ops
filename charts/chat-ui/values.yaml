@@ -52,6 +52,12 @@ owu:
     - name: DEFAULT_MODELS
       value: "qwen3-30b-a3b"
 
+    - name: TOOL_SERVER_CONNECTIONS
+      valueFrom:
+        secretKeyRef:
+          name: open-web-ui-tools
+          key: tools.json
+
     - name: WEBUI_URL
       value: "https://ai.kivoyo.com"
 
