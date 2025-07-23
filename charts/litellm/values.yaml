@@ -99,11 +99,17 @@ litellm:
         namespace: "litellm.caching.caching"
     model_list:
       # At least one model must exist for the proxy to start.
+      - model_name: claude-opus-4
+        litellm_params:
+          model: anthropic/claude-opus-4-20250514
+        model_info:
+          supports_function_calling: true
       - model_name: claude-sonnet-4
         litellm_params:
           model: anthropic/claude-sonnet-4-20250514
         model_info:
           supports_function_calling: true
+          
       - model_name: o4-mini
         litellm_params:
           model: openai/o4-mini
