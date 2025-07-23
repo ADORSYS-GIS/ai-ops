@@ -144,7 +144,7 @@ owu:
           key: webui-secret-key
 
     - name: ENABLE_WEB_SEARCH
-      value: "True"
+      value: "False"
     - name: WEB_SEARCH_TRUST_ENV
       value: "True"
     - name: WEB_SEARCH_RESULT_COUNT
@@ -186,7 +186,7 @@ owu:
           key: litellm-openai-api-key
 
     - name: ENABLE_IMAGE_GENERATION
-      value: "True"
+      value: "False"
     - name: IMAGE_GENERATION_ENGINE
       value: "openai"
     - name: IMAGE_GENERATION_MODEL
