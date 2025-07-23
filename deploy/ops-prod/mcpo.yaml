@@ -17,7 +17,17 @@ spec:
         mcpo:
           persistence:
             config:
+              enabled: false
+            config-json:
+              enabled: true
+              type: secret
               name: mcpo-config-gen
+              advancedMounts:
+                main:
+                  mcpo:
+                    - path: /tmp/config.json
+                      readOnly: true
+                      subPath: config.json
 
   destination:
     server: https://kubernetes.default.svc
