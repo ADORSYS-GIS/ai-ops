@@ -27,6 +27,18 @@ resource "kubernetes_secret" "litellm_openai_api_key" {
   depends_on = [kubernetes_namespace.litellm_namespace]
 }
 
+resource "kubernetes_secret" "litellm_fireworks_key" {
+  metadata {
+    name      = "litellm-fireworks-key"
+    namespace = kubernetes_namespace.litellm_namespace.metadata[0].name
+  }
+  data = {
+    FIREWORKS_AI_API_KEY = var.fireworks_key
+  }
+
+  depends_on = [kubernetes_namespace.litellm_namespace]
+}
+
 resource "kubernetes_secret" "litellm_gemini_api_key" {
   metadata {
     name      = "litellm-gemini-api-key"

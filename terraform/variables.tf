@@ -187,3 +187,9 @@ variable "openai_key" {
   sensitive   = true
   description = "OpenAI API Key"
 }
+
+variable "fireworks_key" {
+  type        = string
+  sensitive   = true
+  description = "Firework Key"
+}
