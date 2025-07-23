@@ -16,7 +16,11 @@
     },
     "key": "${tool_api_key}",
     "path": "openapi.json",
-    "url": "http://mcpo.mcpo.svc.cluster.local:8000/brave-search"
+    "url": "http://mcpo.mcpo.svc.cluster.local:8000/brave-search",
+    "info": {
+      "name": "Brave Search",
+      "description": ""
+    }
   },
   {
     "auth_type": "bearer",
@@ -35,7 +39,11 @@
     },
     "key": "${tool_api_key}",
     "path": "openapi.json",
-    "url": "http://mcpo.mcpo.svc.cluster.local:8000/fetch"
+    "url": "http://mcpo.mcpo.svc.cluster.local:8000/fetch",
+    "info": {
+      "name": "Fetch",
+      "description": ""
+    }
   },
   {
     "auth_type": "bearer",
@@ -54,7 +62,11 @@
     },
     "key": "${tool_api_key}",
     "path": "openapi.json",
-    "url": "http://mcpo.mcpo.svc.cluster.local:8000/memory"
+    "url": "http://mcpo.mcpo.svc.cluster.local:8000/memory",
+    "info": {
+      "name": "Memory",
+      "description": ""
+    }
   },
   {
     "auth_type": "bearer",
@@ -73,7 +85,11 @@
     },
     "key": "${tool_api_key}",
     "path": "openapi.json",
-    "url": "http://mcpo.mcpo.svc.cluster.local:8000/sequential-thinking"
+    "url": "http://mcpo.mcpo.svc.cluster.local:8000/sequential-thinking",
+    "info": {
+      "name": "Sequential thinking",
+      "description": ""
+    }
   },
   {
     "auth_type": "bearer",
@@ -92,6 +108,10 @@
     },
     "key": "${tool_api_key}",
     "path": "openapi.json",
-    "url": "http://mcpo.mcpo.svc.cluster.local:8000/time"
+    "url": "http://mcpo.mcpo.svc.cluster.local:8000/time",
+    "info": {
+      "name": "Time",
+      "description": ""
+    }
   }
 ]
