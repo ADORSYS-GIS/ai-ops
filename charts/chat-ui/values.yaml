@@ -132,7 +132,7 @@ owu:
     - name: TASK_MODEL_EXTERNAL
       value: "qwen3-30b-a3b"
     - name: ENABLE_AUTOCOMPLETE_GENERATION
-      value: "False"
+      value: "True"
     - name: AUTOCOMPLETE_GENERATION_INPUT_MAX_LENGTH
       value: "15"
     - name: ENABLE_COMMUNITY_SHARING
@@ -144,7 +144,7 @@ owu:
           key: webui-secret-key
 
     - name: ENABLE_WEB_SEARCH
-      value: "False"
+      value: "True"
     - name: WEB_SEARCH_TRUST_ENV
       value: "True"
     - name: WEB_SEARCH_RESULT_COUNT
@@ -186,7 +186,7 @@ owu:
           key: litellm-openai-api-key
 
     - name: ENABLE_IMAGE_GENERATION
-      value: "False"
+      value: "True"
     - name: IMAGE_GENERATION_ENGINE
       value: "openai"
     - name: IMAGE_GENERATION_MODEL
