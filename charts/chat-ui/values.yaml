@@ -309,7 +309,7 @@ owu:
     enableSignup: true
     mergeAccountsByEmail: true
   pipelines:
-    replicaCount: 2
+    replicaCount: 1
     podLabels:
       app: dep-for-pipeline
     affinity:
