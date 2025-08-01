@@ -12,6 +12,10 @@ module "eks" {
   create_cloudwatch_log_group              = false
   enable_cluster_creator_admin_permissions = true
 
+  eks_managed_node_group_defaults = {
+    disk_size = 100
+  }
+  
   eks_managed_node_groups = {
     cpu-ng = {
       name           = "cpu"
