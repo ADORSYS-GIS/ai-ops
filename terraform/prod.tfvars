@@ -9,6 +9,8 @@ environment = "prod"
 
 cpu_ec2_instance_types = [
   "t3.medium",
+  "t3.large",
+  "t3.xlarge",
   
   "c5.large",
   "c5.xlarge"
