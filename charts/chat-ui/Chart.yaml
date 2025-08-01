@@ -30,4 +30,5 @@ dependencies:
     
   - name: chromadb
     version: '*'
+    condition: tika.enabled
     repository: https://amikos-tech.github.io/chromadb-chart/

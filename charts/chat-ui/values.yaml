@@ -44,10 +44,10 @@ owu:
     - name: TIKA_SERVER_URL
       value: "http://tika:9998"
 
-    - name: VECTOR_DB
-      value: "chroma"
-    - name: CHROMA_HTTP_HOST
-      value: "chromadb"
+#    - name: VECTOR_DB
+#      value: "chroma"
+#    - name: CHROMA_HTTP_HOST
+#      value: "chromadb"
 
     - name: DEFAULT_MODELS
       value: "o4-mini"
@@ -346,6 +346,7 @@ tika:
 
 
 chromadb:
+  enabled: false
   fullnameOverride: chromadb
   replicaCount: 2
   chromadb:
