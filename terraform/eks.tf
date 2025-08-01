@@ -12,10 +12,6 @@ module "eks" {
   create_cloudwatch_log_group              = false
   enable_cluster_creator_admin_permissions = true
 
-  eks_managed_node_group_defaults = {
-    disk_size = 100
-  }
-  
   eks_managed_node_groups = {
     cpu-ng = {
       name           = "cpu"
@@ -24,6 +20,7 @@ module "eks" {
       desired_size   = var.cpu_desired_instance
       instance_types = var.cpu_ec2_instance_types
       capacity_type  = var.cpu_capacity_type
+      disk_size      = 100
 
       iam_role_additional_policies = {
         ebs = "arn:aws:iam::aws:policy/service-role/AmazonEBSCSIDriverPolicy"
@@ -46,6 +43,8 @@ module "eks" {
       desired_size   = var.mlflow_desired_instance
       instance_types = var.mlflow_ec2_instance_types
       capacity_type  = var.mlflow_capacity_type
+      disk_size      = 100
+      
       iam_role_additional_policies = {
         ebs = "arn:aws:iam::aws:policy/service-role/AmazonEBSCSIDriverPolicy"
       }
@@ -76,6 +75,7 @@ module "eks" {
       desired_size   = var.knative_desired_instance
       instance_types = var.knative_ec2_instance_types
       capacity_type  = var.knative_capacity_type
+      disk_size      = 100
       instance_types = [
         # a10g
         "g5.xlarge",
@@ -150,7 +150,7 @@ module "eks" {
 }
 
 module "eks_blueprints_addons" {
-  source = "aws-ia/eks-blueprints-addons/aws"
+  source  = "aws-ia/eks-blueprints-addons/aws"
   version = "~> 1.0"
 
   depends_on = [module.eks]
@@ -246,7 +246,7 @@ module "eks_blueprints_addons" {
 }
 
 module "ebs_csi_driver_irsa" {
-  source = "terraform-aws-modules/iam/aws//modules/iam-role-for-service-accounts-eks"
+  source  = "terraform-aws-modules/iam/aws//modules/iam-role-for-service-accounts-eks"
   version = "~> 5.0"
 
   role_name_prefix = "${local.name}-ebs-csi-driver-"
@@ -264,7 +264,7 @@ module "ebs_csi_driver_irsa" {
 }
 
 module "eks_data_addons" {
-  source = "aws-ia/eks-data-addons/aws"
+  source  = "aws-ia/eks-data-addons/aws"
   version = "~> 1.0"
 
   oidc_provider_arn = module.eks.oidc_provider_arn
