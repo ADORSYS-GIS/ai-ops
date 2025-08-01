@@ -50,7 +50,7 @@ owu:
       value: "chromadb"
 
     - name: DEFAULT_MODELS
-      value: "qwen3-30b-a3b"
+      value: "o4-mini"
 
     - name: TOOL_SERVER_CONNECTIONS
       valueFrom:
@@ -128,9 +128,9 @@ owu:
     - name: DEFAULT_USER_ROLE
       value: "user"
     - name: TASK_MODEL
-      value: "qwen3-30b-a3b"
+      value: "o4-mini"
     - name: TASK_MODEL_EXTERNAL
-      value: "qwen3-30b-a3b"
+      value: "o4-mini"
     - name: ENABLE_AUTOCOMPLETE_GENERATION
       value: "True"
     - name: AUTOCOMPLETE_GENERATION_INPUT_MAX_LENGTH
