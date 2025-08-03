@@ -19,7 +19,7 @@ spec:
             main:
               type: statefulset
               strategy: RollingUpdate
-              replicas: 2
+              replicas: 1
           persistence:
             config:
               enabled: false
