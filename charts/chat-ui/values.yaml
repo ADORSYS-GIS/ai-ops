@@ -1,6 +1,6 @@
 db:
   enabled: true
-  instances: 3
+  instances: 2
   storage:
     size: 10Gi
     storageClass: ai-ebs
