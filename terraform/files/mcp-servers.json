@@ -48,7 +48,9 @@
         "--client-type",
         "http",
         "--host",
-        "http://chromadb.chat-ui.cluster.local:8000"
+        "http://chromadb.chat-ui.cluster.local:8000",
+        "--port",
+        "8000"
       ]
     }
   }
