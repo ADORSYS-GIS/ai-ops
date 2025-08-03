@@ -17,6 +17,9 @@ spec:
             replicas: 2
             containers:
               main:
+                image:
+                  tag: latest
+                  pullPolicy: Always
                 env:
                   # A smart model
                   OPENAI_QUESTION_BASE_URL: http://litellm.litellm.svc.cluster.local:4000
