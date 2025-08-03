@@ -14,6 +14,8 @@ module "eks" {
 
   eks_managed_node_groups = {
     cpu-ng = {
+      use_custom_launch_template = false
+      
       name           = "cpu"
       min_size       = var.cpu_min_instance
       max_size       = var.cpu_max_instance
@@ -36,6 +38,8 @@ module "eks" {
       )
     }
     mlflow-ng = {
+      use_custom_launch_template = false
+      
       name           = "mlflow-gpus"
       ami_type       = "BOTTLEROCKET_x86_64_NVIDIA"
       min_size       = var.mlflow_min_instance
@@ -44,7 +48,7 @@ module "eks" {
       instance_types = var.mlflow_ec2_instance_types
       capacity_type  = var.mlflow_capacity_type
       disk_size      = 100
-      
+
       iam_role_additional_policies = {
         ebs = "arn:aws:iam::aws:policy/service-role/AmazonEBSCSIDriverPolicy"
       }
@@ -68,6 +72,8 @@ module "eks" {
       )
     }
     knative-ng = {
+      use_custom_launch_template = false
+      
       name           = "knative-gpus"
       ami_type       = "BOTTLEROCKET_x86_64_NVIDIA"
       min_size       = var.knative_min_instance
