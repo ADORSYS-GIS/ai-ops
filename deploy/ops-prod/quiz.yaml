@@ -1,7 +1,7 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: quiz
+  name: quiz-backend
   namespace: argocd
 spec:
   project: application
@@ -10,7 +10,7 @@ spec:
     targetRevision: HEAD
     path: helm/quiz-backend
     helm:
-      valueObject:
+      valuesObject:
         controllers:
           main:
             type: deployment
