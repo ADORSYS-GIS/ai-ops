@@ -15,6 +15,10 @@ spec:
           config:
             enabled: false
         mcpo:
+          controllers:
+            main:
+              type: statefulset
+              replicas: 2
           persistence:
             config:
               enabled: false
