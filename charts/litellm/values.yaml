@@ -103,9 +103,25 @@ litellm:
       - model_name: qwen3-coder-480b-a35b-instruct
         litellm_params:
           model: fireworks_ai/accounts/fireworks/models/qwen3-coder-480b-a35b-instruct
+        model_info:
+          supports_function_calling: true
+      - model_name: qwen3-235b-a22b
+        litellm_params:
+          model: fireworks_ai/accounts/fireworks/models/qwen3-235b-a22b
+          api_key: os.environ/FIREWORKS_AI_API_KEY
+        model_info:
+          supports_function_calling: true
+      - model_name: qwen3-235b-a22b-tool
+        litellm_params:
+          model: fireworks_ai/accounts/fireworks/models/qwen3-235b-a22b-instruct-2507
+          api_key: os.environ/FIREWORKS_AI_API_KEY
+        model_info:
+          supports_function_calling: true
       - model_name: kimi-k2-instruct
         litellm_params:
           model: fireworks_ai/accounts/fireworks/models/kimi-k2-instruct
+        model_info:
+          supports_function_calling: true
       - model_name: qwen3-30b-a3b
         litellm_params:
           model: fireworks_ai/accounts/fireworks/models/qwen3-30b-a3b

@@ -40,6 +40,16 @@
     "context7": {
       "command": "npx",
       "args": ["-y", "@upstash/context7-mcp"]
+    },
+    "chroma": {
+      "command": "uvx",
+      "args": [
+        "chroma-mcp",
+        "--client-type",
+        "http",
+        "--host",
+        "http://chromadb.chat-ui.cluster.local:8000"
+      ]
     }
   }
 }
