@@ -7,3 +7,4 @@ resources:
   - chat-ui.yaml
   - litellm.yaml
   - mcpo.yaml
+  - eg.yaml

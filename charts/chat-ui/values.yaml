@@ -346,7 +346,7 @@ tika:
 
 
 chromadb:
-  enabled: false
+  enabled: true
   fullnameOverride: chromadb
   replicaCount: 2
   chromadb:

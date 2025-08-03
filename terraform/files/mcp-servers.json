@@ -1,7 +1,6 @@
 {
   "mcpServers": {
     "memory": {
-      "type": "streamable_http",
       "command": "npx",
       "args": [
         "-y",
