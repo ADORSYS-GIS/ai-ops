@@ -136,27 +136,5 @@
       "name": "Context7",
       "description": "For resolving packages version"
     }
-  },
-  {
-    "auth_type": "bearer",
-    "config": {
-      "access_control": {
-        "read": {
-          "group_ids": [],
-          "user_ids": []
-        },
-        "write": {
-          "group_ids": [],
-          "user_ids": []
-        }
-      },
-      "enable": true
-    },
-    "path": "api-json",
-    "url": "http://quiz-backend:3000",
-    "info": {
-      "name": "Quizz",
-      "description": ""
-    }
   }
 ]
