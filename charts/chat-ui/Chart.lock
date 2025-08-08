@@ -11,5 +11,5 @@ dependencies:
 - name: chromadb
   repository: https://amikos-tech.github.io/chromadb-chart/
   version: 0.1.24
-digest: sha256:94e5b5efd11debc3d6dfdd0ca273cee3cdfb740dab192957f08360ae406a68f7
-generated: "2025-08-08T04:34:31.493073+02:00"
+digest: sha256:889ad08f9d51c2a17d6e802fe35abf52ee029b32fafd294ce337eda4871c339b
+generated: "2025-08-08T05:11:21.522415+02:00"
