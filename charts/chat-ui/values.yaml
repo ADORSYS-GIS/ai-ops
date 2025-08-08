@@ -50,7 +50,7 @@ owu:
 #      value: "chromadb"
 
     - name: DEFAULT_MODELS
-      value: "kivoyo"
+      value: "adorsys"
 
     - name: TOOL_SERVER_CONNECTIONS
       valueFrom:
