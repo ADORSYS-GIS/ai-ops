@@ -93,6 +93,8 @@ litellm:
       alb.ingress.kubernetes.io/unhealthy-threshold-count: "2"
   
   proxy_config:
+    general_settings:
+      user_header_name: X-OpenWebUI-User-Email
     litellm_settings:
       cache: True
       cache_params: # set cache params for redis
@@ -151,6 +153,8 @@ litellm:
         litellm_params:
           model: fireworks_ai/accounts/fireworks/models/qwen3-235b-a22b-thinking-2507
           drop_params: true
+          thinking: {"type": "enabled", "budget_tokens": 1024}
+          merge_reasoning_content_in_choices: true
         model_info:
           input_cost_per_token: 0.22e-6
           output_cost_per_token: 0.88e-6
@@ -166,6 +170,8 @@ litellm:
         litellm_params:
           model: fireworks_ai/accounts/fireworks/models/qwen3-30b-a3b
           drop_params: true
+          thinking: {"type": "enabled", "budget_tokens": 1024}
+          merge_reasoning_content_in_choices: true
         model_info:
           supports_reasoning: true
           input_cost_per_token: 0.15e-6
@@ -179,14 +185,11 @@ litellm:
           input_cost_per_token: 0.22e-6
           output_cost_per_token: 0.88e-6
             
-      - model_name: claude-opus-4
-        litellm_params:
-          model: anthropic/claude-opus-4-20250514
-        model_info:
-          supports_function_calling: true
       - model_name: claude-sonnet-4
         litellm_params:
           model: anthropic/claude-sonnet-4-20250514
+          thinking: {"type": "enabled", "budget_tokens": 1024}
+          merge_reasoning_content_in_choices: true
         model_info:
           supports_function_calling: true
           
@@ -216,6 +219,8 @@ litellm:
         litellm_params:
           model: openai/gpt-5
           drop_params: true
+          thinking: {"type": "enabled", "budget_tokens": 1024}
+          merge_reasoning_content_in_choices: true
         model_info:
           supports_function_calling: true
           supports_vision: true
@@ -223,6 +228,8 @@ litellm:
         litellm_params:
           model: openai/gpt-5-mini
           drop_params: true
+          thinking: {"type": "enabled", "budget_tokens": 1024}
+          merge_reasoning_content_in_choices: true
         model_info:
           supports_function_calling: true
           supports_vision: true
@@ -280,6 +287,8 @@ litellm:
         litellm_params:
           model: gemini/gemini-2.5-pro
           drop_params: true
+          thinking: {"type": "enabled", "budget_tokens": 1024}
+          merge_reasoning_content_in_choices: true
         model_info:
           supports_function_calling: true
       - model_name: gemini-2.5-flash-lite

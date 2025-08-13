@@ -52,6 +52,9 @@ owu:
     - name: DEFAULT_MODELS
       value: "adorsys"
 
+    - name: ENABLE_FORWARD_USER_INFO_HEADERS
+      value: "True"
+
     - name: TOOL_SERVER_CONNECTIONS
       valueFrom:
         secretKeyRef:
