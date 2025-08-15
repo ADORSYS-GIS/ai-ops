@@ -15,9 +15,3 @@ resource "kubernetes_namespace" "mcpo_namespace" {
     name = "mcpo"
   }
 }
-
-resource "kubernetes_namespace" "envoy_gateway_system" {
-  metadata {
-    name = "envoy-gateway-system"
-  }
-}

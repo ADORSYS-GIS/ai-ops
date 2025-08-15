@@ -62,62 +62,6 @@ variable "cpu_capacity_type" {
   description = "MLFlow EC2 Capacity type"
 }
 
-variable "mlflow_ec2_instance_types" {
-  description = "The EC2 instance type for the MLFlow server"
-  type = list(string)
-}
-
-variable "mlflow_min_instance" {
-  description = "The minimum number of instances for the MLFlow cluster"
-  type        = number
-  default     = 0
-}
-
-variable "mlflow_max_instance" {
-  description = "The maximum number of instances for the MLFlow cluster"
-  type        = number
-  default     = 2
-}
-
-variable "mlflow_desired_instance" {
-  description = "The desired number of instances for the MLFlow cluster"
-  type        = number
-  default     = 0
-}
-
-variable "mlflow_capacity_type" {
-  default     = "ON_DEMAND"
-  description = "MLFlow EC2 Capacity type"
-}
-
-variable "knative_ec2_instance_types" {
-  description = "The EC2 instance type for the Knative server"
-  type = list(string)
-}
-
-variable "knative_min_instance" {
-  description = "The minimum number of instances for the Knative cluster"
-  type        = number
-  default     = 0
-}
-
-variable "knative_max_instance" {
-  description = "The maximum number of instances for the Knative cluster"
-  type        = number
-  default     = 2
-}
-
-variable "knative_desired_instance" {
-  description = "The desired number of instances for the Knative cluster"
-  type        = number
-  default     = 0
-}
-
-variable "knative_capacity_type" {
-  default     = "ON_DEMAND"
-  description = "Knative EC2 Capacity type"
-}
-
 variable "zone_name" {
   description = "The name of the Route 53 zone"
   type        = string

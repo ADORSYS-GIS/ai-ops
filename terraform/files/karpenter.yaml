@@ -1,9 +1,0 @@
-#nodeSelector:
-#  karpenter.sh/controller: 'true'
-dnsPolicy: Default
-settings:
-  clusterName: ${clusterName}
-  clusterEndpoint: ${clusterEndpoint}
-  interruptionQueue: ${interruptionQueue}
-webhook:
-  enabled: false

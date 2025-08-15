@@ -95,8 +95,6 @@ This will remove all the resources created by the Terraform configuration. Make 
 | <a name="module_eks"></a> [eks](#module\_eks) | terraform-aws-modules/eks/aws | ~> 20.0 |
 | <a name="module_eks_blueprints_addons"></a> [eks\_blueprints\_addons](#module\_eks\_blueprints\_addons) | aws-ia/eks-blueprints-addons/aws | n/a |
 | <a name="module_eks_data_addons"></a> [eks\_data\_addons](#module\_eks\_data\_addons) | aws-ia/eks-data-addons/aws | n/a |
-| <a name="module_karpenter"></a> [karpenter](#module\_karpenter) | terraform-aws-modules/eks/aws//modules/karpenter | n/a |
-| <a name="module_karpenter-helm"></a> [karpenter-helm](#module\_karpenter-helm) | blackbird-cloud/deployment/helm | ~> 1.0 |
 | <a name="module_kms"></a> [kms](#module\_kms) | terraform-aws-modules/kms/aws | ~> 1.0 |
 | <a name="module_ops"></a> [ops](#module\_ops) | blackbird-cloud/deployment/helm | ~> 1.0 |
 | <a name="module_redis"></a> [redis](#module\_redis) | terraform-aws-modules/elasticache/aws | ~> 1.0 |

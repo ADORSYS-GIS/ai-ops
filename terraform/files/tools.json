@@ -62,79 +62,10 @@
     },
     "key": "${tool_api_key}",
     "path": "openapi.json",
-    "url": "http://mcpo.mcpo.svc.cluster.local:8000/memory",
-    "info": {
-      "name": "Memory",
-      "description": ""
-    }
-  },
-  {
-    "auth_type": "bearer",
-    "config": {
-      "access_control": {
-        "read": {
-          "group_ids": [],
-          "user_ids": []
-        },
-        "write": {
-          "group_ids": [],
-          "user_ids": []
-        }
-      },
-      "enable": true
-    },
-    "key": "${tool_api_key}",
-    "path": "openapi.json",
-    "url": "http://mcpo.mcpo.svc.cluster.local:8000/sequential-thinking",
-    "info": {
-      "name": "Sequential thinking",
-      "description": ""
-    }
-  },
-  {
-    "auth_type": "bearer",
-    "config": {
-      "access_control": {
-        "read": {
-          "group_ids": [],
-          "user_ids": []
-        },
-        "write": {
-          "group_ids": [],
-          "user_ids": []
-        }
-      },
-      "enable": true
-    },
-    "key": "${tool_api_key}",
-    "path": "openapi.json",
     "url": "http://mcpo.mcpo.svc.cluster.local:8000/time",
     "info": {
       "name": "Time",
       "description": ""
-    }
-  },
-  {
-    "auth_type": "bearer",
-    "config": {
-      "access_control": {
-        "read": {
-          "group_ids": [],
-          "user_ids": []
-        },
-        "write": {
-          "group_ids": [],
-          "user_ids": []
-        }
-      },
-      "enable": true
-    },
-    "key": "${tool_api_key}",
-    "path": "openapi.json",
-    "url": "http://mcpo.mcpo.svc.cluster.local:8000/context7",
-    "info": {
-      "name": "Context7",
-      "description": "For resolving packages version"
     }
   }
 ]

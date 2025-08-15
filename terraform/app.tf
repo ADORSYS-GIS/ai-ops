@@ -15,7 +15,6 @@ module "ops" {
       environment    = var.environment
       fileSystemId   = module.efs.id
       cluster_name   = local.eks_name
-      karpenter_role = module.eks.eks_managed_node_groups["knative-ng"].iam_role_name
     })
   ]
 

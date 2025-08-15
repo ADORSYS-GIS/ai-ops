@@ -37,113 +37,11 @@ module "eks" {
         }
       )
     }
-    mlflow-ng = {
-      use_custom_launch_template = false
-      
-      name           = "mlflow-gpus"
-      ami_type       = "BOTTLEROCKET_x86_64_NVIDIA"
-      min_size       = var.mlflow_min_instance
-      max_size       = var.mlflow_max_instance
-      desired_size   = var.mlflow_desired_instance
-      instance_types = var.mlflow_ec2_instance_types
-      capacity_type  = var.mlflow_capacity_type
-      disk_size      = 100
-
-      iam_role_additional_policies = {
-        ebs = "arn:aws:iam::aws:policy/service-role/AmazonEBSCSIDriverPolicy"
-      }
-      labels = {
-        gpu-node : "true"
-        mflow-node : "true"
-      }
-      taints = [
-        {
-          key    = "mflow-node"
-          value  = "true"
-          effect = "NO_SCHEDULE"
-        }
-      ]
-      tags = merge(
-        local.tags,
-        {
-          "gpu-node"   = "true",
-          "mflow-node" = "true",
-        }
-      )
-    }
-    knative-ng = {
-      use_custom_launch_template = false
-      
-      name           = "knative-gpus"
-      ami_type       = "BOTTLEROCKET_x86_64_NVIDIA"
-      min_size       = var.knative_min_instance
-      max_size       = var.knative_max_instance
-      desired_size   = var.knative_desired_instance
-      instance_types = var.knative_ec2_instance_types
-      capacity_type  = var.knative_capacity_type
-      disk_size      = 100
-      instance_types = [
-        # a10g
-        "g5.xlarge",
-        "g5.2xlarge",
-        "g5.4xlarge",
-        "g5.8xlarge",
-        "g5.12xlarge",
-        "g5.16xlarge",
-        "g5.24xlarge",
-
-        # l4
-        "g6.xlarge",
-        "g6.2xlarge",
-        "g6.4xlarge",
-        "g6.8xlarge",
-        "g6.12xlarge",
-        "g6.16xlarge",
-        "g6.24xlarge",
-        "g6.48xlarge",
-
-        # l40s
-        "g6e.xlarge",
-        "g6e.2xlarge",
-        "g6e.4xlarge",
-        "g6e.8xlarge",
-        "g6e.12xlarge",
-        "g6e.16xlarge",
-        "g6e.24xlarge",
-        "g6e.48xlarge",
-      ]
-      iam_role_additional_policies = {
-        ebs = "arn:aws:iam::aws:policy/service-role/AmazonEBSCSIDriverPolicy"
-      }
-      labels = {
-        gpu-node : "true"
-        karpenter-node : "true"
-        "karpenter.sh/controller" = "true"
-      }
-      taints = [
-        {
-          key    = "knative-node"
-          value  = "true"
-          effect = "NO_SCHEDULE"
-        }
-      ]
-      tags = merge(
-        local.tags,
-        {
-          "gpu-node"       = "true",
-          "karpenter-node" = "true",
-        }
-      )
-    }
   }
 
   node_security_group_name = "sg_${local.eks_name}"
 
   node_security_group_tags = merge(local.tags, {
-    # NOTE - if creating multiple security groups with this module, only tag the
-    # security group that Karpenter should utilize with the following tag
-    # (i.e. - at most, only one security group should have this tag in your account)
-    "karpenter.sh/discovery" = local.eks_name
   })
 
   tags = merge(
