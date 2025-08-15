@@ -15,7 +15,7 @@ cpu_ec2_instance_types = [
   "c5.large",
   "c5.xlarge"
 ]
-cpu_min_instance     = 3
+cpu_min_instance     = 2
 cpu_max_instance     = 10
-cpu_desired_instance = 4
+cpu_desired_instance = 3
 cpu_capacity_type    = "ON_DEMAND"
