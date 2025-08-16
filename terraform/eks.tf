@@ -37,12 +37,43 @@ module "eks" {
         }
       )
     }
+    mlflow-ng = {
+      use_custom_launch_template = false
+      
+      name           = "mlflow-gpus"
+      ami_type       = "BOTTLEROCKET_x86_64_NVIDIA"
+      min_size       = var.mlflow_min_instance
+      max_size       = var.mlflow_max_instance
+      desired_size   = var.mlflow_desired_instance
+      instance_types = var.mlflow_ec2_instance_types
+      capacity_type  = var.mlflow_capacity_type
+      disk_size      = 100
+
+      iam_role_additional_policies = {
+        ebs = "arn:aws:iam::aws:policy/service-role/AmazonEBSCSIDriverPolicy"
+      }
+      labels = {
+        gpu-node : "true"
+        mflow-node : "true"
+      }
+      taints = [
+        {
+          key    = "mflow-node"
+          value  = "true"
+          effect = "NO_SCHEDULE"
+        }
+      ]
+      tags = merge(
+        local.tags,
+        {
+          "gpu-node"   = "true",
+          "mflow-node" = "true",
+        }
+      )
+    }
   }
 
   node_security_group_name = "sg_${local.eks_name}"
-
-  node_security_group_tags = merge(local.tags, {
-  })
 
   tags = merge(
     local.tags,

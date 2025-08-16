@@ -17,5 +17,14 @@ cpu_ec2_instance_types = [
 ]
 cpu_min_instance     = 2
 cpu_max_instance     = 10
-cpu_desired_instance = 3
-cpu_capacity_type    = "ON_DEMAND"
+cpu_desired_instance = 4
+cpu_capacity_type    = "SPOT"
+
+mlflow_ec2_instance_types = [
+  "g6.2xlarge",
+]
+mlflow_min_instance     = 0
+mlflow_max_instance     = 10
+mlflow_desired_instance = 0
+mlflow_capacity_type    = "ON_DEMAND"
+
