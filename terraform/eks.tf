@@ -4,12 +4,14 @@ module "eks" {
 
   cluster_version                          = var.cluster_version
   cluster_name                             = "${local.name}-eks"
-  cluster_endpoint_public_access           = true
+  cluster_endpoint_public_access           = false
+  cluster_endpoint_private_access          = true
   enable_efa_support                       = true
   vpc_id                                   = module.vpc.vpc_id
   subnet_ids                               = module.vpc.private_subnets
   control_plane_subnet_ids                 = module.vpc.intra_subnets
-  create_cloudwatch_log_group              = false
+  create_cloudwatch_log_group              = true
+  cluster_enabled_log_types                = ["api", "audit", "authenticator", "controllerManager", "scheduler"]
   enable_cluster_creator_admin_permissions = true
 
   eks_managed_node_groups = {
@@ -41,6 +43,32 @@ module "eks" {
 
   node_security_group_name = "sg_${local.eks_name}"
 
+  # Disable the module's default (permissive) egress rules which allow public internet access
+  node_security_group_enable_recommended_rules = false
+
+  # Explicitly define minimal egress rules that do NOT expose the nodes to the public internet
+  node_security_group_additional_rules = {
+    # Allow all traffic within the VPC CIDR (private communication)
+    egress_to_vpc = {
+      description = "Allow egress within VPC"
+      protocol    = "-1"
+      from_port   = 0
+      to_port     = 0
+      type        = "egress"
+      cidr_blocks = [module.vpc.vpc_cidr_block]
+    }
+
+    # Allow nodes to talk to the EKS control plane security group (443/TCP)
+    egress_to_cluster = {
+      description                   = "Allow egress to cluster API server"
+      protocol                     = "tcp"
+      from_port                    = 443
+      to_port                      = 443
+      type                         = "egress"
+      source_cluster_security_group = true
+    }
+  }
+  
   node_security_group_tags = merge(local.tags, {
   })
 

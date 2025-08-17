@@ -58,6 +58,7 @@ variable "cpu_desired_instance" {
 }
 
 variable "cpu_capacity_type" {
+  type = string
   default     = "SPOT"
   description = "MLFlow EC2 Capacity type"
 }

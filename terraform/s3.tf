@@ -53,6 +53,22 @@ module "s3_bucket" {
     ]
   })
   
+  versioning = {
+    enabled = true
+  }
+
+  server_side_encryption_configuration = {
+    rule = {
+      apply_server_side_encryption_by_default = {
+        sse_algorithm     = "aws:kms"
+      }
+    }
+  }
+
+  logging = {
+    target_bucket = module.s3_bucket.s3_bucket_id
+    target_prefix = "log/"
+  }
   tags = local.tags
 }
 
