@@ -10,8 +10,7 @@ module "eks" {
   vpc_id                                   = module.vpc.vpc_id
   subnet_ids                               = module.vpc.private_subnets
   control_plane_subnet_ids                 = module.vpc.intra_subnets
-  # create_cloudwatch_log_group              = true
-  # cluster_enabled_log_types                = ["api", "audit", "authenticator", "controllerManager", "scheduler"]
+  create_cloudwatch_log_group              = false
   enable_cluster_creator_admin_permissions = true
 
   eks_managed_node_groups = {
