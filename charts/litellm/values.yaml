@@ -111,6 +111,24 @@ litellm:
           supports_computer_use: true
           input_cost_per_token: 0.45e-6
           output_cost_per_token: 1.8e-6
+      - model_name: kimi-k2-instruct-0905
+        litellm_params:
+          model: fireworks_ai/accounts/fireworks/models/kimi-k2-instruct-0905
+          drop_params: true
+        model_info:
+          supports_function_calling: true
+          supports_computer_use: true
+          input_cost_per_token: 0.6e-6
+          output_cost_per_token: 2.5e-6
+      - model_name: kimi-k2-instruct-0905
+        litellm_params:
+          model: fireworks_ai/accounts/fireworks/models/deepseek-v3p1
+          drop_params: true
+        model_info:
+          supports_function_calling: true
+          supports_computer_use: true
+          input_cost_per_token: 0.56e-6
+          output_cost_per_token: 1.68e-6
       - model_name: qwen3-235b-a22b-instruct-2507
         litellm_params:
           model: fireworks_ai/accounts/fireworks/models/qwen3-235b-a22b-instruct-2507
@@ -287,7 +305,23 @@ litellm:
         litellm_params:
           model: gemini/gemini-2.5-pro
           drop_params: true
+          thinking: {"type": "enabled"}
+          merge_reasoning_content_in_choices: true
+        model_info:
+          supports_function_calling: true
+      - model_name: gemini-2.5-pro-1024
+        litellm_params:
+          model: gemini/gemini-2.5-pro
+          drop_params: true
           thinking: {"type": "enabled", "budget_tokens": 1024}
+          merge_reasoning_content_in_choices: true
+        model_info:
+          supports_function_calling: true
+      - model_name: gemini-2.5-pro-reasoning-4096
+        litellm_params:
+          model: gemini/gemini-2.5-pro
+          drop_params: true
+          thinking: {"type": "enabled", "budget_tokens": 4096}
           merge_reasoning_content_in_choices: true
         model_info:
           supports_function_calling: true
