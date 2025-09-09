@@ -1,15 +1,15 @@
 dependencies:
 - name: open-webui
   repository: https://helm.openwebui.com
-  version: 7.1.0
+  version: 8.2.0
 - name: common
   repository: https://charts.bitnami.com/bitnami
-  version: 2.31.3
+  version: 2.31.4
 - name: tika
   repository: https://apache.jfrog.io/artifactory/tika
-  version: 2.9.0
+  version: 3.2.2
 - name: chromadb
   repository: https://amikos-tech.github.io/chromadb-chart/
   version: 0.1.24
-digest: sha256:889ad08f9d51c2a17d6e802fe35abf52ee029b32fafd294ce337eda4871c339b
-generated: "2025-08-08T05:11:21.522415+02:00"
+digest: sha256:eed2ba548dcb016418fb99e1eff556c45a31919f87504235435ac60c60b33624
+generated: "2025-09-09T02:27:29.399753+02:00"
