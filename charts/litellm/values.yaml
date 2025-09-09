@@ -301,7 +301,7 @@ litellm:
           drop_params: true
         model_info:
           supports_function_calling: true
-      - model_name: gemini-2.5-pro
+      - model_name: gemini-2.5-pro-reasoning
         litellm_params:
           model: gemini/gemini-2.5-pro
           drop_params: true
@@ -309,7 +309,7 @@ litellm:
           merge_reasoning_content_in_choices: true
         model_info:
           supports_function_calling: true
-      - model_name: gemini-2.5-pro-1024
+      - model_name: gemini-2.5-pro-reasoning-1024
         litellm_params:
           model: gemini/gemini-2.5-pro
           drop_params: true
