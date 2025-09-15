@@ -1,7 +1,7 @@
 dependencies:
 - name: open-webui
   repository: https://helm.openwebui.com
-  version: 8.2.0
+  version: 8.4.0
 - name: common
   repository: https://charts.bitnami.com/bitnami
   version: 2.31.4
@@ -11,5 +11,5 @@ dependencies:
 - name: chromadb
   repository: https://amikos-tech.github.io/chromadb-chart/
   version: 0.1.24
-digest: sha256:eed2ba548dcb016418fb99e1eff556c45a31919f87504235435ac60c60b33624
-generated: "2025-09-09T02:27:29.399753+02:00"
+digest: sha256:018a8d9bff8eaf4ea6a99d50e29fd3f0353f318b78587f32ddae81b0d97dcfad
+generated: "2025-09-15T12:24:29.682912+02:00"
