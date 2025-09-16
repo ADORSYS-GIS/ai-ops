@@ -9,7 +9,10 @@ resource "kubernetes_secret" "litellm_redis_secret" {
     namespace = kubernetes_namespace.litellm_namespace.metadata[0].name
   }
   data = {
-    REDIS_URL = local.redis_url
+    REDIS_URL      = local.redis_url
+    REDIS_HOST     = local.redis_node.address
+    REDIS_PORT     = tostring(local.redis_node.port)
+    REDIS_PASSWORD = ""  
   }
 
   depends_on = [kubernetes_namespace.litellm_namespace]

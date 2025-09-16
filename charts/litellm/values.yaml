@@ -99,6 +99,9 @@ litellm:
       cache: True
       cache_params: # set cache params for redis
         type: redis
+        host: os.environ/REDIS_HOST
+        port: os.environ/REDIS_PORT
+        password: os.environ/REDIS_PASSWORD
         namespace: "litellm.caching.caching"
     model_list:
       # At least one model must exist for the proxy to start.
