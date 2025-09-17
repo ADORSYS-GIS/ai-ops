@@ -96,7 +96,7 @@ litellm:
     general_settings:
       user_header_name: X-OpenWebUI-User-Email
     litellm_settings:
-      cache: True
+      cache: false
       cache_params: # set cache params for redis
         type: redis
         namespace: "litellm.caching.caching"
@@ -297,13 +297,13 @@ litellm:
 
       - model_name: gemini-2.5-flash
         litellm_params:
-          model: gemini/gemini-2.5-flash
+          model: google_ai_studio/gemini-2.5-flash
           drop_params: true
         model_info:
           supports_function_calling: true
       - model_name: gemini-2.5-pro-reasoning
         litellm_params:
-          model: gemini/gemini-2.5-pro
+          model: google_ai_studio/gemini-2.5-pro
           drop_params: true
           thinking: {"type": "enabled"}
           merge_reasoning_content_in_choices: true
@@ -311,7 +311,7 @@ litellm:
           supports_function_calling: true
       - model_name: gemini-2.5-pro-reasoning-1024
         litellm_params:
-          model: gemini/gemini-2.5-pro
+          model: google_ai_studio/gemini-2.5-pro
           drop_params: true
           thinking: {"type": "enabled", "budget_tokens": 1024}
           merge_reasoning_content_in_choices: true
@@ -319,7 +319,7 @@ litellm:
           supports_function_calling: true
       - model_name: gemini-2.5-pro-reasoning-4096
         litellm_params:
-          model: gemini/gemini-2.5-pro
+          model: google_ai_studio/gemini-2.5-pro
           drop_params: true
           thinking: {"type": "enabled", "budget_tokens": 4096}
           merge_reasoning_content_in_choices: true
@@ -327,7 +327,7 @@ litellm:
           supports_function_calling: true
       - model_name: gemini-2.5-flash-lite
         litellm_params:
-          model: gemini/gemini-2.5-flash-lite
+          model: google_ai_studio/gemini-2.5-flash-lite
           drop_params: true
         model_info:
           supports_function_calling: true
