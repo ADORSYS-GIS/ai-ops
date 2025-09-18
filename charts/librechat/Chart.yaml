@@ -1,0 +1,24 @@
+apiVersion: v2
+
+name: chat-ui
+description: A description
+version: 0.0.1
+appVersion: v0.0.1
+type: application
+
+keywords:
+  - llm
+  - chat
+  - web-ui
+  - open-webui
+
+dependencies:
+  - name: librechat
+    version: "*"
+    repository: https://charts.blue-atlas.de
+    condition: librechat.enabled
+
+  - name: common
+    version: '*'
+    repository: https://charts.bitnami.com/bitnami
+    

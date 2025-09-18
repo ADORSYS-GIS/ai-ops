@@ -1,0 +1,9 @@
+dependencies:
+- name: librechat
+  repository: https://charts.blue-atlas.de
+  version: 1.8.10
+- name: common
+  repository: https://charts.bitnami.com/bitnami
+  version: 2.31.4
+digest: sha256:d33da44d92945070b4a22d6f75b221f09d251a4fe42ba0e11cab0150f61b60fe
+generated: "2025-09-15T14:15:16.289373+02:00"
