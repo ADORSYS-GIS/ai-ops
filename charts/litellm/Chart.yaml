@@ -11,7 +11,7 @@ keywords:
 
 dependencies:
   - name: litellm-helm
-    version: "*"
+    version: "0.1.770"
     repository: oci://ghcr.io/berriai
     alias: litellm
     condition: litellm.enabled
