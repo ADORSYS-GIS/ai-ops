@@ -1,0 +1,24 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: librechat
+  namespace: argocd
+spec:
+  project: application
+  source:
+    repoURL: https://github.com/adorsys-gis/ai-ops
+    targetRevision: HEAD
+    path: charts/librechat
+
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: librechat
+
+  syncPolicy:
+    syncOptions:
+      - ServerSideApply=true
+    automated:
+      prune: true
+      selfHeal: true
+
+  revisionHistoryLimit: 2
