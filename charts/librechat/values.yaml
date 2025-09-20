@@ -27,6 +27,10 @@ librechat:
 
       # Optional: redirects the user to the end session endpoint after logging out
       OPENID_USE_END_SESSION_ENDPOINT: "true"
+      
+      DOMAIN_CLIENT: "https://v2.ai.kivoyo.com"
+      DOMAIN_SERVER: "https://v2.ai.kivoyo.com"
+      NO_INDEX: "true"
     
     # # For adding a custom config yaml-file you can set the contents in this var
     configYamlContent:
