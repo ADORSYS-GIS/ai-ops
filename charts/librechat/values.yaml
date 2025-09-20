@@ -16,9 +16,9 @@ librechat:
       REFRESH_TOKEN_EXPIRY: "(1000 * 60 * 60 * 24) * 15"
       
       OPENID_ISSUER: "https://login.wazuh.adorsys.team/realms/staging"
-      OPENID_CLIENT_ID: "${KEYCLOAK_CLIENT_ID}"
-      OPENID_CLIENT_SECRET: "${KEYCLOAK_CLIENT_SECRET}"
-      OPENID_SESSION_SECRET: "${SOCIAL_SESSION_SECRET}"
+      #OPENID_CLIENT_ID: "${KEYCLOAK_CLIENT_ID}"
+      #OPENID_CLIENT_SECRET: "${KEYCLOAK_CLIENT_SECRET}"
+      #OPENID_SESSION_SECRET: "${SOCIAL_SESSION_SECRET}"
       OPENID_CALLBACK_URL: "/oauth/openid/callback"
       OPENID_SCOPE: "openid profile email"
       OPENID_REQUIRED_ROLE: "ai"

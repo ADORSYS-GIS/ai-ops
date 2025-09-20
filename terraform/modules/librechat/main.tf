@@ -38,12 +38,11 @@ resource "kubernetes_secret" "creds-secret" {
     namespace = kubernetes_namespace.ns.metadata[0].name
   }
   data = {
-    MEILI_MASTER_KEY      = local.meili-master-key
-    CREDS_KEY             = random_id.creds_key.hex
-    CREDS_IV              = random_id.creds_iv.hex
-    JWT_SECRET            = random_id.jwt_secret.hex
-    JWT_REFRESH_SECRET    = random_id.jwt_refresh_secret.hex
-    SOCIAL_SESSION_SECRET = random_string.social_session_secret.result
+    MEILI_MASTER_KEY   = local.meili-master-key
+    CREDS_KEY          = random_id.creds_key.hex
+    CREDS_IV           = random_id.creds_iv.hex
+    JWT_SECRET         = random_id.jwt_secret.hex
+    JWT_REFRESH_SECRET = random_id.jwt_refresh_secret.hex
 
     OPENAI_API_KEY = var.openai_key
 
@@ -53,8 +52,9 @@ resource "kubernetes_secret" "creds-secret" {
     AWS_BUCKET_NAME       = var.s3_bucket_name
     #AWS_ENDPOINT_URL      = your_endpoint_url
 
-    KEYCLOAK_CLIENT_ID     = var.keycloak_client_id
-    KEYCLOAK_CLIENT_SECRET = var.keycloak_client_secret
+    OPENID_CLIENT_ID      = var.keycloak_client_id
+    OPENID_CLIENT_SECRET  = var.keycloak_client_secret
+    OPENID_SESSION_SECRET = random_string.social_session_secret.result
 
     USE_REDIS = "true"
     REDIS_URI = var.redis_uri
