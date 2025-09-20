@@ -29,169 +29,169 @@ librechat:
       OPENID_USE_END_SESSION_ENDPOINT: "true"
   
   # # For adding a custom config yaml-file you can set the contents in this var
-  configYamlContent: |
-    #version: 1.0.3
-    cache: true
-    fileStrategy: "s3"  # If using Firebase CDN
-    fileConfig:
+    configYamlContent: |
+      #version: 1.0.3
+      cache: true
+      fileStrategy: "s3"  # If using Firebase CDN
+      fileConfig:
+        endpoints:
+          assistants:
+            fileLimit: 5
+            fileSizeLimit: 10  # Maximum size for an individual file in MB
+            totalSizeLimit: 50  # Maximum total size for all files in a single request in MB
+            supportedMimeTypes:
+              - "image/.*"
+              - "application/pdf"
+          openAI:
+            disabled: false  # Disables file uploading to the OpenAI endpoint
+          default:
+            totalSizeLimit: 20
+          YourCustomEndpointName:
+            fileLimit: 2
+            fileSizeLimit: 5
+        serverFileSizeLimit: 100  # Global server file size limit in MB
+        avatarSizeLimit: 2  # Limit for user avatar image size in MB
+      rateLimits:
+        fileUploads:
+          ipMax: 100
+          ipWindowInMinutes: 60  # Rate limit window for file uploads per IP
+          userMax: 50
+          userWindowInMinutes: 60  # Rate limit window for file uploads per user
+      registration:
+        socialLogins: [ "openid" ]
+        allowedDomains:
+          - "v2.ai.kivoyo.com"
+      balance:
+        enabled: false
+        startBalance: 30000
+        autoRefillEnabled: false
+        refillIntervalValue: 30
+        refillIntervalUnit: "days"
+        refillAmount: 10000
+      webSearch:
+        firecrawlApiKey: "${FIRECRAWL_API_KEY}"
+        firecrawlOptions:
+          formats: [ "markdown", "rawHtml" ]
+          includeTags: [ "main", "article", ".content" ]
+          excludeTags: [ "nav", "footer", ".ads" ]
+          waitFor: 2000
+          timeout: 10000
+          mobile: false
+          blockAds: true
+          onlyMainContent: true
+          location:
+            country: "DE"
+            languages:
+              - "en"
+              - "de"
+              - "fr"
       endpoints:
+        all:
+          streamRate: 10
+          titlePromptTemplate: |
+            ### Task:
+            Generate a concise, 3-5 word title with an emoji summarizing the chat history.
+      
+            ### Guidelines:
+            - The title should clearly represent the main theme or subject of the conversation.
+            - Always use emojis that enhance understanding of the topic, but avoid quotation marks or special formatting.
+            - Write the title in the chat's primary language; default to English if multilingual.
+            - Prioritize accuracy over excessive creativity; keep it clear and simple.
+            - The title should be short and funny.
+            - The emoji should come first.
+      
+            ### Output:
+            Format "<emoji> your concise title here"
+              ### Examples:
+              - 📉 Stock Market Trends
+              - 🍪 Perfect Chocolate Chip Recipe
+              - 🎧 Evolution of Music Streaming
+              - 👨🏿‍💻 Remote Work Productivity Tips
+              - 🧠 Artificial Intelligence in Healthcare
+              - 🎮 Video Game Development Insights
+      
+            ### Chat History:
+            Human: {input}
+            Assistant: {output}
+        memory:
+          disabled: false
+          #validKeys: [ "user_preferences", "conversation_context", "personal_info" ]
+          tokenLimit: 2000
+          personalize: true
+          messageWindowSize: 5
+          agent:
+            provider: "openAI"
+            model: "gpt-4"
+            instructions: "You are a helpful assistant that remembers user preferences and context."
+            model_parameters:
+              temperature: 0.7
+              max_tokens: 1000
+        agents:
+          recursionLimit: 50
+          maxRecursionLimit: 100
+          disableBuilder: false
+          # (optional) Agent Capabilities available to all users. Omit the ones you wish to exclude. Defaults to list below.
+          # capabilities: ["execute_code", "file_search", "actions", "tools", "artifacts", "ocr", "chain", "web_search"]
+          # (optional) File citation configuration for file_search capability
+          maxCitations: 30          # Maximum total citations in responses (1-50)
+          maxCitationsPerFile: 7    # Maximum citations from each file (1-10)
+          minRelevanceScore: 0.45   # Minimum relevance score threshold (0.0-1.0)
         assistants:
-          fileLimit: 5
-          fileSizeLimit: 10  # Maximum size for an individual file in MB
-          totalSizeLimit: 50  # Maximum total size for all files in a single request in MB
-          supportedMimeTypes:
-            - "image/.*"
-            - "application/pdf"
-        openAI:
-          disabled: false  # Disables file uploading to the OpenAI endpoint
-        default:
-          totalSizeLimit: 20
-        YourCustomEndpointName:
-          fileLimit: 2
-          fileSizeLimit: 5
-      serverFileSizeLimit: 100  # Global server file size limit in MB
-      avatarSizeLimit: 2  # Limit for user avatar image size in MB
-    rateLimits:
-      fileUploads:
-        ipMax: 100
-        ipWindowInMinutes: 60  # Rate limit window for file uploads per IP
-        userMax: 50
-        userWindowInMinutes: 60  # Rate limit window for file uploads per user
-    registration:
-      socialLogins: [ "openid" ]
-      allowedDomains:
-        - "v2.ai.kivoyo.com"
-    balance:
-      enabled: false
-      startBalance: 30000
-      autoRefillEnabled: false
-      refillIntervalValue: 30
-      refillIntervalUnit: "days"
-      refillAmount: 10000
-    webSearch:
-      firecrawlApiKey: "${FIRECRAWL_API_KEY}"
-      firecrawlOptions:
-        formats: [ "markdown", "rawHtml" ]
-        includeTags: [ "main", "article", ".content" ]
-        excludeTags: [ "nav", "footer", ".ads" ]
-        waitFor: 2000
-        timeout: 10000
-        mobile: false
-        blockAds: true
-        onlyMainContent: true
-        location:
-          country: "DE"
-          languages:
-            - "en"
-            - "de"
-            - "fr"
-    endpoints:
-      all:
-        streamRate: 10
-        titlePromptTemplate: |
-          ### Task:
-          Generate a concise, 3-5 word title with an emoji summarizing the chat history.
-    
-          ### Guidelines:
-          - The title should clearly represent the main theme or subject of the conversation.
-          - Always use emojis that enhance understanding of the topic, but avoid quotation marks or special formatting.
-          - Write the title in the chat's primary language; default to English if multilingual.
-          - Prioritize accuracy over excessive creativity; keep it clear and simple.
-          - The title should be short and funny.
-          - The emoji should come first.
-    
-          ### Output:
-          Format "<emoji> your concise title here"
-            ### Examples:
-            - 📉 Stock Market Trends
-            - 🍪 Perfect Chocolate Chip Recipe
-            - 🎧 Evolution of Music Streaming
-            - 👨🏿‍💻 Remote Work Productivity Tips
-            - 🧠 Artificial Intelligence in Healthcare
-            - 🎮 Video Game Development Insights
-    
-          ### Chat History:
-          Human: {input}
-          Assistant: {output}
-      memory:
-        disabled: false
-        #validKeys: [ "user_preferences", "conversation_context", "personal_info" ]
-        tokenLimit: 2000
-        personalize: true
-        messageWindowSize: 5
-        agent:
-          provider: "openAI"
-          model: "gpt-4"
-          instructions: "You are a helpful assistant that remembers user preferences and context."
-          model_parameters:
-            temperature: 0.7
-            max_tokens: 1000
-      agents:
-        recursionLimit: 50
-        maxRecursionLimit: 100
-        disableBuilder: false
-        # (optional) Agent Capabilities available to all users. Omit the ones you wish to exclude. Defaults to list below.
-        # capabilities: ["execute_code", "file_search", "actions", "tools", "artifacts", "ocr", "chain", "web_search"]
-        # (optional) File citation configuration for file_search capability
-        maxCitations: 30          # Maximum total citations in responses (1-50)
-        maxCitationsPerFile: 7    # Maximum citations from each file (1-10)
-        minRelevanceScore: 0.45   # Minimum relevance score threshold (0.0-1.0)
-      assistants:
-        disableBuilder: false # Disable Assistants Builder Interface by setting to `true`
-        pollIntervalMs: 750  # Polling interval for checking assistant updates
-        timeoutMs: 180000  # Timeout for assistant operations
-        # Should only be one or the other, either `supportedIds` or `excludedIds`
-        #supportedIds: [ "asst_supportedAssistantId1", "asst_supportedAssistantId2" ]
-        #excludedIds: ["asst_excludedAssistantId"]
-      custom:
-        - name: "Kivoyo"
-          apiKey: "${OPENAI_API_KEY}"
-          baseURL: "http://litellm.litellm.svc.cluster.local:4000"
-          models:
-            #default: [ "mistral-tiny", "mistral-small", "mistral-medium" ]
-            fetch: true  # Attempt to dynamically fetch available models
-            userIdQuery: true
-          iconURL: "https://adorsys.com/wp-content/uploads/2023/02/adorsys-logo-mark-full-color-rgb-1.svg"
-          titleConvo: true
-          titleMethod: "completion"
-          titleModel: "gemini-2.5-flash-lite"
-          summarize: true
-          summaryModel: "gemini-2.5-flash-lite"
-          forcePrompt: false
-          modelDisplayLabel: "Kivoyo AI"
-          addParams:
-            safe_prompt: true
-          dropParams:
-            - "stop"
-            - "user"
-            - "presence_penalty"
-            - "frequency_penalty"
-        # headers:
-        #    x-custom-header: "${CUSTOM_HEADER_VALUE}"
-        # - name: "User OpenAI"
-        #   apiKey: "user_provided"
-        #   baseURL: "http://litellm.litellm.svc.cluster.local:4000"
-        #   models:
-        #     #default: [ "mistral-tiny", "mistral-small", "mistral-medium" ]
-        #     fetch: true  # Attempt to dynamically fetch available models
-        #     userIdQuery: true
-        #   iconURL: "https://adorsys.com/wp-content/uploads/2023/02/adorsys-logo-mark-full-color-rgb-1.svg"
-        #   titleConvo: true
-        #   titleMethod: "completion"
-        #   titleModel: "gemini-2.5-flash-lite"
-        #   summarize: true
-        #   summaryModel: "gemini-2.5-flash-lite"
-        #   forcePrompt: false
-        #   modelDisplayLabel: "Kivoyo AI"
-        #   addParams:
-        #     safe_prompt: true
-        #   dropParams:
-        #     - "stop"
-        #     - "user"
-        #     - "presence_penalty"
-        #     - "frequency_penalty"
-        #   headers:
-        #      x-custom-header: "${CUSTOM_HEADER_VALUE}"
+          disableBuilder: false # Disable Assistants Builder Interface by setting to `true`
+          pollIntervalMs: 750  # Polling interval for checking assistant updates
+          timeoutMs: 180000  # Timeout for assistant operations
+          # Should only be one or the other, either `supportedIds` or `excludedIds`
+          #supportedIds: [ "asst_supportedAssistantId1", "asst_supportedAssistantId2" ]
+          #excludedIds: ["asst_excludedAssistantId"]
+        custom:
+          - name: "Kivoyo"
+            apiKey: "${OPENAI_API_KEY}"
+            baseURL: "http://litellm.litellm.svc.cluster.local:4000"
+            models:
+              #default: [ "mistral-tiny", "mistral-small", "mistral-medium" ]
+              fetch: true  # Attempt to dynamically fetch available models
+              userIdQuery: true
+            iconURL: "https://adorsys.com/wp-content/uploads/2023/02/adorsys-logo-mark-full-color-rgb-1.svg"
+            titleConvo: true
+            titleMethod: "completion"
+            titleModel: "gemini-2.5-flash-lite"
+            summarize: true
+            summaryModel: "gemini-2.5-flash-lite"
+            forcePrompt: false
+            modelDisplayLabel: "Kivoyo AI"
+            addParams:
+              safe_prompt: true
+            dropParams:
+              - "stop"
+              - "user"
+              - "presence_penalty"
+              - "frequency_penalty"
+          # headers:
+          #    x-custom-header: "${CUSTOM_HEADER_VALUE}"
+          # - name: "User OpenAI"
+          #   apiKey: "user_provided"
+          #   baseURL: "http://litellm.litellm.svc.cluster.local:4000"
+          #   models:
+          #     #default: [ "mistral-tiny", "mistral-small", "mistral-medium" ]
+          #     fetch: true  # Attempt to dynamically fetch available models
+          #     userIdQuery: true
+          #   iconURL: "https://adorsys.com/wp-content/uploads/2023/02/adorsys-logo-mark-full-color-rgb-1.svg"
+          #   titleConvo: true
+          #   titleMethod: "completion"
+          #   titleModel: "gemini-2.5-flash-lite"
+          #   summarize: true
+          #   summaryModel: "gemini-2.5-flash-lite"
+          #   forcePrompt: false
+          #   modelDisplayLabel: "Kivoyo AI"
+          #   addParams:
+          #     safe_prompt: true
+          #   dropParams:
+          #     - "stop"
+          #     - "user"
+          #     - "presence_penalty"
+          #     - "frequency_penalty"
+          #   headers:
+          #      x-custom-header: "${CUSTOM_HEADER_VALUE}"
   mongodb:
     persistence:
       storageClass: ai-ebs
