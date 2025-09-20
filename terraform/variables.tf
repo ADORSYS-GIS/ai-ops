@@ -173,3 +173,13 @@ variable "fireworks_key" {
   sensitive   = true
   description = "Firework Key"
 }
+
+variable "librechat_client_id" {
+  type        = string
+  sensitive   = true
+}
+
+variable "librechat_client_secret" {
+  type        = string
+  sensitive   = true
+}

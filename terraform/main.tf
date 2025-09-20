@@ -30,8 +30,8 @@ module "librechat" {
   s3_secret_access_key   = module.storage.s3_secret_access_key
   s3_region              = module.storage.s3_region
   s3_bucket_name         = module.storage.s3_bucket_name
-  keycloak_client_id     = var.oidc_kc_client_id
-  keycloak_client_secret = var.oidc_kc_client_secret
+  keycloak_client_id     = var.librechat_client_id
+  keycloak_client_secret = var.librechat_client_secret
   redis_uri              = module.cache.redis_url
   tags                   = local.tags
 }
