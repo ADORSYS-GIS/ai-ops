@@ -20,7 +20,7 @@ librechat:
       #OPENID_CLIENT_SECRET: "${KEYCLOAK_CLIENT_SECRET}"
       #OPENID_SESSION_SECRET: "${SOCIAL_SESSION_SECRET}"
       OPENID_CALLBACK_URL: "/oauth/openid/callback"
-      OPENID_SCOPE: "openid profile email"
+      OPENID_SCOPE: "openid profile email librechat"
       OPENID_REQUIRED_ROLE: "ai"
       OPENID_REQUIRED_ROLE_TOKEN_KIND: "(access|id)" # that means, `access` or `id` 
       OPENID_REQUIRED_ROLE_PARAMETER_PATH: "librechat_roles"
