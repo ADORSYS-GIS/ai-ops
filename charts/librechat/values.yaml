@@ -23,7 +23,7 @@ librechat:
       OPENID_SCOPE: "openid profile email"
       OPENID_REQUIRED_ROLE: "ai"
       OPENID_REQUIRED_ROLE_TOKEN_KIND: "(access|id)" # that means, `access` or `id` 
-      OPENID_REQUIRED_ROLE_PARAMETER_PATH: "realm_access.roles"
+      OPENID_REQUIRED_ROLE_PARAMETER_PATH: "librechat_roles"
 
       # Optional: redirects the user to the end session endpoint after logging out
       OPENID_USE_END_SESSION_ENDPOINT: "true"
