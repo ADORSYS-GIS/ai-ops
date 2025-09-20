@@ -27,10 +27,10 @@ librechat:
 
       # Optional: redirects the user to the end session endpoint after logging out
       OPENID_USE_END_SESSION_ENDPOINT: "true"
-  
-  # # For adding a custom config yaml-file you can set the contents in this var
-    configYamlContent: |
-      #version: 1.0.3
+    
+    # # For adding a custom config yaml-file you can set the contents in this var
+    configYamlContent:
+      version: 1.0.0
       cache: true
       fileStrategy: "s3"  # If using Firebase CDN
       fileConfig:
@@ -61,37 +61,13 @@ librechat:
         socialLogins: [ "openid" ]
         allowedDomains:
           - "v2.ai.kivoyo.com"
-      balance:
-        enabled: false
-        startBalance: 30000
-        autoRefillEnabled: false
-        refillIntervalValue: 30
-        refillIntervalUnit: "days"
-        refillAmount: 10000
-      webSearch:
-        firecrawlApiKey: "${FIRECRAWL_API_KEY}"
-        firecrawlOptions:
-          formats: [ "markdown", "rawHtml" ]
-          includeTags: [ "main", "article", ".content" ]
-          excludeTags: [ "nav", "footer", ".ads" ]
-          waitFor: 2000
-          timeout: 10000
-          mobile: false
-          blockAds: true
-          onlyMainContent: true
-          location:
-            country: "DE"
-            languages:
-              - "en"
-              - "de"
-              - "fr"
       endpoints:
         all:
           streamRate: 10
           titlePromptTemplate: |
             ### Task:
             Generate a concise, 3-5 word title with an emoji summarizing the chat history.
-      
+            
             ### Guidelines:
             - The title should clearly represent the main theme or subject of the conversation.
             - Always use emojis that enhance understanding of the topic, but avoid quotation marks or special formatting.
@@ -99,7 +75,7 @@ librechat:
             - Prioritize accuracy over excessive creativity; keep it clear and simple.
             - The title should be short and funny.
             - The emoji should come first.
-      
+            
             ### Output:
             Format "<emoji> your concise title here"
               ### Examples:
@@ -109,7 +85,7 @@ librechat:
               - 👨🏿‍💻 Remote Work Productivity Tips
               - 🧠 Artificial Intelligence in Healthcare
               - 🎮 Video Game Development Insights
-      
+            
             ### Chat History:
             Human: {input}
             Assistant: {output}
@@ -148,7 +124,7 @@ librechat:
             apiKey: "${OPENAI_API_KEY}"
             baseURL: "http://litellm.litellm.svc.cluster.local:4000"
             models:
-              #default: [ "mistral-tiny", "mistral-small", "mistral-medium" ]
+              default: [ "gemini-2.5-flash-lite" ]
               fetch: true  # Attempt to dynamically fetch available models
               userIdQuery: true
             iconURL: "https://adorsys.com/wp-content/uploads/2023/02/adorsys-logo-mark-full-color-rgb-1.svg"
@@ -227,8 +203,8 @@ librechat:
             pathType: Prefix
   
   
-  meilisearch: 
-    persistence: 
+  meilisearch:
+    persistence:
       storageClass: ai-ebs
     auth:
       existingMasterKeySecret: "librechat-creds-env"
