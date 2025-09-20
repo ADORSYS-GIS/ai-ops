@@ -258,6 +258,13 @@ litellm:
         model_info:
           supports_function_calling: true
           supports_vision: true
+      - model_name: codex-mini-latest
+        litellm_params:
+          model: openai/codex-mini-latest
+          drop_params: true
+        model_info:
+          supports_function_calling: true
+          supports_vision: true
       - model_name: text-embedding-3-large
         litellm_params:
           model: openai/text-embedding-3-large
