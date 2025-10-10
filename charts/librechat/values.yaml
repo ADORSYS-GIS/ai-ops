@@ -36,6 +36,7 @@ librechat:
       # TRUST_PROXY: "-1"
       
       USE_REDIS: "false"
+      REDIS_KEY_PREFIX: "librechat-prod"
     
     
     # # For adding a custom config yaml-file you can set the contents in this var
