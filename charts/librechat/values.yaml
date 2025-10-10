@@ -34,6 +34,8 @@ librechat:
       DOMAIN_SERVER: "https://v2.ai.kivoyo.com"
       NO_INDEX: "true"
       # TRUST_PROXY: "-1"
+      
+      USE_REDIS: "false"
     
     
     # # For adding a custom config yaml-file you can set the contents in this var
@@ -143,7 +145,7 @@ librechat:
             apiKey: "user_provided"
             baseURL: "http://litellm.litellm.svc.cluster.local:4000"
             models:
-              #default: [ "mistral-tiny", "mistral-small", "mistral-medium" ]
+              default: [ "fake-tiny", "fake-small", "fake-medium" ]
               fetch: true  # Attempt to dynamically fetch available models
               userIdQuery: true
             iconURL: "https://adorsys.com/wp-content/uploads/2023/02/adorsys-logo-mark-full-color-rgb-1.svg"

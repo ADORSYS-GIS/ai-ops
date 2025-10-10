@@ -57,7 +57,7 @@ resource "kubernetes_secret" "creds-secret" {
     OPENID_SESSION_SECRET = random_string.social_session_secret.result
 
     # USE_REDIS = "true"
-    # REDIS_URI = var.redis_uri
+    REDIS_URI = var.redis_uri
   }
 
   depends_on = [kubernetes_namespace.ns]
