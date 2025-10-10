@@ -22,10 +22,10 @@ librechat:
       OPENID_CALLBACK_URL: "/oauth/openid/callback"
       OPENID_SCOPE: "openid profile email librechat"
       OPENID_REQUIRED_ROLE: "ai"
-      OPENID_REQUIRED_ROLE_TOKEN_KIND: "access" 
+      OPENID_REQUIRED_ROLE_TOKEN_KIND: "access"
       OPENID_REQUIRED_ROLE_PARAMETER_PATH: "librechat_roles"
       OPENID_AUTO_REDIRECT: "true"
-      DEBUG_OPENID_REQUESTS: "true"
+      # DEBUG_OPENID_REQUESTS: "true"
 
       # Optional: redirects the user to the end session endpoint after logging out
       OPENID_USE_END_SESSION_ENDPOINT: "true"
@@ -33,8 +33,8 @@ librechat:
       DOMAIN_CLIENT: "https://v2.ai.kivoyo.com"
       DOMAIN_SERVER: "https://v2.ai.kivoyo.com"
       NO_INDEX: "true"
-      
-#      TRUST_PROXY: "-1"
+      # TRUST_PROXY: "-1"
+    
     
     # # For adding a custom config yaml-file you can set the contents in this var
     configYamlContent:
@@ -139,28 +139,28 @@ librechat:
               - "frequency_penalty"
           # headers:
           #    x-custom-header: "${CUSTOM_HEADER_VALUE}"
-          # - name: "User OpenAI"
-          #   apiKey: "user_provided"
-          #   baseURL: "http://litellm.litellm.svc.cluster.local:4000"
-          #   models:
-          #     #default: [ "mistral-tiny", "mistral-small", "mistral-medium" ]
-          #     fetch: true  # Attempt to dynamically fetch available models
-          #     userIdQuery: true
-          #   iconURL: "https://adorsys.com/wp-content/uploads/2023/02/adorsys-logo-mark-full-color-rgb-1.svg"
-          #   titleConvo: true
-          #   titleMethod: "completion"
-          #   titleModel: "gemini-2.5-flash-lite"
-          #   summarize: true
-          #   summaryModel: "gemini-2.5-flash-lite"
-          #   forcePrompt: false
-          #   modelDisplayLabel: "Kivoyo AI"
-          #   addParams:
-          #     safe_prompt: true
-          #   dropParams:
-          #     - "stop"
-          #     - "user"
-          #     - "presence_penalty"
-          #     - "frequency_penalty"
+          - name: "User OpenAI"
+            apiKey: "user_provided"
+            baseURL: "http://litellm.litellm.svc.cluster.local:4000"
+            models:
+              #default: [ "mistral-tiny", "mistral-small", "mistral-medium" ]
+              fetch: true  # Attempt to dynamically fetch available models
+              userIdQuery: true
+            iconURL: "https://adorsys.com/wp-content/uploads/2023/02/adorsys-logo-mark-full-color-rgb-1.svg"
+            titleConvo: true
+            titleMethod: "completion"
+            titleModel: "gemini-2.5-flash-lite"
+            summarize: true
+            summaryModel: "gemini-2.5-flash-lite"
+            forcePrompt: false
+            modelDisplayLabel: "User OpenAI"
+            addParams:
+              safe_prompt: true
+            dropParams:
+              - "stop"
+              - "user"
+              - "presence_penalty"
+              - "frequency_penalty"
           #   headers:
           #      x-custom-header: "${CUSTOM_HEADER_VALUE}"
   mongodb:
@@ -199,7 +199,7 @@ librechat:
           - path: /
             pathType: Prefix
   
-  image: 
+  image:
     tag: v0.8.0
   
   meilisearch:
@@ -207,3 +207,6 @@ librechat:
       storageClass: ai-ebs
     auth:
       existingMasterKeySecret: "librechat-creds-env"
+  
+  librechat-rag-api:
+    enabled: true
