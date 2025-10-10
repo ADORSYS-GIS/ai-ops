@@ -223,3 +223,14 @@ librechat:
   
   librechat-rag-api:
     enabled: false
+    
+  affinity:
+    podAntiAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        - labelSelector:
+            matchExpressions:
+              - key: "app.kubernetes.io/name"
+                operator: In
+                values:
+                  - librechat-librechat
+          topologyKey: "kubernetes.io/hostname"
