@@ -209,4 +209,4 @@ librechat:
       existingMasterKeySecret: "librechat-creds-env"
   
   librechat-rag-api:
-    enabled: true
+    enabled: false
