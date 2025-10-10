@@ -45,6 +45,14 @@ librechat:
     configYamlContent:
       version: 1.3.1
       cache: true
+      # Balance settings
+      balance:
+        enabled: true                # Enable token credit balances for users
+        startBalance: 20000          # Initial tokens credited upon registration
+        autoRefillEnabled: false     # Enable automatic token refills
+        refillIntervalValue: 30      # Numerical value for refill interval
+        refillIntervalUnit: "days"   # Time unit for refill interval (days, hours, etc.)
+        refillAmount: 10000          # Tokens added during each refill
       fileStrategy: "s3"  # If using Firebase CDN
       fileConfig:
         endpoints:
