@@ -6,3 +6,4 @@ resources:
   - chat-ui.yaml
   - litellm.yaml
   - mcpo.yaml
+  - librechat.yaml

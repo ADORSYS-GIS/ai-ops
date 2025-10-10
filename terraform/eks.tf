@@ -4,7 +4,7 @@ module "eks" {
 
   cluster_version                          = var.cluster_version
   cluster_name                             = "${local.name}-eks"
-  cluster_endpoint_public_access           = false
+  cluster_endpoint_public_access           = true
   cluster_endpoint_private_access          = true
   enable_efa_support                       = true
   vpc_id                                   = module.vpc.vpc_id
@@ -16,7 +16,7 @@ module "eks" {
   eks_managed_node_groups = {
     cpu-ng = {
       use_custom_launch_template = false
-      
+
       name           = "cpu"
       min_size       = var.cpu_min_instance
       max_size       = var.cpu_max_instance
@@ -31,10 +31,44 @@ module "eks" {
       labels = {
         cpu-node : "true"
       }
+      taints = {
+        env-workload : "prod"
+      }
+      taints = [
+        {
+          key    = "env-workload"
+          value  = "prod"
+          effect = "NO_SCHEDULE"
+        }
+      ]
       tags = merge(
         local.tags,
         {
           "cpu-node" = "true",
+        }
+      )
+    }
+    sandbox-ng = {
+      use_custom_launch_template = false
+
+      name           = "sandbox"
+      min_size       = var.sandbox_min_instance
+      max_size       = var.sandbox_max_instance
+      desired_size   = var.sandbox_desired_instance
+      instance_types = var.sandbox_ec2_instance_types
+      capacity_type  = var.sandbox_capacity_type
+      disk_size      = 100
+
+      iam_role_additional_policies = {
+        ebs = "arn:aws:iam::aws:policy/service-role/AmazonEBSCSIDriverPolicy"
+      }
+      labels = {
+        sandbox-node : "true"
+      }
+      tags = merge(
+        local.tags,
+        {
+          "sandbox-node" = "true",
         }
       )
     }
@@ -60,10 +94,10 @@ module "eks" {
     # Allow nodes to talk to the EKS control plane security group (443/TCP)
     egress_to_cluster = {
       description                   = "Allow egress to cluster API server"
-      protocol                     = "tcp"
-      from_port                    = 443
-      to_port                      = 443
-      type                         = "egress"
+      protocol                      = "tcp"
+      from_port                     = 443
+      to_port                       = 443
+      type                          = "egress"
       source_cluster_security_group = true
     }
   }
@@ -165,7 +199,10 @@ module "eks_blueprints_addons" {
     ]
   }
 
-  external_dns_route53_zone_arns = [data.aws_route53_zone.selected.arn]
+  external_dns_route53_zone_arns = concat(
+    [data.aws_route53_zone.selected.arn],
+    [for i in data.aws_route53_zone.other : i.arn]
+  )
 
   tags = merge(
     local.tags,
@@ -184,7 +221,7 @@ module "ebs_csi_driver_irsa" {
 
   oidc_providers = {
     cluster = {
-      provider_arn = module.eks.oidc_provider_arn
+      provider_arn               = module.eks.oidc_provider_arn
       namespace_service_accounts = ["kube-system:ebs-csi-controller-sa"]
     }
   }

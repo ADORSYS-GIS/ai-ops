@@ -1,15 +1,10 @@
-locals {
-  redis_node = module.redis.cluster_cache_nodes[0]
-  redis_url  = "redis://${local.redis_node.address}:${local.redis_node.port}"
-}
-
 resource "kubernetes_secret" "litellm_redis_secret" {
   metadata {
     name      = "litellm-redis-secret"
     namespace = kubernetes_namespace.litellm_namespace.metadata[0].name
   }
   data = {
-    REDIS_URL = local.redis_url
+    REDIS_URL = module.cache.redis_url
   }
 
   depends_on = [kubernetes_namespace.litellm_namespace]
@@ -110,10 +105,10 @@ resource "kubernetes_secret" "open_web_ui_s3" {
   }
   data = {
     STORAGE_PROVIDER     = "s3"
-    S3_BUCKET_NAME       = local.s3_bucket_name
-    S3_REGION_NAME       = var.region
-    S3_ACCESS_KEY_ID     = local.s3_access_key_id
-    S3_SECRET_ACCESS_KEY = local.s3_secret_access_key
+    S3_BUCKET_NAME       = module.storage.s3_bucket_name
+    S3_REGION_NAME       = module.storage.s3_region
+    S3_ACCESS_KEY_ID     = module.storage.s3_access_key_id
+    S3_SECRET_ACCESS_KEY = module.storage.s3_secret_access_key
   }
 
   depends_on = [kubernetes_namespace.chat_ui_namespace]
@@ -138,7 +133,7 @@ resource "kubernetes_secret" "open_web_ui_redis_secret" {
     namespace = kubernetes_namespace.chat_ui_namespace.metadata[0].name
   }
   data = {
-    redis-url = local.redis_url
+    redis-url = module.cache.redis_url
   }
 
   depends_on = [kubernetes_namespace.chat_ui_namespace]

@@ -1,0 +1,6 @@
+dependencies:
+- name: librechat
+  repository: https://charts.blue-atlas.de
+  version: 1.8.10
+digest: sha256:de1aa99d040f3ae2c5ad4d6dff6c57a81946467ffac10b71affb82a36a3c6122
+generated: "2025-10-08T16:05:13.453234+02:00"

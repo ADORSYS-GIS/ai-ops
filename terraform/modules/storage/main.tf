@@ -10,7 +10,7 @@ resource "aws_iam_access_key" "s3_user_access_key" {
 }
 
 resource "random_id" "suffix" {
-  byte_length = 8 # Adjust length as needed
+  byte_length = 8
 }
 
 module "s3_bucket" {
@@ -27,9 +27,9 @@ module "s3_bucket" {
   cors_rule = [
     {
       allowed_methods = ["PUT", "POST"]
-      allowed_origins = ["https://${var.zone_name}"]
+      allowed_origins = [var.allowed_origin]
       allowed_headers = ["*"]
-      expose_headers = ["ETag"]
+      expose_headers  = ["ETag"]
       max_age_seconds = 3000
     },
   ]
@@ -52,12 +52,14 @@ module "s3_bucket" {
       }
     ]
   })
-  
+
   tags = local.tags
 }
 
 locals {
-  s3_bucket_name       = "${local.name}-${var.environment}-web"
+  s3_bucket_name       = var.bucket_name
   s3_access_key_id     = aws_iam_access_key.s3_user_access_key.id
   s3_secret_access_key = aws_iam_access_key.s3_user_access_key.secret
+  s3_region            = var.region
+  tags                 = merge({}, var.tags)
 }
