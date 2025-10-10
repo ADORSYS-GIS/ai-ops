@@ -65,10 +65,10 @@ librechat:
           ipWindowInMinutes: 60  # Rate limit window for file uploads per IP
           userMax: 50
           userWindowInMinutes: 60  # Rate limit window for file uploads per user
-#      registration:
+      registration:
 #        socialLogins: [ "openid" ]
-#        allowedDomains:
-#          - "adorsys.com"
+        allowedDomains:
+          - "adorsys.com"
       endpoints:
         all:
           streamRate: 5
