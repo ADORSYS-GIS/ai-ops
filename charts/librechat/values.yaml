@@ -4,6 +4,8 @@ global:
 
 librechat:
   enabled: true
+  replicaCount: 2
+  
   librechat:
     existingSecretName: "librechat-creds-env"
     imageVolume:
