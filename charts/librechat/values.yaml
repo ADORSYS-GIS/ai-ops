@@ -133,8 +133,8 @@ librechat:
             summaryModel: "gemini-2.5-flash-lite"
             forcePrompt: false
             modelDisplayLabel: "Kivoyo AI"
-            addParams:
-              safe_prompt: true
+#            addParams:
+#              safe_prompt: true
             dropParams:
               - "stop"
               - "user"
