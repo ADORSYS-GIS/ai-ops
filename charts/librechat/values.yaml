@@ -129,7 +129,7 @@ librechat:
           #excludedIds: ["asst_excludedAssistantId"]
         custom:
           - name: "Kivoyo"
-            apiKey: "${OPENAI_API_KEY}"
+            apiKey: "${KIVOYO_OPENAI_API_KEY}"
             baseURL: "http://litellm.litellm.svc.cluster.local:4000"
             models:
               default: [ "gemini-2.5-flash-lite" ]

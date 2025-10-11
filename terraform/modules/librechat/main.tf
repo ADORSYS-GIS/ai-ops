@@ -44,7 +44,7 @@ resource "kubernetes_secret" "creds-secret" {
     JWT_SECRET         = random_id.jwt_secret.hex
     JWT_REFRESH_SECRET = random_id.jwt_refresh_secret.hex
 
-    OPENAI_API_KEY = var.litelllm_masterkey
+    KIVOYO_OPENAI_API_KEY = var.litelllm_masterkey
 
     AWS_ACCESS_KEY_ID     = var.s3_access_key_id
     AWS_SECRET_ACCESS_KEY = var.s3_secret_access_key
