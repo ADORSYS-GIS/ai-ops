@@ -204,6 +204,15 @@ litellm:
           output_cost_per_token: 0.88e-6
       - model_name: glm-4p5
         litellm_params:
+          model: fireworks_ai/accounts/fireworks/models/glm-4p6
+          drop_params: true
+          merge_reasoning_content_in_choices: true
+        model_info:
+          supports_function_calling: true
+          input_cost_per_token: 0.55e-6
+          output_cost_per_token: 2.19e-6
+      - model_name: glm-4p5
+        litellm_params:
           model: fireworks_ai/accounts/fireworks/models/glm-4p5
           drop_params: true
           merge_reasoning_content_in_choices: true
