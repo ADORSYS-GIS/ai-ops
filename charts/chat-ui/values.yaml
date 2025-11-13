@@ -347,15 +347,3 @@ tika:
                   - tika
           topologyKey: "kubernetes.io/hostname"
 
-
-chromadb:
-  enabled: false
-  fullnameOverride: chromadb
-  replicaCount: 2
-  chromadb:
-    allowReset: "true"
-    auth:
-      type: "false"
-    data:
-      storageClass: ai-ebs
-      volumeSize: 10Gi

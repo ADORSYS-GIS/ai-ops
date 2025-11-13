@@ -27,8 +27,3 @@ dependencies:
     name: tika
     repository: https://apache.jfrog.io/artifactory/tika
     version: '*'
-    
-  - name: chromadb
-    version: '*'
-    condition: chromadb.enabled
-    repository: https://amikos-tech.github.io/chromadb-chart/
