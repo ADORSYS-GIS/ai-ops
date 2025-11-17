@@ -120,6 +120,15 @@ litellm:
           supports_computer_use: true
           input_cost_per_token: 0.6e-6
           output_cost_per_token: 2.5e-6
+      - model_name: kimi-k2-thinking
+        litellm_params:
+          model: fireworks_ai/accounts/fireworks/models/kimi-k2-thinking
+          drop_params: true
+        model_info:
+          supports_function_calling: true
+          supports_computer_use: true
+          input_cost_per_token: 0.6e-6
+          output_cost_per_token: 2.5e-6
       - model_name: deepseek-v3p1
         litellm_params:
           model: fireworks_ai/accounts/fireworks/models/deepseek-v3p1
