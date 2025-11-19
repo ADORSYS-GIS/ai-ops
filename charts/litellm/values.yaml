@@ -374,3 +374,11 @@ litellm:
           drop_params: true
         model_info:
           supports_function_calling: true
+      - model_name: gemini-3-pro
+        litellm_params:
+          model: gemini/gemini-3-pro-preview
+          drop_params: true
+          thinking: {"type": "enabled"}
+          merge_reasoning_content_in_choices: true
+        model_info:
+          supports_function_calling: true
