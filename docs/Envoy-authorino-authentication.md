@@ -57,6 +57,12 @@ multipass launch -c 2 -m 4G -d 20G -n ai-ops-authorino 24.04
 multipass shell ai-ops-authorino
 ```
 
+**Expected output:**
+```
+Launching ai-ops-authorino...
+Launched: ai-ops-authorino
+```
+
 ### Step 2: Shell Enhancement (Optional)
 
 For improved shell experience:
@@ -85,8 +91,19 @@ sudo cp /etc/rancher/k3s/k3s.yaml ~/.kube/config
 sudo chown $(id -u):$(id -g) ~/.kube/config
 chmod 644 ~/.kube/config
 
+# IMPORTANT: Export KUBECONFIG environment variable
+export KUBECONFIG=~/.kube/config
+echo 'export KUBECONFIG=~/.kube/config' >> ~/.bashrc
+
 # Verify installation
-kubectl version --short
+kubectl version
+```
+
+**Expected output:**
+```
+Client Version: v1.28.x-k3s1
+Kustomize Version: v5.0.4-0.20230601165947-6ce0bf390ce3
+Server Version: v1.28.x-k3s1
 ```
 
 ### Step 4: Install Helm
@@ -101,15 +118,36 @@ chmod 700 get_helm.sh
 helm version
 ```
 
+**Expected output:**
+```
+version.BuildInfo{Version:"v3.x.x", GitCommit:"...", GitTreeState:"clean", GoVersion:"go1.x.x"}
+```
+
 ### Step 5: Install k9s (Optional)
+
+**Note:** k9s installation may fail when run as batch commands. Install manually if needed.
 
 ```bash
 # Install k9s for cluster visualization
 curl -sS https://webinstall.dev/k9s | bash
 
-# Add to PATH if needed
+# Wait for installation to complete before proceeding
+sleep 5
+
+# Add to PATH and source
 echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.bashrc
 source ~/.bashrc
+
+# Verify installation works
+k9s version
+```
+
+**If k9s installation fails, use alternative method:**
+```bash
+# Alternative: Manual installation
+wget https://github.com/derailed/k9s/releases/latest/download/k9s_Linux_amd64.tar.gz
+tar -xzf k9s_Linux_amd64.tar.gz
+sudo mv k9s /usr/local/bin/
 ```
 
 ## Deployment
@@ -127,8 +165,15 @@ helm upgrade -i eg oci://docker.io/envoyproxy/gateway-helm \
 # Verify installation
 helm status eg -n envoy-gateway-system
 
-# Check pods are running
-kubectl get pods -n envoy-gateway-system
+# Check pods are running - wait until all are Ready
+kubectl get pods -n envoy-gateway-system -w
+```
+
+**Expected output:**
+```
+NAME                                        READY   STATUS    RESTARTS   AGE
+envoy-gateway-xxxxx-xxxxx                   1/1     Running   0          2m
+envoy-gateway-config-xxxxx-xxxxx            1/1     Running   0          2m
 ```
 
 ### Step 2: Install Authorino Operator
@@ -142,6 +187,12 @@ kubectl wait --for=condition=Available deployment/authorino-operator -n authorin
 
 # Verify installation
 kubectl get pods -n authorino-operator
+```
+
+**Expected output:**
+```
+NAME                                  READY   STATUS    RESTARTS   AGE
+authorino-operator-xxxxxxxxx-xxxxx   1/1     Running   0          1m
 ```
 
 ### Step 3: Setup Working Directory
@@ -178,6 +229,11 @@ kubectl -n test-authorino-v1 apply -f authorino.yaml
 
 # Wait for Authorino to be ready
 kubectl wait --for=condition=Ready authorino/authorino -n test-authorino-v1 --timeout=300s
+```
+
+**Expected output:**
+```
+authorino.operator.authorino.kuadrant.io/authorino condition met
 ```
 
 ### Step 5: Deploy Test Application
@@ -238,14 +294,19 @@ EOF
 # Deploy HTTPBin
 kubectl -n test-authorino-v1 apply -f httpbin-workload.yaml
 
-# Wait for deployment
+# Wait for deployment to be ready
 kubectl wait --for=condition=Available deployment/httpbin -n test-authorino-v1 --timeout=300s
 ```
 
-#### Option B: Talker API (Alternative)
+**Expected output:**
+```
+deployment.apps/httpbin condition met
+```
+
+#### Option B: Talker API (Alternative - may have compatibility issues on MacOS)
 
 ```bash
-# Deploy Talker API (may have compatibility issues on some systems)
+# Deploy Talker API
 kubectl apply -f https://raw.githubusercontent.com/kuadrant/authorino-examples/main/talker-api/talker-api-deploy.yaml -n test-authorino-v1
 ```
 
@@ -279,8 +340,18 @@ EOF
 # Apply gateway configuration
 kubectl -n test-authorino-v1 apply -f gateway-example.yaml
 
-# Wait for gateway to be ready
+# Wait for gateway to be programmed
 kubectl wait --for=condition=Programmed gateway/eg -n test-authorino-v1 --timeout=300s
+```
+
+**Expected output:**
+```
+gateway.gateway.networking.k8s.io/eg condition met
+```
+
+**If gateway condition is not met, check status:**
+```bash
+kubectl describe gateway eg -n test-authorino-v1
 ```
 
 ### Step 7: Create HTTP Route
@@ -312,13 +383,23 @@ EOF
 
 # Apply HTTP route
 kubectl -n test-authorino-v1 apply -f http-route.yaml
+
+# Verify route is accepted
+kubectl get httproute httpbin -n test-authorino-v1 -o yaml | grep -A5 conditions
+```
+
+**Expected output should show:**
+```
+conditions:
+- type: Accepted
+  status: "True"
 ```
 
 ### Step 8: Configure Authentication
 
 ```bash
 # Create AuthConfig for API key authentication
-cat <<EOF > authconfig_01.yaml
+cat <<EOF > authconfig.yaml
 apiVersion: authorino.kuadrant.io/v1beta3
 kind: AuthConfig
 metadata:
@@ -338,7 +419,10 @@ spec:
 EOF
 
 # Apply authentication configuration
-kubectl -n test-authorino-v1 apply -f authconfig_01.yaml
+kubectl -n test-authorino-v1 apply -f authconfig.yaml
+
+# Verify AuthConfig is ready
+kubectl get authconfig -n test-authorino-v1
 ```
 
 ### Step 9: Configure Security Policy
@@ -365,6 +449,9 @@ EOF
 
 # Apply security policy
 kubectl -n test-authorino-v1 apply -f security-config.yaml
+
+# Verify policy is accepted
+kubectl get securitypolicy -n test-authorino-v1
 ```
 
 ### Step 10: Create API Key Secret
@@ -386,39 +473,105 @@ EOF
 
 # Apply API key secret
 kubectl -n test-authorino-v1 apply -f api-key-secret.yaml
+
+# Verify secret exists with correct labels
+kubectl get secrets -n test-authorino-v1 --show-labels | grep friends
+```
+
+**Expected output:**
+```
+api-key-1   Opaque   1   1m   authorino.kuadrant.io/managed-by=authorino,group=friends
 ```
 
 ## Testing
 
-### Step 1: Set Up Port Forwarding
+### Step 1: Verify All Components Are Ready
 
 ```bash
-# Get the gateway service
-kubectl get service -n envoy-gateway-system
+# Check all pods are running
+kubectl get pods -n test-authorino-v1
 
-# Forward gateway port to localhost
-kubectl port-forward service/envoy-eg-$(kubectl get gateway eg -n test-authorino-v1 -o jsonpath='{.metadata.uid}' | cut -c1-8) -n envoy-gateway-system 8080:80 &
+# Check gateway is programmed
+kubectl get gateway eg -n test-authorino-v1 -o jsonpath='{.status.conditions[?(@.type=="Programmed")].status}'
+
+# Should output: True
 ```
 
-### Step 2: Test Without Authentication (Should Fail)
+### Step 2: Set Up Port Forwarding
+
+First, find the Envoy service created by the gateway:
+
+```bash
+# List services in envoy-gateway-system to find the Envoy service
+kubectl get svc -n envoy-gateway-system
+```
+
+**Expected output (look for a service starting with "envoy-"):**
+```
+NAME                                    TYPE           CLUSTER-IP     EXTERNAL-IP   PORT(S)
+envoy-test-authorino-v1-eg-xxxxx        LoadBalancer   10.43.xx.xx    <pending>     80:xxxxx/TCP
+```
+
+Now set up port forwarding using the service name you found:
+
+```bash
+# Replace [SERVICE_NAME] with the actual service name from above
+kubectl port-forward -n envoy-gateway-system service/[SERVICE_NAME] 8080:80 &
+```
+
+**Example with actual service name:**
+```bash
+# Example: if service name is envoy-test-authorino-v1-eg-12345
+kubectl port-forward -n envoy-gateway-system service/envoy-test-authorino-v1-eg-12345 8080:80 &
+```
+
+**If no service is found, try this alternative method:**
+```bash
+# Find services by gateway label
+kubectl get svc -n envoy-gateway-system -l gateway.envoyproxy.io/owning-gateway-namespace=test-authorino-v1
+```
+
+### Step 3: Test Without Authentication (Should Fail)
 
 ```bash
 # Test without API key - should return 403 Forbidden
 curl -i -H "Host: ai-v1.home.lab" http://localhost:8080/headers
-
-# Expected response: HTTP/1.1 403 Forbidden
 ```
 
-### Step 3: Test With Authentication (Should Succeed)
+**Expected output:**
+```
+HTTP/1.1 403 Forbidden
+content-length: 19
+content-type: text/plain
+date: ...
+
+access denied
+```
+
+### Step 4: Test With Authentication (Should Succeed)
 
 ```bash
 # Test with valid API key
 curl -i -H "Host: ai-v1.home.lab" -H "Authorization: APIKEY my-secret-api-key" http://localhost:8080/headers
-
-# Expected response: HTTP/1.1 200 OK with headers
 ```
 
-### Step 4: Additional Tests
+**Expected output:**
+```
+HTTP/1.1 200 OK
+content-type: application/json
+date: ...
+
+{
+  "headers": {
+    "Accept": ["*/*"],
+    "Authorization": ["APIKEY my-secret-api-key"],
+    "Host": ["ai-v1.home.lab"],
+    ...
+  }
+}
+```
+
+### Step 5: Additional Tests
 
 ```bash
 # Test different endpoints
@@ -429,58 +582,165 @@ curl -i -H "Host: ai-v1.home.lab" -H "Authorization: APIKEY my-secret-api-key" h
 curl -i -H "Host: ai-v1.home.lab" -H "Authorization: APIKEY invalid-key" http://localhost:8080/headers
 ```
 
+**Expected output for invalid key:**
+```
+HTTP/1.1 403 Forbidden
+```
+
 ## Troubleshooting
 
-### Common Issues
+### Common Issues and Solutions
 
-#### 1. Gateway Not Ready
+#### 1. KUBECONFIG Issues
+**Problem**: Permission denied or kubectl commands fail
+**Solution**:
+```bash
+# Ensure KUBECONFIG is set
+export KUBECONFIG=~/.kube/config
+echo 'export KUBECONFIG=~/.kube/config' >> ~/.bashrc
+source ~/.bashrc
+
+# Check file permissions
+ls -la ~/.kube/config
+# Should show -rw-r--r--
+
+# If permissions are wrong:
+chmod 644 ~/.kube/config
+```
+
+#### 2. k9s Installation Fails
+**Problem**: k9s installation fails when running commands in batch
+**Solution**:
+```bash
+# Install k9s manually step by step
+wget https://github.com/derailed/k9s/releases/latest/download/k9s_Linux_amd64.tar.gz
+tar -xzf k9s_Linux_amd64.tar.gz
+sudo mv k9s /usr/local/bin/
+rm k9s_Linux_amd64.tar.gz
+
+# Verify installation
+k9s version
+```
+
+#### 3. Gateway Condition Not Programmed
+**Problem**: Gateway condition "Programmed" is not met
+**Solution**:
 ```bash
 # Check gateway status
 kubectl describe gateway eg -n test-authorino-v1
 
-# Check Envoy Gateway logs
-kubectl logs -n envoy-gateway-system deployment/envoy-gateway
+# Look for issues in events
+kubectl get events -n test-authorino-v1 --sort-by=.metadata.creationTimestamp
+
+# Check Envoy Gateway controller logs
+kubectl logs -n envoy-gateway-system deployment/envoy-gateway -f
+
+# Verify GatewayClass exists
+kubectl get gatewayclass
+
+# If issues persist, recreate gateway:
+kubectl delete gateway eg -n test-authorino-v1
+kubectl apply -f gateway-example.yaml -n test-authorino-v1
 ```
 
-#### 2. Authorino Not Working
+#### 4. Port-Forwarding Fails - No Envoy Service Found
+**Problem**: Cannot find envoy service for port forwarding
+**Solution**:
 ```bash
-# Check Authorino instance status
-kubectl get authorino -n test-authorino-v1
+# Step 1: List all services in envoy-gateway-system
+kubectl get svc -n envoy-gateway-system
+
+# Step 2: If no services found, check gateway status
+kubectl get gateway eg -n test-authorino-v1
+
+# Step 3: Wait for gateway to create service (may take a few minutes)
+kubectl wait --for=condition=Programmed gateway/eg -n test-authorino-v1 --timeout=300s
+
+# Step 4: Try again to list services
+kubectl get svc -n envoy-gateway-system
+
+# Step 5: Use the service name that appears (usually starts with envoy-test-authorino-v1-eg-)
+kubectl port-forward -n envoy-gateway-system service/[SERVICE_NAME] 8080:80 &
+```
+
+#### 5. Port-Forward Connection Drops During Testing
+**Problem**: Port forwarding stops working when making requests
+**Solution**:
+```bash
+# Step 1: Stop existing port forwards
+pkill -f "kubectl port-forward"
+
+# Step 2: Start port forwarding in foreground (easier to monitor)
+kubectl port-forward -n envoy-gateway-system service/[SERVICE_NAME] 8080:80
+
+# Alternative: If still having issues, try a different port
+kubectl port-forward -n envoy-gateway-system service/[SERVICE_NAME] 8081:80 &
+
+# Test with the new port
+curl -i -H "Host: ai-v1.home.lab" http://localhost:8081/headers
+```
+
+#### 6. Authentication Always Fails
+**Problem**: All requests return 403 even with correct API key
+**Solution**:
+```bash
+# Verify Authorino is running
+kubectl get pods -n test-authorino-v1 | grep authorino
 
 # Check Authorino logs
-kubectl logs -n test-authorino-v1 deployment/authorino-authorino
+kubectl logs -n test-authorino-v1 deployment/authorino-authorino -f
+
+# Verify AuthConfig is applied
+kubectl get authconfig -n test-authorino-v1 -o yaml
+
+# Check if API key secret has correct labels
+kubectl get secrets -n test-authorino-v1 --show-labels | grep group=friends
+
+# Verify SecurityPolicy is properly linked
+kubectl describe securitypolicy test-authorino-security-policy -n test-authorino-v1
+
+# Test Authorino service directly
+kubectl port-forward -n test-authorino-v1 service/authorino-authorino-authorization 50051:50051 &
 ```
 
-#### 3. Authentication Failures
+#### 7. HTTPBin Not Responding
+**Problem**: Backend service is not reachable
+**Solution**:
 ```bash
-# Verify AuthConfig
-kubectl get authconfig -n test-authorino-v1
+# Check HTTPBin pod status
+kubectl get pods -n test-authorino-v1 -l app=httpbin
 
-# Check if API key secret exists and has correct labels
-kubectl get secrets -n test-authorino-v1 --show-labels
-```
+# Verify service exists
+kubectl get svc -n test-authorino-v1 httpbin
 
-#### 4. Connection Issues
-```bash
-# Verify all services are running
-kubectl get pods,svc -n test-authorino-v1
+# Test service directly
+kubectl port-forward -n test-authorino-v1 service/httpbin 8082:8080 &
+curl localhost:8082/headers
 
-# Check if port-forwarding is active
-ps aux | grep kubectl | grep port-forward
+# Check HTTPBin logs
+kubectl logs -n test-authorino-v1 deployment/httpbin
 ```
 
 ### Debug Commands
 
 ```bash
-# View all resources in the namespace
+# Comprehensive namespace overview
 kubectl get all -n test-authorino-v1
 
-# Check events for issues
+# Check all events in namespace
 kubectl get events -n test-authorino-v1 --sort-by=.metadata.creationTimestamp
 
-# Describe problematic resources
+# Describe all custom resources
+kubectl describe gateway eg -n test-authorino-v1
 kubectl describe httproute httpbin -n test-authorino-v1
 kubectl describe securitypolicy test-authorino-security-policy -n test-authorino-v1
+kubectl describe authconfig ai-v1-home-api-protection -n test-authorino-v1
+
+# Check running processes
+ps aux | grep kubectl | grep port-forward
+
+# Network connectivity test
+kubectl run -it --rm debug --image=nicolaka/netshoot --restart=Never -- nslookup httpbin.test-authorino-v1.svc.cluster.local
 ```
 
 ## Cleanup
