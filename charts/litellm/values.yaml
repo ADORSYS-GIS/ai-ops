@@ -344,6 +344,12 @@ litellm:
           drop_params: true
         model_info:
           supports_function_calling: true
+      - model_name: gemini-3-flash
+        litellm_params:
+          model: gemini/gemini-3-flash-preview
+          drop_params: true
+        model_info:
+          supports_function_calling: true
       - model_name: gemini-2.5-pro-reasoning
         litellm_params:
           model: gemini/gemini-2.5-pro
