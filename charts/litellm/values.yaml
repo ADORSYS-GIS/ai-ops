@@ -344,12 +344,6 @@ litellm:
           drop_params: true
         model_info:
           supports_function_calling: true
-      - model_name: gemini-3-flash
-        litellm_params:
-          model: gemini/gemini-3-flash-preview
-          drop_params: true
-        model_info:
-          supports_function_calling: true
       - model_name: gemini-2.5-pro-reasoning
         litellm_params:
           model: gemini/gemini-2.5-pro
@@ -383,6 +377,20 @@ litellm:
       - model_name: gemini-3-pro
         litellm_params:
           model: gemini/gemini-3-pro-preview
+          drop_params: true
+          thinking: {"type": "enabled"}
+          merge_reasoning_content_in_choices: true
+        model_info:
+          supports_function_calling: true
+      - model_name: gemini-3-flash
+        litellm_params:
+          model: gemini/gemini-3-flash-preview
+          drop_params: true
+        model_info:
+          supports_function_calling: true
+      - model_name: gemini-3-flash-thinking
+        litellm_params:
+          model: gemini/gemini-3-flash-preview
           drop_params: true
           thinking: {"type": "enabled"}
           merge_reasoning_content_in_choices: true
