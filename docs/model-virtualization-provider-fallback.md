@@ -7,7 +7,6 @@
 4. [Ticket 1: Model Name Virtualization](#ticket-1-model-name-virtualization)
 5. [Ticket 2: Provider Fallback](#ticket-2-provider-fallback)
 6. [Troubleshooting](#troubleshooting)
-
 ---
 
 ## Overview
@@ -34,13 +33,17 @@
 
 ## Environment Setup
 
-### Create VM
+You can choose between two approaches for your Kubernetes cluster:
+
+### Option A: Using Multipass VM
+
+#### Create VM
 ```bash
-multipass launch --name aiops --cpus 8 --mem 20G --disk 50G
+multipass launch --name aiops --cpus 10 --mem 30G --disk 50G
 multipass shell aiops
 ```
 
-### Install K3s
+#### Install K3s
 ```bash
 curl -sfL https://get.k3s.io | sh -
 mkdir ~/.kube
@@ -49,6 +52,59 @@ sudo chmod 644 ~/.kube/config
 export KUBECONFIG=~/.kube/config
 echo 'export KUBECONFIG=~/.kube/config' >> ~/.bashrc
 ```
+
+### Option B: Using k3d (Docker-based)
+
+**Prerequisites**: Ensure Docker is installed and running on your system.
+
+#### Install k3d
+```bash
+# Linux/macOS
+curl -s https://raw.githubusercontent.com/k3d-io/k3d/main/install.sh | bash
+
+# Or using wget
+wget -q -O - https://raw.githubusercontent.com/k3d-io/k3d/main/install.sh | bash
+
+# Verify installation
+k3d version
+```
+
+#### Create k3d Cluster
+```bash
+# Create cluster with appropriate resources
+k3d cluster create aiops \
+  --image rancher/k3s:v1.32.0-k3s1 \
+  --wait
+
+# Set kubeconfig
+export KUBECONFIG="$(k3d kubeconfig write aiops)"
+echo "export KUBECONFIG=$(k3d kubeconfig write aiops)" >> ~/.bashrc
+
+# Verify cluster
+kubectl cluster-info
+kubectl get nodes
+
+```
+
+
+#### k3d Cluster Management Commands
+```bash
+# Stop cluster
+k3d cluster stop aiops
+
+# Start cluster
+k3d cluster start aiops
+
+# Delete cluster
+k3d cluster delete aiops
+
+# List clusters
+k3d cluster list
+```
+
+---
+
+### Common Setup (Both Options)
 
 ### Install Helm
 ```bash
@@ -63,6 +119,8 @@ curl -sS https://webinstall.dev/k9s | sh
 ```
 
 ### Install Envoy AI Gateway
+
+**Install Envoy Gateway**
 ```bash
 helm upgrade -i eg oci://docker.io/envoyproxy/gateway-helm \
   --version v0.0.0-latest \
@@ -71,18 +129,26 @@ helm upgrade -i eg oci://docker.io/envoyproxy/gateway-helm \
   -f https://raw.githubusercontent.com/envoyproxy/ai-gateway/main/manifests/envoy-gateway-values.yaml
 
 kubectl wait --timeout=2m -n envoy-gateway-system deployment/envoy-gateway --for=condition=Available
+```
 
+**Install AI Gateway CRDs**
+```bash
 helm upgrade -i aieg-crd oci://docker.io/envoyproxy/ai-gateway-crds-helm \
   --version v0.0.0-latest \
   --namespace envoy-ai-gateway-system \
   --create-namespace
-
+```
+**Install AI Gateway Resources**
+```bash
 helm upgrade -i aieg oci://docker.io/envoyproxy/ai-gateway-helm \
   --version v0.0.0-latest \
   --namespace envoy-ai-gateway-system \
   --create-namespace
 
 kubectl wait --timeout=2m -n envoy-ai-gateway-system deployment/ai-gateway-controller --for=condition=Available
+```
+**Verify Installation**
+```bash
 kubectl get pods -n envoy-ai-gateway-system
 ```
 
@@ -111,6 +177,11 @@ kubectl wait --for=condition=Available -n cert-manager deployment/cert-manager-w
 ```bash
 helm install kserve-crd oci://ghcr.io/kserve/charts/kserve-crd --version v0.12.0
 helm install kserve oci://ghcr.io/kserve/charts/kserve --version v0.12.0
+```
+
+**Verify Overall Setup**
+```bash
+kubectl get pods -A
 ```
 
 ---
@@ -204,9 +275,14 @@ spec:
 
 ### Step 2: Deploy Models
 ```bash
-kubectl apply -f primary-model.yaml
-kubectl apply -f secondary-model.yaml
 kubectl apply -f tertiary-model.yaml
+kubectl get pods -n default
+kubectl get isvc -n default -w
+```
+```bash
+
+kubectl apply -f secondary-model.yaml
+kubectl apply -f primary-model.yaml
 ```
 
 Monitor deployment:
@@ -216,6 +292,9 @@ kubectl get isvc -n default -w
 ```
 
 Wait until all show `READY=True`.
+
+![Model Deployment Status](images/ticket1-model-deployment.png)
+*Figure 1: InferenceServices showing READY=True status*
 
 ### Step 3: Create Gateway Configuration
 
@@ -377,8 +456,8 @@ spec:
 ```
 
 **Key Configuration**:
-- `x-ai-eg-model: virtual-qwen-model` - Client uses this virtual name
-- `modelNameOverride` - Gateway translates to actual model names
+- `x-ai-eg-model: virtual-qwen-model` - Client uses this virtual name as seen in the curl request used for testing 
+- `modelNameOverride` - Gateway translates to actual model names; that can be verified in the responses and the logs.
 - `weight` - Traffic distribution (50% primary, 30% secondary, 20% tertiary)
 
 ### Step 5: Apply Configuration
@@ -396,6 +475,7 @@ kubectl wait pods --timeout=2m \
 ```
 
 ### Step 6: Setup Port Forward
+
 ```bash
 export ENVOY_SERVICE=$(kubectl get svc -n envoy-gateway-system \
   --selector=gateway.envoyproxy.io/owning-gateway-namespace=default,gateway.envoyproxy.io/owning-gateway-name=envoy-ai-gateway-basic \
@@ -403,6 +483,7 @@ export ENVOY_SERVICE=$(kubectl get svc -n envoy-gateway-system \
 
 kubectl port-forward -n envoy-gateway-system svc/$ENVOY_SERVICE 8080:80
 ```
+
 
 ### Step 7: Test Model Virtualization
 ```bash
@@ -422,10 +503,15 @@ curl -H "Content-Type: application/json" \
   $GATEWAY_URL/v1/chat/completions
 ```
 
+
 **Expected Result**: 
 - Request succeeds with virtual model name
 - Traffic distributed: 50% to primary (1.5b), 30% to secondary (0.5b), 20% to tertiary (0.5b)
 - Client unaware of actual model names
+
+![Successful Response](images/ticket1-successful-response.png)
+*Figure 2: Example of successful virtualized model response*
+
 
 **Test Multiple Times**:
 ```bash
@@ -439,7 +525,8 @@ done
 ```
 
 You should see requests distributed across backends according to weights.
-**Monitor  Behavior**
+
+**Monitor Behavior**
 
 Watch logs to observe model virtualization:
 ```bash
@@ -448,84 +535,30 @@ kubectl logs -n envoy-gateway-system \
   --tail=50 -f
 ```
 
+![Gateway Logs - Virtualization](images/ticket1-gateway-logs.png)
+*Figure 3: Gateway logs showing traffic distribution across backends*
 
 ---
 
 ## Ticket 2: Provider Fallback
 
-**Goal**: Configure primary model with automatic fallback. Test by deleting primary pod to verify failover to weaker fallback model.
+**Goal**: Configure primary model with automatic fallback using existing models from Ticket 1. Test by deleting primary isvc to verify failover to secondary model.
 
-### Step 1: Create Model Files
+**Note**: This ticket reuses the `qwen-primary` and `qwen-secondary` models from Ticket 1, so you don't need to deploy new models.
 
-**File: `primary-fallback-model.yaml`**
-```yaml
-apiVersion: serving.kserve.io/v1beta1
-kind: InferenceService
-metadata:
-  name: qwen-primary
-  namespace: default
-spec:
-  predictor:
-    containers:
-      - name: kserve-container
-        image: ollama/ollama:latest
-        ports:
-          - containerPort: 11434
-            protocol: TCP
-        command: ["/bin/bash", "-c"]
-        args:
-          - "ollama serve & sleep 5 && ollama pull qwen2.5:1.5b && wait"
-        resources:
-          requests:
-            cpu: "1"
-            memory: "1Gi"
-          limits:
-            cpu: "2"
-            memory: "2Gi"
-```
+### Step 1: Verify Existing Models
 
-**File: `fallback-model.yaml`**
-```yaml
-apiVersion: serving.kserve.io/v1beta1
-kind: InferenceService
-metadata:
-  name: qwen-fallback
-  namespace: default
-spec:
-  predictor:
-    containers:
-      - name: kserve-container
-        image: ollama/ollama:latest
-        ports:
-          - containerPort: 11434
-            protocol: TCP
-        command: ["/bin/bash", "-c"]
-        args:
-          - "ollama serve & sleep 5 && ollama pull qwen2.5:0.5b && wait"
-        resources:
-          requests:
-            cpu: "1"
-            memory: "2Gi"
-          limits:
-            cpu: "2"
-            memory: "2Gi"
-```
-
-**Note**: Fallback uses smaller 0.5b model (weaker but faster/cheaper).
-
-### Step 2: Deploy Models
+Ensure models from Ticket 1 are still running:
 ```bash
-kubectl apply -f primary-fallback-model.yaml
-kubectl apply -f fallback-model.yaml
+kubectl get isvc -n default
+kubectl get pods -n default | grep qwen
 ```
 
-Monitor:
-```bash
-kubectl get pods -n default
-kubectl get isvc -n default -w
-```
+You should see `qwen-primary` and `qwen-secondary` with READY=True status.
 
-### Step 3: Create Fallback Gateway Configuration
+
+
+### Step 2: Create Fallback Gateway Configuration
 
 **File: `provider-fallback.yaml`**
 ```yaml
@@ -546,43 +579,43 @@ spec:
               name: x-ai-eg-model
               value: qwen-with-fallback
       backendRefs:
-        - name: envoy-ai-gateway-qwen-primary
+        - name: envoy-ai-gateway-qwen-primary-fb
           modelNameOverride: qwen2.5:1.5b
           priority: 0
-        - name: envoy-ai-gateway-qwen-fallback
+        - name: envoy-ai-gateway-qwen-secondary-fb
           modelNameOverride: qwen2.5:0.5b
           priority: 1
 ---
 apiVersion: aigateway.envoyproxy.io/v1alpha1
 kind: AIServiceBackend
 metadata:
-  name: envoy-ai-gateway-qwen-primary
+  name: envoy-ai-gateway-qwen-primary-fb
   namespace: default
 spec:
   schema:
     name: OpenAI
   backendRef:
-    name: envoy-ai-gateway-qwen-primary
+    name: envoy-ai-gateway-qwen-primary-fb
     kind: Backend
     group: gateway.envoyproxy.io
 ---
 apiVersion: aigateway.envoyproxy.io/v1alpha1
 kind: AIServiceBackend
 metadata:
-  name: envoy-ai-gateway-qwen-fallback
+  name: envoy-ai-gateway-qwen-secondary-fb
   namespace: default
 spec:
   schema:
     name: OpenAI
   backendRef:
-    name: envoy-ai-gateway-qwen-fallback
+    name: envoy-ai-gateway-qwen-secondary-fb
     kind: Backend
     group: gateway.envoyproxy.io
 ---
 apiVersion: gateway.envoyproxy.io/v1alpha1
 kind: Backend
 metadata:
-  name: envoy-ai-gateway-qwen-primary
+  name: envoy-ai-gateway-qwen-primary-fb
   namespace: default
 spec:
   endpoints:
@@ -593,12 +626,12 @@ spec:
 apiVersion: gateway.envoyproxy.io/v1alpha1
 kind: Backend
 metadata:
-  name: envoy-ai-gateway-qwen-fallback
+  name: envoy-ai-gateway-qwen-secondary-fb
   namespace: default
 spec:
   endpoints:
     - fqdn:
-        hostname: qwen-fallback-predictor-00001.default.svc.cluster.local
+        hostname: qwen-secondary-predictor-00001.default.svc.cluster.local
         port: 80
 ---
 apiVersion: gateway.envoyproxy.io/v1alpha1
@@ -608,12 +641,11 @@ metadata:
   namespace: default
 spec:
   targetRefs:
-    - group: gateway.networking.k8s.io
-      kind: HTTPRoute
-      name: envoy-ai-gateway-fallback
+    - group: gateway.envoyproxy.io
+      kind: Gateway
+      name: envoy-ai-gateway-basic
   retry:
-    numAttemptsPerPriority: 1
-    numRetries: 5
+    numRetries: 3
     perRetry:
       backOff:
         baseInterval: 100ms
@@ -626,26 +658,24 @@ spec:
         - 503
         - 504
         - 404
-        - 401
-        - 403
       triggers:
         - connect-failure
         - retriable-status-codes
 ```
 
 **Key Configuration**:
-- `priority: 0` - Primary model tried first
-- `priority: 1` - Fallback model tried if primary fails
-- `numAttemptsPerPriority: 1` - One attempt per backend
+- Reuses existing `qwen-primary` and `qwen-secondary` services
+- `priority: 0` - Primary model (qwen2.5:1.5b) tried first
+- `priority: 1` - Fallback to secondary model (qwen2.5:0.5b) if primary fails
+- `numRetries: 3` - Total retry attempts
 - `retryOn` - Conditions that trigger fallback
 
-### Step 4: Apply Configuration
+### Step 3: Apply Configuration
 ```bash
-kubectl apply -f gateway-setup.yaml  # If not already applied
 kubectl apply -f provider-fallback.yaml
 ```
 
-Wait for gateway:
+Wait for gateway to update:
 ```bash
 kubectl wait pods --timeout=2m \
   -l gateway.envoyproxy.io/owning-gateway-name=envoy-ai-gateway-basic \
@@ -653,7 +683,9 @@ kubectl wait pods --timeout=2m \
   --for=condition=Ready
 ```
 
-### Step 5: Test Normal Operation
+
+
+### Step 4: Test Normal Operation
 
 Setup port forward if not already:
 ```bash
@@ -684,16 +716,20 @@ curl -H "Content-Type: application/json" \
 
 **Expected**: Request succeeds via primary model (1.5b - more detailed response).
 
-### Step 6: Test Fallback by Deleting Primary Pod
+![Normal Operation](images/ticket2-normal-operation.png)
+*Figure 6: Request successfully processed by primary model*
+
+### Step 5: Test Fallback by Deleting Primary Isvc
 
 Get primary pod:
 ```bash
-kubectl get pods -n default -l serving.kserve.io/inferenceservice=qwen-primary-fb
+kubectl get isvc -n default | grep qwen-primary
 ```
 
-Delete primary pod:
+Delete primary isvc:
 ```bash
-kubectl delete pod -n default -l serving.kserve.io/inferenceservice=qwen-primary-fb
+kubectl delete inferenceservice qwen-primary
+
 ```
 
 Immediately test (while primary is down):
@@ -714,31 +750,36 @@ curl -H "Content-Type: application/json" \
 
 **Expected Result**:
 - Gateway attempts primary (fails - pod deleted)
-- Automatically retries on fallback (priority 1)
+- Automatically retries on fallback (priority 1 - secondary model)
 - Request succeeds via fallback model (0.5b - simpler response)
 - No client-side error
 
-### Step 7: Monitor Fallback Behavior
+![Fallback Success](images/ticket2-fallback-success.png)
+*Figure 8: Request successfully handled by fallback model*
 
-Watch logs to observe fallback:
+### Step 6: Monitor Fallback Behavior
+
+Watch logs to observe fallback in real-time:
 ```bash
 kubectl logs -n envoy-gateway-system \
   -l gateway.envoyproxy.io/owning-gateway-name=envoy-ai-gateway-basic \
   --tail=50 -f
 ```
 
-Look for connection failures and retry messages.
+Look for connection failures and retry messages showing:
+- Initial attempt to primary backend
+- Connection failure or timeout
+- Automatic retry to secondary backend
+- Successful response from fallback
 
-Check pod status:
-```bash
-kubectl get pods -n default -w
-```
+![Fallback Logs](images/ticket2-fallback-logs.png)
+*Figure 9: Gateway logs showing primary failure and successful fallback to secondary*
 
-Primary pod will restart automatically (KServe behavior).
 
-### Step 8: Test Multiple Requests During Recovery
 
-Run continuous requests:
+### Step 7: Test Multiple Requests During Recovery
+
+Run continuous requests to observe the complete failover and recovery cycle:
 ```bash
 for i in {1..20}; do
   echo "Request $i at $(date +%H:%M:%S)"
@@ -754,12 +795,22 @@ done
 - After ~30-60s: Primary recovers, requests return to primary
 - No request failures throughout
 
-### Step 9: Verify Return to Normal
+
+
+### Step 8: Reapply Primary Isvc For Return to Normal
+
+Apply primary isvc and wait to be Ready
+```bash
+kubectl apply -f  provider-fallback.yaml
+sleep 60
+```
 
 Wait for primary to be ready:
 ```bash
-kubectl get pods -n default -l serving.kserve.io/inferenceservice=qwen-primary-fb -w
+kubectl get pods -n default | grep qwen-primary
+kubectl get isvc qwen-primary -n default
 ```
+
 
 Test again:
 ```bash
@@ -777,7 +828,7 @@ curl -H "Content-Type: application/json" \
   $GATEWAY_URL/v1/chat/completions
 ```
 
-**Expected**: Back to primary model (better quality responses).
+**Expected**: Back to primary model (better quality responses from 1.5b model).
 
 ---
 
@@ -842,5 +893,6 @@ kubectl get svc -n default | grep predictor
 - Fallback: `qwen2.5:0.5b` (priority 1, weaker model)
 - Uses `priority` for failover sequence
 - Automatic retry on failure via BackendTrafficPolicy
-- Test by deleting primary pod - requests continue via fallback
+- Test by deleting primary isvc - requests continue via fallback
 - Zero downtime during recovery
+
