@@ -293,7 +293,9 @@ kubectl get isvc -n default -w
 
 Wait until all show `READY=True`.
 
-![Model Deployment Status](images/ticket1-model-deployment.png)
+
+<img width="1383" height="64" alt="isvc-when-ready" src="https://github.com/user-attachments/assets/932971b7-e168-40d2-8d2b-b886cb04a29e" />
+
 *Figure 1: InferenceServices showing READY=True status*
 
 ### Step 3: Create Gateway Configuration
@@ -509,7 +511,8 @@ curl -H "Content-Type: application/json" \
 - Traffic distributed: 50% to primary (1.5b), 30% to secondary (0.5b), 20% to tertiary (0.5b)
 - Client unaware of actual model names
 
-![Successful Response](images/ticket1-successful-response.png)
+<img width="1837" height="348" alt="ticket1-successful-response1" src="https://github.com/user-attachments/assets/7d788891-53d6-44e7-a0e9-b020aac3e052" />
+
 *Figure 2: Example of successful virtualized model response*
 
 
@@ -534,8 +537,8 @@ kubectl logs -n envoy-gateway-system \
   -l gateway.envoyproxy.io/owning-gateway-name=envoy-ai-gateway-basic \
   --tail=50 -f
 ```
+<img width="1813" height="602" alt="ticket1-successful-response" src="https://github.com/user-attachments/assets/066c4e98-3294-43c2-917b-9ac057d92ee0" />
 
-![Gateway Logs - Virtualization](images/ticket1-gateway-logs.png)
 *Figure 3: Gateway logs showing traffic distribution across backends*
 
 ---
@@ -716,7 +719,7 @@ curl -H "Content-Type: application/json" \
 
 **Expected**: Request succeeds via primary model (1.5b - more detailed response).
 
-![Normal Operation](images/ticket2-normal-operation.png)
+<img width="1852" height="277" alt="ticket2-normal-operation" src="https://github.com/user-attachments/assets/e512c5f2-74b8-4929-be46-18867b978628" />
 *Figure 6: Request successfully processed by primary model*
 
 ### Step 5: Test Fallback by Deleting Primary Isvc
@@ -754,7 +757,8 @@ curl -H "Content-Type: application/json" \
 - Request succeeds via fallback model (0.5b - simpler response)
 - No client-side error
 
-![Fallback Success](images/ticket2-fallback-success.png)
+<img width="1862" height="366" alt="ticket2-fallback-success" src="https://github.com/user-attachments/assets/27791d13-1622-40bb-a432-60dcfe5081a9" />
+
 *Figure 8: Request successfully handled by fallback model*
 
 ### Step 6: Monitor Fallback Behavior
@@ -772,7 +776,7 @@ Look for connection failures and retry messages showing:
 - Automatic retry to secondary backend
 - Successful response from fallback
 
-![Fallback Logs](images/ticket2-fallback-logs.png)
+<img width="1797" height="222" alt="ticket2-fallback-logs" src="https://github.com/user-attachments/assets/808e3b5b-1200-4b2a-a54a-be46a6ccf796" />
 *Figure 9: Gateway logs showing primary failure and successful fallback to secondary*
 
 
