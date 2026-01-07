@@ -338,7 +338,19 @@ EOF
 
 # Apply gateway configuration
 kubectl -n test-authorino-v1 apply -f gateway-example.yaml
-
+```
+```sh
+# Get pods in the envoy-gateway-system
+kubectl get pods -n envoy-gateway-system
+```
+Look for the pod that is named like envoy-test-authorino-v1-eg*, copy it's name and use in the command below
+```sh
+# Patch NodePort
+kubectl patch svc [envoy-test-authorino-v1-eg*] \
+  -n envoy-gateway-system \
+  -p '{"spec":{"type":"NodePort"}}'
+```
+```sh
 # Wait for gateway to be programmed
 kubectl wait --for=condition=Programmed gateway/eg -n test-authorino-v1 --timeout=300s
 ```
