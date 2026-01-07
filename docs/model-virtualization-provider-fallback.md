@@ -276,11 +276,6 @@ spec:
 ### Step 2: Deploy Models
 ```bash
 kubectl apply -f tertiary-model.yaml
-kubectl get pods -n default
-kubectl get isvc -n default -w
-```
-```bash
-
 kubectl apply -f secondary-model.yaml
 kubectl apply -f primary-model.yaml
 ```
@@ -582,43 +577,43 @@ spec:
               name: x-ai-eg-model
               value: qwen-with-fallback
       backendRefs:
-        - name: envoy-ai-gateway-qwen-primary-fb
+        - name: envoy-ai-gateway-qwen-primary
           modelNameOverride: qwen2.5:1.5b
           priority: 0
-        - name: envoy-ai-gateway-qwen-secondary-fb
+        - name: envoy-ai-gateway-qwen-secondary
           modelNameOverride: qwen2.5:0.5b
           priority: 1
 ---
 apiVersion: aigateway.envoyproxy.io/v1alpha1
 kind: AIServiceBackend
 metadata:
-  name: envoy-ai-gateway-qwen-primary-fb
+  name: envoy-ai-gateway-qwen-primary
   namespace: default
 spec:
   schema:
     name: OpenAI
   backendRef:
-    name: envoy-ai-gateway-qwen-primary-fb
+    name: envoy-ai-gateway-qwen-primary
     kind: Backend
     group: gateway.envoyproxy.io
 ---
 apiVersion: aigateway.envoyproxy.io/v1alpha1
 kind: AIServiceBackend
 metadata:
-  name: envoy-ai-gateway-qwen-secondary-fb
+  name: envoy-ai-gateway-qwen-secondary
   namespace: default
 spec:
   schema:
     name: OpenAI
   backendRef:
-    name: envoy-ai-gateway-qwen-secondary-fb
+    name: envoy-ai-gateway-qwen-secondary
     kind: Backend
     group: gateway.envoyproxy.io
 ---
 apiVersion: gateway.envoyproxy.io/v1alpha1
 kind: Backend
 metadata:
-  name: envoy-ai-gateway-qwen-primary-fb
+  name: envoy-ai-gateway-qwen-primary
   namespace: default
 spec:
   endpoints:
@@ -629,7 +624,7 @@ spec:
 apiVersion: gateway.envoyproxy.io/v1alpha1
 kind: Backend
 metadata:
-  name: envoy-ai-gateway-qwen-secondary-fb
+  name: envoy-ai-gateway-qwen-secondary
   namespace: default
 spec:
   endpoints:
@@ -644,7 +639,7 @@ metadata:
   namespace: default
 spec:
   targetRefs:
-    - group: gateway.envoyproxy.io
+    - group: gateway.networking.k8s.io
       kind: Gateway
       name: envoy-ai-gateway-basic
   retry:
@@ -664,6 +659,7 @@ spec:
       triggers:
         - connect-failure
         - retriable-status-codes
+
 ```
 
 **Key Configuration**:
