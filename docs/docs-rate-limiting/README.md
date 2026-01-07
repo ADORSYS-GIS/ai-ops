@@ -232,13 +232,6 @@ helm repo add kuadrant https://kuadrant.io/helm-charts/
 helm install kuadrant-operator kuadrant/kuadrant-operator
 ```
 
-**Warning:** Official Kuadrant docs may have issues with the operator. Check pod logs in the `kuadrant-system` namespace. If problems occur, apply the provided manifests instead:
-
-```bash
-cd docs-manifest/limitador/manifests/
-kubectl apply -f .
-```
-
 **Explanation:** This installs the operator and activates the Kuadrant control plane, enabling Limitador for enforcing policies.
 
 ## Apply the RateLimitPolicy
