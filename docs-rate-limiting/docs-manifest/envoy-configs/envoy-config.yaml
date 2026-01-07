@@ -99,6 +99,6 @@ metadata:
   namespace: default
 type: Opaque
 stringData:
-  apiKey: <API-KEY> # Replace with your OpenAI API key.
+  apiKey: <API_KEY> # Replace with your OpenAI API key.
 ---
 

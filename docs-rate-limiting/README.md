@@ -108,3 +108,42 @@ curl -v -H "Content-Type: application/json" \
 ```
 
 🔴 Expected behavior: Sending the request more than three times should result in a failure due to rate limiting.
+
+
+# Limitador Rate Limiting
+## Install Kuadrant Operator and CRDS
+```bash
+helm repo add kuadrant https://kuadrant.io/helm-charts/
+helm install kuadrant-operator kuadrant/kuadrant-operator 
+```
+
+Warning : The official docs is having an issue with the kuadrant operator -- check the logs of the pods to ensure. So to fix it we apply these manifest :
+
+```bash
+cd manifests/
+kubectl apply -f .
+```
++ This activate the kuadrant control plane at the same time.
+
+## Apply the RatelimitPolicy
+```bash
+kubectl apply -f docs-manifest/limitador/rate-limit-policy.yaml
+```
+## Test the request
+```bash
+curl -v -H "Content-Type: application/json" \
+  -H "x-user-id: user1" \
+  -d '{
+    "model": "gpt-5-mini",
+    "messages": [
+      {
+        "role": "user",
+        "content": "hi"
+      }
+    ]
+  }' \
+  $GATEWAY_URL/v1/chat/completions
+```
++ It should not work more than 3 times.
+
+Good luck !
