@@ -109,11 +109,12 @@ kubectl apply -f ./docs-manifest/redis/redis-deployment.yaml
 ### Configure Redis as the Rate Limit Backend
 
 Update the Envoy Gateway's configuration to use Redis for rate limiting.
++ make sure `yq` command is install `sudo apt install yq -y` before.
 
 ```bash
-kubectl patch configmap envoy-gateway-config -n envoy-gateway-system \
-  --type merge \
-  -p '{"data": {"envoy-gateway.yaml": "rateLimit:\n  backend:\n    type: Redis\n    redis:\n      url: redis.redis-system.svc.cluster.local:6379\n"}}'
+kubectl get configmap envoy-gateway-config -n envoy-gateway-system -o yaml \
+| yq '.data["envoy-gateway.yaml"] += "\nrateLimit:\n  backend:\n    type: Redis\n    redis:\n      url: redis.redis-system.svc.cluster.local:6379\n"' \
+| kubectl apply -f -
 ```
 
 **Explanation:** This patches the ConfigMap to enable global rate limiting with Redis as the datastore. The gateway will now track and enforce limits across requests.
