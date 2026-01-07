@@ -4,21 +4,61 @@ This guide provides a step-by-step walkthrough for testing request rate limiting
 
 **Prerequisites:**
 
-- A Kubernetes cluster (e.g., K3s) is installed and running. If not, follow the setup in [docs-info/setup.md](docs-info/setup.md).
+- A Kubernetes cluster (e.g., K3s) is installed and running. If not, see the setup instructions below.
 - `kubectl` is installed and configured to access your cluster.
 - Basic familiarity with Kubernetes manifests and `curl` for testing.
 
 ---
 
-## 1. Run the Initial Setup
+## 1. Environment Setup
 
 Before configuring the gateway, ensure your environment has the necessary components installed. This includes K3s, Envoy Gateway, and the Envoy AI Gateway controller, which handle routing and AI-specific features like token counting.
 
-Follow the detailed installation steps in [docs-info/setup.md](docs-info/setup.md). This document covers installing K3s, Envoy Gateway, AI Gateway CRDs, and the controller. Once complete, verify that the deployments are running (e.g., check pods in `envoy-gateway-system` and `envoy-ai-gateway-system` namespaces).
+### Install K3s
+
+Install K3s using the official installation script:
+
+```bash
+curl -sfL https://get.k3s.io | sh -
+```
+
+### Install Envoy Gateway
+
+```bash
+helm upgrade -i eg oci://docker.io/envoyproxy/gateway-helm \
+  --version v0.0.0-latest \
+  --namespace envoy-gateway-system \
+  --create-namespace \
+  -f https://raw.githubusercontent.com/envoyproxy/ai-gateway/main/manifests/envoy-gateway-values.yaml
+
+kubectl wait --timeout=2m -n envoy-gateway-system deployment/envoy-gateway --for=condition=Available
+```
+
+### Install AI Gateway CRDs
+
+```bash
+helm upgrade -i aieg-crd oci://docker.io/envoyproxy/ai-gateway-crds-helm \
+  --version v0.0.0-latest \
+  --namespace envoy-ai-gateway-system \
+  --create-namespace
+```
+
+### Install AI Gateway Controller
+
+```bash
+helm upgrade -i aieg oci://docker.io/envoyproxy/ai-gateway-helm \
+  --version v0.0.0-latest \
+  --namespace envoy-ai-gateway-system \
+  --create-namespace
+
+kubectl wait --timeout=2m -n envoy-ai-gateway-system deployment/ai-gateway-controller --for=condition=Available
+```
+
+Once complete, verify that the deployments are running (e.g., check pods in `envoy-gateway-system` and `envoy-ai-gateway-system` namespaces).
 
 ---
 
-## 2. Configure the Gateway (Without Rate Limiting)
+## 2. Configure the Gateway (Without Rate Limiting yet)
 
 In this step, you'll deploy the base Envoy configuration and gateway resources to create a functional AI gateway. This setup allows requests to pass through without any rate limiting, so you can test basic functionality first.
 
@@ -89,8 +129,7 @@ curl -v -H "Content-Type: application/json" \
 
 **Expected Behavior:** The request should succeed (HTTP 200) and return a response from the AI service. At this stage, there's no rate limiting, so multiple requests will all pass.
 
-**Note:** Ensure the API key in [docs-manifest/envoy-configs/envoy-config.yaml](docs-manifest/envoy-configs/envoy-config.yaml) is valid for the backend service.
----
+## **Note:** Ensure the API key in [docs-manifest/envoy-configs/envoy-config.yaml](docs-manifest/envoy-configs/envoy-config.yaml) is valid for the backend service.
 
 ## 4. Enable Rate Limiting
 
@@ -101,7 +140,7 @@ To enforce rate limits, integrate Redis as the backend store for tracking reques
 Apply the Redis StatefulSet and service manifests to set up a single-node Redis instance for rate limit storage.
 
 ```bash
-kubectl apply -f ./docs-manifest/redis/redis-deployment.yaml
+kubectl apply -f docs-manifest/redis/redis-deployment.yaml
 ```
 
 **Explanation:** This creates a Redis pod in the `redis-system` namespace with persistent storage. Wait for the pod to be ready before proceeding.
@@ -109,7 +148,8 @@ kubectl apply -f ./docs-manifest/redis/redis-deployment.yaml
 ### Configure Redis as the Rate Limit Backend
 
 Update the Envoy Gateway's configuration to use Redis for rate limiting.
-+ make sure `yq` command is install `sudo apt install yq -y` before.
+
+- make sure `yq` command is install `sudo apt install yq -y` before.
 
 ```bash
 kubectl get configmap envoy-gateway-config -n envoy-gateway-system -o yaml \
@@ -124,7 +164,7 @@ kubectl get configmap envoy-gateway-config -n envoy-gateway-system -o yaml \
 Apply the BackendTrafficPolicy that defines specific rate limit rules (e.g., token-based limits per user and model).
 
 ```bash
-kubectl apply -f ./docs-manifest/envoy-rate-limiting/rate-limiting-envoy.yaml
+kubectl apply -f docs-manifest/envoy-configs/rate-limiting-envoy.yaml
 ```
 
 **Explanation:** This policy enforces limits like 3 requests per minute for "gpt-5-mini" based on total tokens used, tracked via response metadata. Restart the Envoy deployment if needed for changes to take effect.
@@ -171,9 +211,11 @@ curl -v -H "Content-Type: application/json" \
 # Limitador Rate Limiting
 
 As an alternative to Envoy's built-in rate limiting, use Limitador (via Kuadrant) for more flexible, policy-based limits. This integrates with the gateway via a RateLimitPolicy.
+
 ## OLM (Operator Lifecycle Manager) installed
+
 ```bash
-curl -sL https://github.com/operator-framework/operator-lifecycle-manager/releases/download/v0.28.0/install.sh | bash -s v0.28.0   
+curl -sL https://github.com/operator-framework/operator-lifecycle-manager/releases/download/v0.28.0/install.sh | bash -s v0.28.0
 ```
 
 ## Install Kuadrant Operator and CRDs
@@ -188,7 +230,7 @@ helm install kuadrant-operator kuadrant/kuadrant-operator
 **Warning:** Official Kuadrant docs may have issues with the operator. Check pod logs in the `kuadrant-system` namespace. If problems occur, apply the provided manifests instead:
 
 ```bash
-cd manifests/
+cd docs-manifest/limitador/manifests/
 kubectl apply -f .
 ```
 
