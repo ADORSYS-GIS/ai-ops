@@ -8,6 +8,6 @@ rules:
 - apiGroups: ["operators.coreos.com"]
   resources: ["operatorgroups"]
   verbs: ["get", "list", "create", "update", "patch", "delete"]
-- apiGroups: ["kuadrant.io/v1beta1"]
+- apiGroups: ["kuadrant.io"]
   resources: ["kuadrant"]
   verbs: ["get", "list", "watch", "create", "update"]
