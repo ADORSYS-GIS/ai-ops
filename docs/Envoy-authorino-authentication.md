@@ -156,11 +156,10 @@ sudo mv k9s /usr/local/bin/
 
 ```bash
 # Install Envoy Gateway using Helm
-helm upgrade -i eg oci://docker.io/envoyproxy/gateway-helm \
-  --version v0.0.0-latest \
-  --namespace envoy-gateway-system \
-  --create-namespace \
-  -f https://raw.githubusercontent.com/envoyproxy/ai-gateway/main/manifests/envoy-gateway-values.yaml
+helm install eg oci://docker.io/envoyproxy/gateway-helm \
+  --version v1.6.1 \
+  -n envoy-gateway-system \
+  --create-namespace
 
 # Verify installation
 helm status eg -n envoy-gateway-system
