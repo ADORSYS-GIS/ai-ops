@@ -790,7 +790,7 @@ helm uninstall eg -n envoy-gateway-system
 kubectl delete namespace envoy-gateway-system
 ```
 
-### Clean Up Multipass (If Used)
+### Clean Up Multipass (If it was used)
 
 ```bash
 # Exit the multipass instance
@@ -812,5 +812,6 @@ multipass purge
 ---
 
 **Note**: This guide assumes a development/testing environment. For production deployments, additional security considerations, monitoring, and high availability configurations should be implemented.
+
 
 # [To test with talker API instead of httpbin](https://github.com/Kuadrant/authorino/blob/main/docs/user-guides/hello-world.md)
