@@ -171,6 +171,10 @@ curl -v -H "Content-Type: application/json" \
 # Limitador Rate Limiting
 
 As an alternative to Envoy's built-in rate limiting, use Limitador (via Kuadrant) for more flexible, policy-based limits. This integrates with the gateway via a RateLimitPolicy.
+## OLM (Operator Lifecycle Manager) installed
+```bash
+curl -sL https://github.com/operator-framework/operator-lifecycle-manager/releases/download/v0.28.0/install.sh | bash -s v0.28.0   
+```
 
 ## Install Kuadrant Operator and CRDs
 
