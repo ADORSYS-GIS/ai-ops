@@ -54,6 +54,12 @@ helm upgrade -i aieg oci://docker.io/envoyproxy/ai-gateway-helm \
 kubectl wait --timeout=2m -n envoy-ai-gateway-system deployment/ai-gateway-controller --for=condition=Available
 ```
 
+Verify the AI Gateway controller pods are running:
+
+```bash
+kubectl get pods -n envoy-ai-gateway-system
+```
+
 Once complete, verify that the deployments are running (e.g., check pods in `envoy-gateway-system` and `envoy-ai-gateway-system` namespaces).
 
 ---
@@ -68,6 +74,13 @@ Apply the manifests that define the AI Gateway route, backend, security policy, 
 
 ```bash
 kubectl apply -f docs-manifest/envoy-configs/envoy-config.yaml
+```
+
+Verify resources created by the manifest (Gateway, HTTPRoute, ConfigMap, etc.):
+
+```bash
+kubectl get -f docs-manifest/envoy-configs/envoy-config.yaml
+kubectl get gateway,httproute,configmap -n default || true
 ```
 
 ### Apply the Gateway Manifest
@@ -97,6 +110,13 @@ export ENVOY_SERVICE=$(kubectl get svc -n envoy-gateway-system \
   -o jsonpath='{.items[0].metadata.name}')
 
 kubectl port-forward -n envoy-gateway-system svc/$ENVOY_SERVICE 8080:80
+```
+
+In another terminal, verify the service is reachable locally:
+
+```bash
+kubectl get svc -n envoy-gateway-system $ENVOY_SERVICE -o wide
+curl -I http://localhost:8080 || echo "Gateway not responding yet"
 ```
 
 **Explanation:** This command finds the Envoy service associated with your gateway and forwards traffic from localhost:8080 to the service's port 80. Keep this running in a separate terminal.
@@ -145,6 +165,13 @@ Apply the Redis StatefulSet and service manifests to set up a single-node Redis 
 kubectl apply -f docs-manifest/redis/redis-deployment.yaml
 ```
 
+Wait for Redis pods to become ready and verify the service:
+
+```bash
+kubectl wait --for=condition=Ready pod --all -n redis-system --timeout=2m
+kubectl get pods,svc -n redis-system
+```
+
 **Explanation:** This creates a Redis pod in the `redis-system` namespace with persistent storage. Wait for the pod to be ready before proceeding.
 
 ### Configure Redis as the Rate Limit Backend
@@ -157,6 +184,16 @@ Update the Envoy Gateway's configuration to use Redis for rate limiting.
 kubectl get configmap envoy-gateway-config -n envoy-gateway-system -o yaml \
 | yq '.data["envoy-gateway.yaml"] += "\nrateLimit:\n  backend:\n    type: Redis\n    redis:\n      url: redis.redis-system.svc.cluster.local:6379\n"' \
 | kubectl apply -f -
+```
+
+Restart Envoy deployment so the new configmap is picked up and verify rollout:
+
+```bash
+kubectl rollout restart deployment/envoy-gateway -n envoy-gateway-system
+kubectl rollout status deployment/envoy-gateway -n envoy-gateway-system --timeout=2m
+
+# Verify the configmap contains the rateLimit section
+kubectl get configmap envoy-gateway-config -n envoy-gateway-system -o yaml | yq '.data["envoy-gateway.yaml"]' -r | grep -A2 "rateLimit:" || true
 ```
 
 **Explanation:** This patches the ConfigMap to enable global rate limiting with Redis as the datastore. The gateway will now track and enforce limits across requests.
