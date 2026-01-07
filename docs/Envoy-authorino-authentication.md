@@ -533,18 +533,18 @@ kubectl get svc -n envoy-gateway-system -l gateway.envoyproxy.io/owning-gateway-
 ### Step 3: Test Without Authentication (Should Fail)
 
 ```bash
-# Test without API key - should return 403 Forbidden
+# Test without API key - should return 401 Unauthorized
 curl -i -H "Host: ai-v1.home.lab" http://localhost:8080/headers
 ```
 
 **Expected output:**
 ```
-HTTP/1.1 403 Forbidden
-content-length: 19
-content-type: text/plain
-date: ...
+HTTP/1.1 401 Unauthorized
+www-authenticate: APIKEY realm="api-clients"
+x-ext-auth-reason: credential not found
+date: Wed, 07 Jan 2026 10:09:23 GMT
+content-length: 0
 
-access denied
 ```
 
 ### Step 4: Test With Authentication (Should Succeed)
@@ -557,17 +557,16 @@ curl -i -H "Host: ai-v1.home.lab" -H "Authorization: APIKEY my-secret-api-key" h
 **Expected output:**
 ```
 HTTP/1.1 200 OK
-content-type: application/json
-date: ...
+access-control-allow-credentials: true
+access-control-allow-origin: *
+content-type: application/json; charset=utf-8
+date: Wed, 07 Jan 2026 10:08:07 GMT
+content-length: 29
 
 {
-  "headers": {
-    "Accept": ["*/*"],
-    "Authorization": ["APIKEY my-secret-api-key"],
-    "Host": ["ai-v1.home.lab"],
-    ...
-  }
+  "origin": "10.42.0.19"
 }
+
 ```
 
 ### Step 5: Additional Tests
@@ -583,7 +582,7 @@ curl -i -H "Host: ai-v1.home.lab" -H "Authorization: APIKEY invalid-key" http://
 
 **Expected output for invalid key:**
 ```
-HTTP/1.1 403 Forbidden
+HTTP/1.1 401 Unauthorized
 ```
 
 ## Troubleshooting
