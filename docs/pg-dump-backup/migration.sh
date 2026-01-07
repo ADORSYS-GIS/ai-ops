@@ -1,4 +1,11 @@
 #!/bin/bash
+
+# Below is a complete script that:
+
+# Dumps the source DB
+# Restores into the target DB
+# Cleans up temporary files on failure
+
 set -euo pipefail
 
 : "${SOURCE_DATABASE_URL:?SOURCE_DATABASE_URL not set}"
