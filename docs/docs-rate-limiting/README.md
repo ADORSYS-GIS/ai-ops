@@ -82,6 +82,7 @@ kubectl apply -f docs-manifest/envoy-configs/envoy-gateway.yaml
 
 ---
 
+
 ## 3. Test Requests with curl
 
 Now that the gateway is configured, test it by sending requests. This verifies that the gateway forwards requests to the backend AI service correctly.
@@ -99,6 +100,8 @@ kubectl port-forward -n envoy-gateway-system svc/$ENVOY_SERVICE 8080:80
 ```
 
 **Explanation:** This command finds the Envoy service associated with your gateway and forwards traffic from localhost:8080 to the service's port 80. Keep this running in a separate terminal.
+
+## **Note:** Ensure the API key in [docs-manifest/envoy-configs/envoy-config.yaml](docs-manifest/envoy-configs/envoy-config.yaml) is valid for the backend service.
 
 ### Set the Gateway URL
 
@@ -129,7 +132,6 @@ curl -v -H "Content-Type: application/json" \
 
 **Expected Behavior:** The request should succeed (HTTP 200) and return a response from the AI service. At this stage, there's no rate limiting, so multiple requests will all pass.
 
-## **Note:** Ensure the API key in [docs-manifest/envoy-configs/envoy-config.yaml](docs-manifest/envoy-configs/envoy-config.yaml) is valid for the backend service.
 
 ## 4. Enable Rate Limiting
 
@@ -213,6 +215,9 @@ curl -v -H "Content-Type: application/json" \
 As an alternative to Envoy's built-in rate limiting, use Limitador (via Kuadrant) for more flexible, policy-based limits. This integrates with the gateway via a RateLimitPolicy.
 
 ## OLM (Operator Lifecycle Manager) installed
+Operator Lifecycle Manager (OLM) is a tool that helps manage Kubernetes applications called Operators.
+
+OLM makes it easier to install, upgrade, and manage these Operators in a reliable and automated way
 
 ```bash
 curl -sL https://github.com/operator-framework/operator-lifecycle-manager/releases/download/v0.28.0/install.sh | bash -s v0.28.0
