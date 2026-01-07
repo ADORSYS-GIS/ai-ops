@@ -170,9 +170,8 @@ kubectl get pods -n envoy-gateway-system -w
 
 **Expected output:**
 ```
-NAME                                        READY   STATUS    RESTARTS   AGE
-envoy-gateway-xxxxx-xxxxx                   1/1     Running   0          2m
-envoy-gateway-config-xxxxx-xxxxx            1/1     Running   0          2m
+NAME                             READY   STATUS    RESTARTS   AGE
+envoy-gateway-64d8866b44-jqf4d   1/1     Running   0          40s
 ```
 
 ### Step 2: Install Authorino Operator
@@ -302,13 +301,6 @@ kubectl wait --for=condition=Available deployment/httpbin -n test-authorino-v1 -
 deployment.apps/httpbin condition met
 ```
 
-#### Option B: Talker API (Alternative - may have compatibility issues on MacOS)
-
-```bash
-# Deploy Talker API
-kubectl apply -f https://raw.githubusercontent.com/kuadrant/authorino-examples/main/talker-api/talker-api-deploy.yaml -n test-authorino-v1
-```
-
 ### Step 6: Configure Gateway
 
 ```bash
@@ -340,10 +332,10 @@ EOF
 kubectl -n test-authorino-v1 apply -f gateway-example.yaml
 ```
 ```sh
-# Get pods in the envoy-gateway-system
-kubectl get pods -n envoy-gateway-system
+# Get svc in the envoy-gateway-system
+kubectl get svc -n envoy-gateway-system
 ```
-Look for the pod that is named like envoy-test-authorino-v1-eg*, copy it's name and use in the command below
+Look for the resource that is named like envoy-test-authorino-v1-eg*, copy it's name and use in the command below
 ```sh
 # Patch NodePort
 kubectl patch svc [envoy-test-authorino-v1-eg*] \
@@ -572,12 +564,38 @@ HTTP/1.1 200 OK
 access-control-allow-credentials: true
 access-control-allow-origin: *
 content-type: application/json; charset=utf-8
-date: Wed, 07 Jan 2026 10:08:07 GMT
-content-length: 29
+date: Wed, 07 Jan 2026 11:15:56 GMT
+content-length: 442
 
 {
-  "origin": "10.42.0.19"
+  "headers": {
+    "Accept": [
+      "*/*"
+    ],
+    "Authorization": [
+      "APIKEY my-secret-api-key"
+    ],
+    "Host": [
+      "ai-v1.home.lab"
+    ],
+    "User-Agent": [
+      "curl/7.81.0"
+    ],
+    "X-Envoy-External-Address": [
+      "127.0.0.1"
+    ],
+    "X-Forwarded-For": [
+      "10.42.0.14"
+    ],
+    "X-Forwarded-Proto": [
+      "http"
+    ],
+    "X-Request-Id": [
+      "d62eeff2-c156-4108-b066-e983135724ad"
+    ]
+  }
 }
+
 
 ```
 
@@ -794,3 +812,5 @@ multipass purge
 ---
 
 **Note**: This guide assumes a development/testing environment. For production deployments, additional security considerations, monitoring, and high availability configurations should be implemented.
+
+# [To test with talker API instead of httpbin](https://github.com/Kuadrant/authorino/blob/main/docs/user-guides/hello-world.md)
