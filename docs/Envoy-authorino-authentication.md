@@ -335,10 +335,10 @@ kubectl -n test-authorino-v1 apply -f gateway-example.yaml
 # Get svc in the envoy-gateway-system
 kubectl get svc -n envoy-gateway-system
 ```
-Look for the resource that is named like envoy-test-authorino-v1-eg*, copy it's name and use in the command below
+Look for the resource that is named like envoy-test-authorino-v1-eg*, copy it's name and replace envoy-text-authorinov1-eg* below with it
 ```sh
 # Patch NodePort
-kubectl patch svc [envoy-test-authorino-v1-eg*] \
+kubectl patch svc envoy-test-authorino-v1-eg* \
   -n envoy-gateway-system \
   -p '{"spec":{"type":"NodePort"}}'
 ```
@@ -814,4 +814,4 @@ multipass purge
 **Note**: This guide assumes a development/testing environment. For production deployments, additional security considerations, monitoring, and high availability configurations should be implemented.
 
 
-# [To test with talker API instead of httpbin](https://github.com/Kuadrant/authorino/blob/main/docs/user-guides/hello-world.md)
+You may prefer to test envoy with authorino using talker api as backend service. To do so follow this guide from [authorino-helloworld](https://github.com/Kuadrant/authorino/blob/main/docs/user-guides/hello-world.md)
