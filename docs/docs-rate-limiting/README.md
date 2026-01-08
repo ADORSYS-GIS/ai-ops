@@ -272,6 +272,20 @@ curl -v -H "Content-Type: application/json" \
 
 As an alternative to Envoy's built-in rate limiting, use Limitador (via Kuadrant) for more flexible, policy-based limits. This integrates with the gateway via a RateLimitPolicy.
 
+### Remove Previous Rate Limiting Policy
+
+To avoid conflicts between Envoy and Limitador rate limiting, delete the Envoy BackendTrafficPolicy before proceeding.
+
+```bash
+kubectl delete -f docs-manifest/envoy-configs/rate-limiting-envoy.yaml
+```
+
+Verify it's removed:
+
+```bash
+kubectl get backendtrafficpolicy -n default
+```
+
 ## OLM (Operator Lifecycle Manager) installed
 
 Operator Lifecycle Manager (OLM) is a tool that helps manage Kubernetes applications called Operators.
