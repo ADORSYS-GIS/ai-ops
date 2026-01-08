@@ -22,6 +22,12 @@ Install K3s using the official installation script:
 curl -sfL https://get.k3s.io | sh -
 ```
 
+Verify K3s is running:
+
+```bash
+kubectl get nodes
+```
+
 ### Install Envoy Gateway
 
 ```bash
@@ -41,6 +47,12 @@ helm upgrade -i aieg-crd oci://docker.io/envoyproxy/ai-gateway-crds-helm \
   --version v0.0.0-latest \
   --namespace envoy-ai-gateway-system \
   --create-namespace
+```
+
+Verify CRDs are installed:
+
+```bash
+kubectl get crd | grep aigateway
 ```
 
 ### Install AI Gateway Controller
@@ -91,10 +103,14 @@ Apply the Gateway and GatewayClass resources to create an HTTP listener on port 
 kubectl apply -f docs-manifest/envoy-configs/envoy-gateway.yaml
 ```
 
-**Explanation:** These manifests create a Gateway named `envoy-ai-gateway-basic` in the `default` namespace, which routes requests based on headers like `x-ai-eg-model` (e.g., for models like "gpt-5-mini"). Without rate limiting, all valid requests should succeed.
+Verify the gateway is ready:
+
+```bash
+kubectl get gateway envoy-ai-gateway-basic -n default
+kubectl wait --timeout=2m -n default gateway/envoy-ai-gateway-basic --for=condition=Programmed
+```
 
 ---
-
 
 ## 3. Test Requests with curl
 
@@ -152,7 +168,6 @@ curl -v -H "Content-Type: application/json" \
 
 **Expected Behavior:** The request should succeed (HTTP 200) and return a response from the AI service. At this stage, there's no rate limiting, so multiple requests will all pass.
 
-
 ## 4. Enable Rate Limiting
 
 To enforce rate limits, integrate Redis as the backend store for tracking request counts. This allows per-user limits based on headers like `x-user-id` and model-specific token usage.
@@ -178,7 +193,7 @@ kubectl get pods,svc -n redis-system
 
 Update the Envoy Gateway's configuration to use Redis for rate limiting.
 
-- make sure `yq` command is install `sudo apt install yq -y` before.
+- make sure `yq` command is install `sudo snap install yq -y` before.
 
 ```bash
 kubectl get configmap envoy-gateway-config -n envoy-gateway-system -o yaml \
@@ -204,6 +219,12 @@ Apply the BackendTrafficPolicy that defines specific rate limit rules (e.g., tok
 
 ```bash
 kubectl apply -f docs-manifest/envoy-configs/rate-limiting-envoy.yaml
+```
+
+Verify the policy is applied:
+
+```bash
+kubectl get backendtrafficpolicy -n default
 ```
 
 **Explanation:** This policy enforces limits like 3 requests per minute for "gpt-5-mini" based on total tokens used, tracked via response metadata. Restart the Envoy deployment if needed for changes to take effect.
@@ -252,12 +273,19 @@ curl -v -H "Content-Type: application/json" \
 As an alternative to Envoy's built-in rate limiting, use Limitador (via Kuadrant) for more flexible, policy-based limits. This integrates with the gateway via a RateLimitPolicy.
 
 ## OLM (Operator Lifecycle Manager) installed
+
 Operator Lifecycle Manager (OLM) is a tool that helps manage Kubernetes applications called Operators.
 
 OLM makes it easier to install, upgrade, and manage these Operators in a reliable and automated way
 
 ```bash
 curl -sL https://github.com/operator-framework/operator-lifecycle-manager/releases/download/v0.28.0/install.sh | bash -s v0.28.0
+```
+
+Verify OLM is installed:
+
+```bash
+kubectl get pods -n olm
 ```
 
 ## Install Kuadrant Operator and CRDs
@@ -269,6 +297,12 @@ helm repo add kuadrant https://kuadrant.io/helm-charts/
 helm install kuadrant-operator kuadrant/kuadrant-operator
 ```
 
+Wait for the operator to be ready:
+
+```bash
+kubectl wait --timeout=5m -n default deployment/kuadrant-operator --for=condition=Available
+```
+
 **Explanation:** This installs the operator and activates the Kuadrant control plane, enabling Limitador for enforcing policies.
 
 ## Apply the RateLimitPolicy
@@ -277,6 +311,12 @@ Apply the policy that defines limits (e.g., 3 requests per minute per user).
 
 ```bash
 kubectl apply -f docs-manifest/limitador/rate-limit-policy.yaml
+```
+
+Verify the policy is applied:
+
+```bash
+kubectl get ratelimitpolicy -n default
 ```
 
 **Explanation:** This attaches the policy to the HTTPRoute `envoy-ai-gateway-basic-openai`, enforcing request-based limits.
