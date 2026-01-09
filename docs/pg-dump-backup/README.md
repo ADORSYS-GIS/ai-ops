@@ -1,214 +1,182 @@
-# PostgreSQL Backup & Migration Script
+# PostgreSQL Backup & Migration Tool
 
-This document describes the **production-ready PostgreSQL backup and migration script** implemented to address:
+A production-ready shell script for PostgreSQL database backup and migration operations. This tool provides robust, non-interactive backup and migration capabilities with support for multiple storage backends.
 
-> **GitHub Issue #40 — Create a pg_dump to migrate all data to new database**
+## ✨ Features
 
-The script intentionally supports **both backup and migration**, with explicit user choice, while keeping the scope controlled, auditable, and safe for production use.
+*   **Dual Modes**: Backup-only or backup-with-migration operations
+*   **Multiple Storage Backends**: Local filesystem or AWS S3
+*   **Production Safe**: Non-interactive operation with comprehensive error handling
+*   **Version Aware**: Auto-detects PostgreSQL version and uses appropriate tools
 
----
+## 🐳 Quick Test with Docker
 
-## 🎯 Purpose
+### Prerequisites
 
-This script allows operators to:
-
-* **Backup** a PostgreSQL database
-* **Migrate** all data from one PostgreSQL database to another
-
-The behavior is **explicitly controlled** through environment variables. Nothing happens implicitly.
-
----
-
-## 🧭 Operating Modes
-
-### `MODE=backup`
-
-* Creates a logical dump using `pg_dump`
-* Does **not** modify any database
-* Stores the dump locally or uploads it to S3
-
-### `MODE=migrate`
-
-* Creates a dump from the source database
-* Restores it into the target database using `pg_restore`
-* **Destructive operation** (drops existing objects)
-* Requires explicit confirmation
-
----
-
-## 🗂 Storage Options
-
-### `STORAGE=local`
-
-The dump is stored on the local filesystem.
-
-Required variables:
+*   Install Docker: [Docker Installation Guide](https://docs.docker.com/get-docker/)
+*   Download the script:
 
 ```bash
-BACKUP_DIR=/path/to/backup/dir
+git clone https://github.com/ADORSYS-GIS/ai-ops.git
+cd ai-ops/docs/pg-dump-backup
+chmod +x pg_dump_tool.sh
 ```
 
-Behavior:
-
-* Dump file is created inside `BACKUP_DIR`
-* File is preserved unless explicitly removed by the operator
-
----
-
-### `STORAGE=s3`
-
-The dump is temporarily created locally, then uploaded to S3.
-
-Required variables:
+### Step 1: Start PostgreSQL Container
 
 ```bash
-S3_BUCKET=my-bucket
-AWS_REGION=eu-west-1
+docker pull postgres:15-alpine
+
+docker run --name test-postgres \
+  -e POSTGRES_USER=testuser \
+  -e POSTGRES_PASSWORD=testpass \
+  -e POSTGRES_DB=testdb \
+  -p 5432:5432 \
+  -d postgres:15-alpine
+
+sleep 10
 ```
 
-Optional:
+### Step 2: Populate with Test Data
 
 ```bash
-S3_PREFIX=pg-dumps/
+docker exec test-postgres psql -U testuser -d testdb -c "\
+CREATE TABLE users (\
+  id SERIAL PRIMARY KEY,\
+  username VARCHAR(50) NOT NULL,\
+  email VARCHAR(100) NOT NULL,\
+  created_at TIMESTAMP DEFAULT NOW()\
+);\
+\
+CREATE TABLE products (\
+  id SERIAL PRIMARY KEY,\
+  name VARCHAR(100) NOT NULL,\
+  price DECIMAL(10,2) NOT NULL,\
+  stock INTEGER DEFAULT 0\
+);\
+\
+INSERT INTO users (username, email) VALUES\
+('john_doe', 'john@example.com'),\
+('jane_smith', 'jane@example.com'),\
+('bob_wilson', 'bob@example.com');\
+\
+INSERT INTO products (name, price, stock) VALUES\
+('Laptop', 999.99, 10),\n('Mouse', 25.50, 50),\n('Keyboard', 79.99, 30);\
+"
+
+docker exec test-postgres psql -U testuser -d testdb -c "SELECT COUNT(*) FROM users;"
+docker exec test-postgres psql -U testuser -d testdb -c "SELECT COUNT(*) FROM products;"
 ```
 
-Behavior:
-
-* Temporary local directory is used
-* Dump is uploaded to S3
-* Temporary files are cleaned up automatically
-
----
-
-## 🔐 Credentials & Security
-
-* Database passwords **must not** be embedded in URLs
-* Authentication should be provided via:
-
-  * `.pgpass` (recommended)
-  * or `PGPASSWORD` environment variable
-
-Example `.pgpass` permissions:
+### Step 3: Test Backup Script
 
 ```bash
-chmod 600 ~/.pgpass
+export MODE=backup
+export STORAGE=local
+export SOURCE_DATABASE_URL="postgresql://testuser:testpass@localhost:5432/testdb"
+export BACKUP_DIR="./test-backups"
+
+mkdir -p test-backups
+
+./pg_dump_tool.sh
+
+ls -lh test-backups/*.dump
 ```
 
----
-
-## 🌍 Required Environment Variables
-
-### Always required
+### Step 4: Test Migration (Optional)
 
 ```bash
-MODE=backup | migrate
-STORAGE=local | s3
-SOURCE_DATABASE_URL=postgresql://user@host:5432/dbname
+docker exec test-postgres psql -U testuser -c "CREATE DATABASE testdb2;"
+
+export MODE=migrate
+export TARGET_DATABASE_URL="postgresql://testuser:testpass@localhost:5432/testdb2"
+export CONFIRM_MIGRATION=true
+
+./pg_dump_tool.sh
+
+docker exec test-postgres psql -U testuser -d testdb2 -c "SELECT COUNT(*) FROM users;"
+docker exec test-postgres psql -U testuser -d testdb2 -c "SELECT COUNT(*) FROM products;"
 ```
 
-The script validates that database URLs start with:
-
-* `postgresql://`
-* or `postgres://`
-
----
-
-### Migration-only variables
+### Step 5: Clean Up
 
 ```bash
-TARGET_DATABASE_URL=postgresql://user@host:5432/targetdb
-CONFIRM_MIGRATION=true
+docker stop test-postgres
+docker rm test-postgres
+
+rm -rf test-backups
 ```
 
-Migration **will not run** unless `CONFIRM_MIGRATION=true` is explicitly set.
+## 🚀 Quick Start Examples
 
----
-
-## ▶️ Usage Examples
-
-### Local backup
+### 1. Simple Local Backup
 
 ```bash
-MODE=backup \
-STORAGE=local \
-BACKUP_DIR=/var/backups \
-SOURCE_DATABASE_URL=postgresql://user@host:5432/db \
+export MODE=backup
+export STORAGE=local
+export SOURCE_DATABASE_URL="postgresql://user:password@localhost:5432/mydb"
+export BACKUP_DIR="./my-backups"
 ./pg_dump_tool.sh
 ```
 
----
-
-### Backup to S3
+### 2. Backup to S3
 
 ```bash
-MODE=backup \
-STORAGE=s3 \
-S3_BUCKET=my-backups \
-AWS_REGION=eu-west-1 \
-SOURCE_DATABASE_URL=postgresql://user@host:5432/db \
+export MODE=backup
+export STORAGE=s3
+export SOURCE_DATABASE_URL="postgresql://user:password@localhost:5432/mydb"
+export S3_BUCKET="my-backup-bucket"
+export AWS_REGION="us-east-1"
+export S3_PREFIX="database-backups/"
 ./pg_dump_tool.sh
 ```
 
----
+## 📋 Prerequisites
 
-### Database migration
+*   PostgreSQL Client Tools: `pg_dump`, `pg_restore`, `psql`
+*   AWS CLI (for S3 storage option)
+*   Bash 4.0+
+
+## ⚙️ Configuration
+
+| Variable            | Required         | Description                           | Example                               |
+| :------------------ | :--------------- | :------------------------------------ | :------------------------------------ |
+| `MODE`              | Yes              | Operation mode: backup or migrate     | `backup`                              |
+| `STORAGE`           | Yes              | Storage backend: local or s3          | `s3`                                  |
+| `SOURCE_DATABASE_URL` | Yes              | Source PostgreSQL connection URL      | `postgresql://user:pass@host:5432/db` |
+| `TARGET_DATABASE_URL` | If `MODE=migrate` | Target PostgreSQL connection URL      | `postgresql://user:pass@host2:5432/db`|
+| `BACKUP_DIR`        | If `STORAGE=local`| Local backup directory                | `./backups`                           |
+| `S3_BUCKET`         | If `STORAGE=s3`   | S3 bucket name                        | `my-backup-bucket`                    |
+| `AWS_REGION`        | If `STORAGE=s3`   | AWS region                            | `us-east-1`                           |
+| `S3_PREFIX`         | No               | S3 key prefix                         | `database-backups/`                   |
+| `CONFIRM_MIGRATION` | If `MODE=migrate` | Safety flag for migrations            | `true`                                |
+
+## 🔐 Security Best Practices
+
+*   Use `.pgpass` file for database authentication
+*   Set appropriate file permissions on the script
+*   Store environment variables securely
+*   Use IAM roles instead of access keys for S3 when possible
+
+## 🛠️ Troubleshooting
+
+If you encounter version mismatch errors:
 
 ```bash
-MODE=migrate \
-STORAGE=local \
-BACKUP_DIR=/tmp \
-SOURCE_DATABASE_URL=postgresql://old-db \
-TARGET_DATABASE_URL=postgresql://new-db \
-CONFIRM_MIGRATION=true \
+# Install specific PostgreSQL version tools
+# Ubuntu/Debian:
+sudo apt-get install postgresql-client-15
+
+# Or set the version explicitly:
+export PG_VERSION=15
 ./pg_dump_tool.sh
 ```
 
----
+For connection issues:
 
-## ⚠️ Important Notes
+```bash
+# Test database connection first
+psql "$SOURCE_DATABASE_URL" -c "SELECT 1;"
+```
 
-* The target database **must already exist**
-* Required PostgreSQL extensions must be pre-installed
-* Migration drops existing objects (`--clean --if-exists`)
-* The script is **not idempotent** by design
-* Safe re-runs require operator intent
-
----
-
-## 🧩 Non-Goals (Explicitly Out of Scope)
-
-The following are intentionally **not implemented**:
-
-* Automatic idempotency
-* Schema diffing
-* Backup retention policies
-* Encryption at rest
-* Scheduling (Cron / Kubernetes CronJob)
-
-These can be added later without changing the core behavior.
-
----
-
-## ✅ Scope Confirmation (for Project Managers)
-
-This implementation:
-
-* ✔ Fully satisfies issue #40
-* ✔ Migrates all PostgreSQL data using `pg_dump` / `pg_restore`
-* ✔ Is production-safe
-* ✔ Avoids unnecessary complexity
-* ✔ Is auditable and explicit
-
----
-
-## 🚀 Future Improvements (Optional)
-
-* Kubernetes Job / CronJob wrapper
-* Encryption before S3 upload
-* Backup retention automation
-* Read-only or schema-only modes
-* CI/CD integration
-
----
-
-**Status:** Ready for production use and review
+The Docker test example above provides a complete, self-contained environment to test all script functionality before using it in production.
