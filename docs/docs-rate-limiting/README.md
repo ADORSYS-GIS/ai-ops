@@ -304,7 +304,26 @@ Wait for the operator to be ready:
 kubectl wait --timeout=5m -n default deployment/kuadrant-operator-controller-manager --for=condition=Available
 ```
 
-**Explanation:** This installs the operator and activates the Kuadrant control plane, enabling Limitador for enforcing policies.
+**Explanation:** This installs the operator.
+
+## Acttivate kuadrant control plance
+```bash
+  kubectl apply -f - <<'EOF'
+  apiVersion: kuadrant.io/v1beta1
+  kind: Kuadrant
+  metadata:
+    name: kuadrant-sample
+    namespace: default        
+  spec: {}
+EOF
+
+```
+
+```bash
+kubectl wait --timeout=5m -n default deployment/limitador-limitador --for=condition=Available
+```
+
+**Explanation:** This activates the Kuadrant control plane, enabling Limitador for enforcing policies.
 
 ## Apply the RateLimitPolicy
 
