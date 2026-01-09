@@ -21,6 +21,17 @@ Install K3s using the official installation script:
 ```bash
 curl -sfL https://get.k3s.io | sh -
 ```
+Configure the `kubectl` client :
+
+```bash
+mkdir $HOME/.kube/ || echo "Directory is present already" && sudo cp -r /etc/rancher/k3s/k3s.yaml $HOME/.kube/config
+```
+
+Give require permissions :
+```bash
+sudo chown $(whoami):$(whoami) $HOME/.kube/config   
+KUBECONFIG=$HOME/.kube/config
+```
 
 Verify K3s is running:
 
@@ -66,19 +77,13 @@ helm upgrade -i aieg oci://docker.io/envoyproxy/ai-gateway-helm \
 kubectl wait --timeout=2m -n envoy-ai-gateway-system deployment/ai-gateway-controller --for=condition=Available
 ```
 
-Verify the AI Gateway controller pods are running:
-
-```bash
-kubectl get pods -n envoy-ai-gateway-system
-```
-
-Once complete, verify that the deployments are running (e.g., check pods in `envoy-gateway-system` and `envoy-ai-gateway-system` namespaces).
-
 ---
 
 ## 2. Configure the Gateway (Without Rate Limiting yet)
 
 In this step, you'll deploy the base Envoy configuration and gateway resources to create a functional AI gateway. This setup allows requests to pass through without any rate limiting, so you can test basic functionality first.
+
+## **Note:** Ensure the API key in [docs-manifest/envoy-configs/envoy-config.yaml](docs-manifest/envoy-configs/envoy-config.yaml) is valid for the backend service.
 
 ### Apply the Base Envoy Configuration
 
@@ -103,13 +108,6 @@ Apply the Gateway and GatewayClass resources to create an HTTP listener on port 
 kubectl apply -f docs-manifest/envoy-configs/envoy-gateway.yaml
 ```
 
-Verify the gateway is ready:
-
-```bash
-kubectl get gateway envoy-ai-gateway-basic -n default
-kubectl wait --timeout=2m -n default gateway/envoy-ai-gateway-basic --for=condition=Programmed
-```
-
 ---
 
 ## 3. Test Requests with curl
@@ -125,19 +123,10 @@ export ENVOY_SERVICE=$(kubectl get svc -n envoy-gateway-system \
   --selector=gateway.envoyproxy.io/owning-gateway-namespace=default,gateway.envoyproxy.io/owning-gateway-name=envoy-ai-gateway-basic \
   -o jsonpath='{.items[0].metadata.name}')
 
-kubectl port-forward -n envoy-gateway-system svc/$ENVOY_SERVICE 8080:80
-```
-
-In another terminal, verify the service is reachable locally:
-
-```bash
-kubectl get svc -n envoy-gateway-system $ENVOY_SERVICE -o wide
-curl -I http://localhost:8080 || echo "Gateway not responding yet"
+kubectl port-forward -n envoy-gateway-system svc/$ENVOY_SERVICE 8080:80 &
 ```
 
 **Explanation:** This command finds the Envoy service associated with your gateway and forwards traffic from localhost:8080 to the service's port 80. Keep this running in a separate terminal.
-
-## **Note:** Ensure the API key in [docs-manifest/envoy-configs/envoy-config.yaml](docs-manifest/envoy-configs/envoy-config.yaml) is valid for the backend service.
 
 ### Set the Gateway URL
 
@@ -264,8 +253,6 @@ curl -v -H "Content-Type: application/json" \
 
 **Expected Behavior:** The first few requests (up to 3 per minute) should succeed. Subsequent requests should fail with an HTTP 429 (Too Many Requests) status, indicating rate limiting is active.
 
-**Note:** Limits reset based on the window (e.g., per minute). For advanced rules, see [docs-info/advance-rl-envoy.md](docs-info/advance-rl-envoy.md).
-
 ---
 
 # Limitador Rate Limiting
@@ -314,7 +301,7 @@ helm install kuadrant-operator kuadrant/kuadrant-operator
 Wait for the operator to be ready:
 
 ```bash
-kubectl wait --timeout=5m -n default deployment/kuadrant-operator --for=condition=Available
+kubectl wait --timeout=5m -n default deployment/kuadrant-operator-controller-manager --for=condition=Available
 ```
 
 **Explanation:** This installs the operator and activates the Kuadrant control plane, enabling Limitador for enforcing policies.
