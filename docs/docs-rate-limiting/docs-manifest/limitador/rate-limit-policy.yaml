@@ -1,0 +1,16 @@
+apiVersion: kuadrant.io/v1
+kind: RateLimitPolicy
+metadata:
+  name: ai-ratelimit
+  namespace: default
+spec:
+  targetRef:
+    group: gateway.networking.k8s.io
+    kind: HTTPRoute
+    name: envoy-ai-gateway-basic-openai
+
+  limits:
+    toys:
+      rates:
+        - limit: 3
+          window: 1m
