@@ -493,11 +493,6 @@ api-key-1   Opaque   1   1m   authorino.kuadrant.io/managed-by=authorino,group=f
 ```bash
 # Check all pods are running
 kubectl get pods -n test-authorino-v1
-
-# Check gateway is programmed
-kubectl get gateway eg -n test-authorino-v1 -o jsonpath='{.status.conditions[?(@.type=="Programmed")].status}'
-
-# Should output: True
 ```
 
 ### Step 2: Set Up Port Forwarding
