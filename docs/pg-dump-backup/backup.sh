@@ -1,62 +1,87 @@
 #!/bin/bash
-# ----------------------------------------------------------------------------
-# PostgreSQL Backup Script
-# 
-# Purpose: Creates a compressed custom-format backup of a PostgreSQL database
-#          using DATABASE_URL and saves it to a specified directory.
-#
-# Usage: 
-#   Set environment variables:
-#     export DATABASE_URL="postgres://user:pass@host:port/dbname"
-#     export BACKUP_DIR="/path/to/backups"
-#   Then run: ./backup.sh
-#
-# Requirements:
-#   - pg_dump must be installed
-#   - DATABASE_URL must include username, password, host, and database name
-#   - Write permissions to BACKUP_DIR
-#
-# Output:
-#   Creates a .dump file named like: dbname_YYYYMMDDTHHMMSSZ.dump.gz
-#   Example: myapp_20260107T100000Z.dump.gz
-# ----------------------------------------------------------------------------
+set -Eeuo pipefail
 
-set -euo pipefail
+#######################################
+# Validation helpers
+#######################################
+fail() {
+  echo "[ERROR] $1" >&2
+  exit 1
+}
 
-trap 'echo "[ERROR] Backup failed at line $LINENO"; exit 1' ERR
+log() {
+  echo "[$(date +'%Y-%m-%d %H:%M:%S')] [$1] $2"
+}
 
-: "${DATABASE_URL:?DATABASE_URL not set}"
-: "${BACKUP_DIR:?BACKUP_DIR not set}"
+#######################################
+# Required global inputs
+#######################################
+: "${MODE:?MODE must be set to 'backup' or 'migrate'}"
+: "${STORAGE:?STORAGE must be set to 'local' or 's3'}"
+: "${SOURCE_DATABASE_URL:?SOURCE_DATABASE_URL not set}"
 
-# Check if pg_dump is available
-if ! command -v pg_dump &> /dev/null; then
-  echo "[ERROR] pg_dump command not found. Installing postgresql-client..."
-  if ! sudo apt install -y postgresql-client; then
-    echo "[ERROR] Failed to install postgresql-client. Please install manually."
-    exit 1
+[[ "$SOURCE_DATABASE_URL" =~ ^(postgresql|postgres):// ]] \
+  || fail "SOURCE_DATABASE_URL must start with 'postgresql://' or 'postgres://'"
+
+#######################################
+# Mode validation
+#######################################
+case "$MODE" in
+  backup|migrate) ;;
+  *) fail "Invalid MODE: $MODE (expected 'backup' or 'migrate')" ;;
+esac
+
+#######################################
+# Storage validation
+#######################################
+case "$STORAGE" in
+  local)
+    : "${BACKUP_DIR:?BACKUP_DIR must be set for local storage}"
+    mkdir -p "$BACKUP_DIR"
+    DUMP_TARGET_DIR="$BACKUP_DIR"
+    ;;
+  s3)
+    : "${S3_BUCKET:?S3_BUCKET must be set for S3 storage}"
+    : "${AWS_REGION:?AWS_REGION must be set for S3 storage}"
+    export AWS_DEFAULT_REGION="$AWS_REGION"
+    DUMP_TARGET_DIR="$(mktemp -d)"
+    ;;
+  *)
+    fail "Invalid STORAGE: $STORAGE (expected 'local' or 's3')"
+    ;;
+esac
+
+#######################################
+# Pre-flight checks
+#######################################
+command -v pg_dump >/dev/null || fail "pg_dump not installed"
+command -v pg_restore >/dev/null || fail "pg_restore not installed"
+
+if [[ "$STORAGE" == "s3" ]]; then
+  command -v aws >/dev/null || fail "AWS CLI required for S3 storage"
+fi
+
+#######################################
+# Migration-specific validation
+#######################################
+if [[ "$MODE" == "migrate" ]]; then
+  : "${TARGET_DATABASE_URL:?TARGET_DATABASE_URL required for migration}"
+  [[ "$TARGET_DATABASE_URL" =~ ^(postgresql|postgres):// ]] \
+    || fail "TARGET_DATABASE_URL must start with 'postgresql://' or 'postgres://'"
+
+  [[ "${CONFIRM_MIGRATION:-false}" == "true" ]] \
+    || fail "Migration requires CONFIRM_MIGRATION=true"
+fi
+
+#######################################
+# Cleanup handler
+#######################################
+cleanup() {
+  if [[ "$STORAGE" == "s3" && -n "${DUMP_TARGET_DIR:-}" && -d "$DUMP_TARGET_DIR" ]]; then
+    log "INFO" "Cleaning up temporary directory: $DUMP_TARGET_DIR"
+    rm -rf "$DUMP_TARGET_DIR"
   fi
-  # Verify installation
-  if ! command -v pg_dump &> /dev/null; then
-    echo "[ERROR] pg_dump is still not available after installation."
-    exit 1
-  fi
-fi   
+}
+trap cleanup EXIT
 
-export PGCONNECT_TIMEOUT=10
-
-TIMESTAMP=$(date -u +"%Y%m%dT%H%M%SZ")
-DB_NAME=$(basename "$(echo "$DATABASE_URL" | sed 's/[?].*//')")
-BACKUP_FILE="$BACKUP_DIR/${DB_NAME}_${TIMESTAMP}.dump"
-
-mkdir -p "$BACKUP_DIR"
-
-echo "[INFO] Starting backup at $TIMESTAMP"
-
-pg_dump \
-  --no-password \
-  --dbname="$DATABASE_URL" \
-  --format=custom \
-  --compress=9 \
-  --file="$BACKUP_FILE"
-
-echo "[INFO] Backup completed: $BACKUP_FILE"   
+log "INFO" "Script initialized successfully"

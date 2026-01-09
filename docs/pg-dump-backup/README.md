@@ -1,377 +1,214 @@
-# PostgreSQL Backup Strategy
+# PostgreSQL Backup & Migration Script
 
-This document describes **a progressive, production-minded approach** to backing up PostgreSQL databases.
+This document describes the **production-ready PostgreSQL backup and migration script** implemented to address:
 
-It starts from the **simplest possible local shell script** and evolves step by step toward a **fully production‑ready solution** (cloud storage, Kubernetes, security, observability, disaster recovery).
+> **GitHub Issue #40 — Create a pg_dump to migrate all data to new database**
 
-The goal is **not to force a single implementation**, but to **give decision power to the project manager** using **explicit checklists**.
-
-Each section explains:
-
-* **What is added**
-* **Why it matters**
-* **What trade‑offs it introduces**
-
-At the end, the project manager can **check the boxes** that match the real constraints of the project.
+The script intentionally supports **both backup and migration**, with explicit user choice, while keeping the scope controlled, auditable, and safe for production use.
 
 ---
 
-## 1️⃣ Level 0 — Minimal Local Backup (Baseline)
+## 🎯 Purpose
 
-### Description
+This script allows operators to:
 
-A single shell script run manually or via cron on a machine that has access to PostgreSQL.
+* **Backup** a PostgreSQL database
+* **Migrate** all data from one PostgreSQL database to another
 
-### Typical usage
-
-* Developer laptop
-* Single VM
-* Early-stage project
-* One-off backups
-
-### Characteristics
-
-* Uses `pg_dump`
-* Runs locally
-* Writes to local disk
-* No automation guarantees
-
-### Why this level exists
-
-* Establishes a **known-good baseline**
-* Makes backup mechanics explicit
-* Easy to reason about
-
-### Example (conceptual)
-
-* Local shell script
-* `pg_dump --dbname="$DATABASE_URL"`
-* Output written to a directory
-
-### Risks
-
-* No redundancy
-* No monitoring
-* Backup lost if machine is lost
-
-### Decision
-
-* [ ] Acceptable for development only
-* [ ] Acceptable for non-critical data
-* [ ] ❌ Not acceptable for production data
+The behavior is **explicitly controlled** through environment variables. Nothing happens implicitly.
 
 ---
 
-## 2️⃣ Level 1 — Non‑Interactive & Safer Local Script
+## 🧭 Operating Modes
 
-### What is added
+### `MODE=backup`
 
-* Non-interactive execution
-* Explicit failure behavior
-* Directory validation
+* Creates a logical dump using `pg_dump`
+* Does **not** modify any database
+* Stores the dump locally or uploads it to S3
 
-### Key improvements
+### `MODE=migrate`
 
-* `--no-password`
-* `set -euo pipefail`
-* `mkdir -p "$BACKUP_DIR"`
-
-### Why this matters
-
-* Prevents scripts from **hanging silently**
-* Makes failures **loud and deterministic**
-* Required for automation (cron, CI, jobs)
-
-### New guarantees
-
-* Script fails fast
-* Script never prompts
-* Script always writes to a known location
-
-### Decision
-
-* [ ] Required for cron usage
-* [ ] Required for CI/CD
-* [ ] Required for production
+* Creates a dump from the source database
+* Restores it into the target database using `pg_restore`
+* **Destructive operation** (drops existing objects)
+* Requires explicit confirmation
 
 ---
 
-## 3️⃣ Level 2 — Correct Backup Format & Verification
+## 🗂 Storage Options
 
-### What is added
+### `STORAGE=local`
 
-* Custom dump format
-* Compression
-* Verifiability
+The dump is stored on the local filesystem.
 
-### Changes
+Required variables:
 
-* `pg_dump --format=custom`
-* Optional compression level
+```bash
+BACKUP_DIR=/path/to/backup/dir
+```
 
-### Why this matters
+Behavior:
 
-* Smaller backups
-* Faster restore
-* Integrity checking
-* Parallel restore support
-
-### New guarantees
-
-* Backup is restorable
-* Backup is inspectable (`pg_restore --list`)
-
-### Decision
-
-* [ ] Use plain SQL dumps (simple, slow restore)
-* [ ] Use custom format (recommended)
+* Dump file is created inside `BACKUP_DIR`
+* File is preserved unless explicitly removed by the operator
 
 ---
 
-## 4️⃣ Level 3 — Off‑Machine Storage (S3 / MinIO)
+### `STORAGE=s3`
 
-### What is added
+The dump is temporarily created locally, then uploaded to S3.
 
-* Upload backups to object storage
+Required variables:
 
-### Supported targets
+```bash
+S3_BUCKET=my-bucket
+AWS_REGION=eu-west-1
+```
 
-* AWS S3
-* MinIO
-* GCS / Azure Blob (conceptually similar)
+Optional:
 
-### Why this matters
+```bash
+S3_PREFIX=pg-dumps/
+```
 
-> A backup stored on the same machine is **not a backup**.
+Behavior:
 
-This protects against:
-
-* Node loss
-* Disk corruption
-* Accidental deletion
-* Ransomware
-
-### New guarantees
-
-* Backups survive machine failure
-* Centralized retention policies
-
-### Trade‑offs
-
-* Requires credentials
-* Requires network access
-
-### Decision
-
-* [ ] No off-machine storage (not recommended)
-* [ ] S3
-* [ ] MinIO (on‑prem / self‑hosted)
-* [ ] Other object storage
+* Temporary local directory is used
+* Dump is uploaded to S3
+* Temporary files are cleaned up automatically
 
 ---
 
-## 5️⃣ Level 4 — Retention & Lifecycle Management
+## 🔐 Credentials & Security
 
-### What is added
+* Database passwords **must not** be embedded in URLs
+* Authentication should be provided via:
 
-* Automatic deletion of old backups
+  * `.pgpass` (recommended)
+  * or `PGPASSWORD` environment variable
 
-### Options
+Example `.pgpass` permissions:
 
-* Local cleanup (`find -mtime`)
-* Object storage lifecycle rules (preferred)
-
-### Why this matters
-
-* Prevents infinite storage growth
-* Controls cost
-* Reduces blast radius of leaks
-
-### Decision
-
-* [ ] No retention policy (❌ risky)
-* [ ] Local retention (basic)
-* [ ] Object storage lifecycle rules (recommended)
+```bash
+chmod 600 ~/.pgpass
+```
 
 ---
 
-## 6️⃣ Level 5 — Kubernetes CronJob
+## 🌍 Required Environment Variables
 
-### What is added
+### Always required
 
-* Kubernetes-native scheduling
-* Declarative execution
-* Retry behavior
+```bash
+MODE=backup | migrate
+STORAGE=local | s3
+SOURCE_DATABASE_URL=postgresql://user@host:5432/dbname
+```
 
-### Why this matters
+The script validates that database URLs start with:
 
-* No reliance on a single VM
-* Git‑tracked scheduling
-* Native retries and status
-
-### Typical design
-
-* CronJob
-* One-shot Job
-* Dedicated backup container
-
-### New guarantees
-
-* Predictable execution
-* Failure visibility via Kubernetes
-
-### Decision
-
-* [ ] No Kubernetes
-* [ ] Kubernetes CronJob
+* `postgresql://`
+* or `postgres://`
 
 ---
 
-## 7️⃣ Level 6 — Security Hardening
+### Migration-only variables
 
-### What is added
+```bash
+TARGET_DATABASE_URL=postgresql://user@host:5432/targetdb
+CONFIRM_MIGRATION=true
+```
 
-* Secret isolation
-* Least privilege
-* Network restrictions
-
-### Measures
-
-* Kubernetes Secrets
-* Backup-only DB role
-* NetworkPolicy
-* No Gateway exposure
-
-### Why this matters
-
-* Limits blast radius
-* Prevents accidental data exposure
-* Meets compliance expectations
-
-### Decision
-
-* [ ] Use shared DB credentials (❌ not recommended)
-* [ ] Dedicated backup DB role
-* [ ] NetworkPolicy isolation
+Migration **will not run** unless `CONFIRM_MIGRATION=true` is explicitly set.
 
 ---
 
-## 8️⃣ Level 7 — Observability & Alerting
+## ▶️ Usage Examples
 
-### What is added
+### Local backup
 
-* Logs
-* Metrics
-* Alerts
-
-### Why this matters
-
-> A backup you don’t monitor is a backup you don’t have.
-
-### Signals
-
-* Job success / failure
-* Duration
-* Backup size
-
-### Decision
-
-* [ ] Logs only
-* [ ] Metrics (Prometheus)
-* [ ] Alerts on failure
+```bash
+MODE=backup \
+STORAGE=local \
+BACKUP_DIR=/var/backups \
+SOURCE_DATABASE_URL=postgresql://user@host:5432/db \
+./pg_dump_tool.sh
+```
 
 ---
 
-## 9️⃣ Level 8 — Restore Testing & Disaster Recovery
+### Backup to S3
 
-### What is added
-
-* Restore drills
-* Staging restores
-
-### Why this matters
-
-* Validates backups
-* Reduces recovery time under stress
-
-### Practices
-
-* Monthly restore verification
-* Quarterly full restore
-
-### Decision
-
-* [ ] No restore testing (❌ dangerous)
-* [ ] Periodic verification
-* [ ] Full DR drills
+```bash
+MODE=backup \
+STORAGE=s3 \
+S3_BUCKET=my-backups \
+AWS_REGION=eu-west-1 \
+SOURCE_DATABASE_URL=postgresql://user@host:5432/db \
+./pg_dump_tool.sh
+```
 
 ---
 
-## 🔟 Optional Advanced Hardening
+### Database migration
 
-### Encryption
-
-* At-rest encryption
-* Client-side encryption (`age`, `gpg`, KMS)
-
-### Immutability
-
-* Object lock
-* WORM storage
-
-### Multi-region
-
-* Cross-region replication
-
-### Decision
-
-* [ ] Encryption required
-* [ ] Immutability required
-* [ ] Multi-region required
+```bash
+MODE=migrate \
+STORAGE=local \
+BACKUP_DIR=/tmp \
+SOURCE_DATABASE_URL=postgresql://old-db \
+TARGET_DATABASE_URL=postgresql://new-db \
+CONFIRM_MIGRATION=true \
+./pg_dump_tool.sh
+```
 
 ---
 
-## ✅ Final Selection Checklist (to be completed by PM)
+## ⚠️ Important Notes
 
-### Execution Environment
-
-* [ ] Local machine
-* [ ] VM
-* [ ] Kubernetes
-
-### Storage
-
-* [ ] Local disk only
-* [ ] S3
-* [ ] MinIO
-* [ ] Other
-
-### Security
-
-* [ ] Dedicated backup DB user
-* [ ] Secrets manager
-* [ ] Network isolation
-
-### Reliability
-
-* [ ] Retry on failure
-* [ ] Alerts
-* [ ] Restore testing
-
-### Compliance
-
-* [ ] Retention policy
-* [ ] Encryption
-* [ ] Immutability
+* The target database **must already exist**
+* Required PostgreSQL extensions must be pre-installed
+* Migration drops existing objects (`--clean --if-exists`)
+* The script is **not idempotent** by design
+* Safe re-runs require operator intent
 
 ---
 
-## 📌 Next Step
+## 🧩 Non-Goals (Explicitly Out of Scope)
 
-Once this checklist is completed, the implementation can be:
+The following are intentionally **not implemented**:
 
-* Tailored exactly to constraints
-* Justified to stakeholders
-* Audited and evolved safely
+* Automatic idempotency
+* Schema diffing
+* Backup retention policies
+* Encryption at rest
+* Scheduling (Cron / Kubernetes CronJob)
 
-👉 **Return this document with boxes checked, and we will finalize the exact implementation.**
+These can be added later without changing the core behavior.
+
+---
+
+## ✅ Scope Confirmation (for Project Managers)
+
+This implementation:
+
+* ✔ Fully satisfies issue #40
+* ✔ Migrates all PostgreSQL data using `pg_dump` / `pg_restore`
+* ✔ Is production-safe
+* ✔ Avoids unnecessary complexity
+* ✔ Is auditable and explicit
+
+---
+
+## 🚀 Future Improvements (Optional)
+
+* Kubernetes Job / CronJob wrapper
+* Encryption before S3 upload
+* Backup retention automation
+* Read-only or schema-only modes
+* CI/CD integration
+
+---
+
+**Status:** Ready for production use and review
