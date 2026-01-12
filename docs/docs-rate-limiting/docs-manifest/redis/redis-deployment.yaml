@@ -1,0 +1,53 @@
+kind: Namespace
+apiVersion: v1
+metadata:
+  name: redis-system
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: redis
+  namespace: redis-system
+spec:
+  ports:
+    - name: redis
+      port: 6379
+      protocol: TCP
+      targetPort: 6379
+  selector:
+    app: redis
+  clusterIP: None  # Headless service for stable DNS
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: redis
+  namespace: redis-system
+spec:
+  serviceName: "redis"  # Must match the headless service name
+  replicas: 1
+  selector:
+    matchLabels:
+      app: redis
+  template:
+    metadata:
+      labels:
+        app: redis
+    spec:
+      containers:
+        - name: redis
+          image: redis:6.0.6
+          ports:
+            - containerPort: 6379
+          volumeMounts:
+            - name: data
+              mountPath: /data
+  volumeClaimTemplates:
+    - metadata:
+        name: data
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        storageClassName: local-path  # Default in k3s
+        resources:
+          requests:
+            storage: 1Gi   
