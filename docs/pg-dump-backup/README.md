@@ -24,7 +24,7 @@ chmod +x pg_dump_tool.sh
 
 * prepare .pgpass env file
 ```bash
-echo "localhost:5432:testdb:testuser:testpassword" > /home/$HOME/.pgpass && chmod 600 /home/$HOME/.pgpass
+echo "localhost:5432:testdb:testuser:testpassword" > $HOME/.pgpass && chmod 600 $HOME/.pgpass
 ```
 ### Step 1: Start PostgreSQL Container
 
