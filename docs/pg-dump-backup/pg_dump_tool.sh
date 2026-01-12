@@ -204,7 +204,6 @@ perform_backup() {
     # Build pg_dump command with optional extra arguments
     local dump_cmd=(
         "$PG_DUMP_BIN"
-        --no-password
         --verbose
         --format=custom
         --compress=9
@@ -250,7 +249,6 @@ perform_restore() {
     # Build pg_restore command
     local restore_cmd=(
         "$PG_RESTORE_BIN"
-        --no-password
         --verbose
         --clean
         --if-exists
