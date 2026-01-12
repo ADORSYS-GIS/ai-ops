@@ -30,7 +30,7 @@ mkdir $HOME/.kube/ || echo "Directory is present already" && sudo cp -r /etc/ran
 Give require permissions :
 ```bash
 sudo chown $(whoami):$(whoami) $HOME/.kube/config   
-KUBECONFIG=$HOME/.kube/config
+export KUBECONFIG=$HOME/.kube/config
 ```
 
 Verify K3s is running:
@@ -306,7 +306,7 @@ kubectl wait --timeout=5m -n default deployment/kuadrant-operator-controller-man
 
 **Explanation:** This installs the operator.
 
-## Acttivate kuadrant control plance
+## Acttivate kuadrant control plane
 ```bash
   kubectl apply -f - <<'EOF'
   apiVersion: kuadrant.io/v1beta1
