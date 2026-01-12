@@ -1,0 +1,123 @@
+
+apiVersion: aigateway.envoyproxy.io/v1alpha1
+kind: AIServiceBackend
+metadata:
+  name: envoy-ai-gateway-basic-gcp
+  namespace: default
+spec:
+  schema:
+    name: GCPVertexAI
+  backendRef:
+    name: envoy-ai-gateway-basic-gcp
+    kind: Backend
+    group: gateway.envoyproxy.io
+
+---
+apiVersion: aigateway.envoyproxy.io/v1alpha1
+kind: BackendSecurityPolicy
+metadata:
+  name: envoy-ai-gateway-basic-gcp-credentials
+  namespace: default
+spec:
+  targetRefs:
+    - group: aigateway.envoyproxy.io
+      kind: AIServiceBackend
+      name: envoy-ai-gateway-basic-gcp
+    - group: aigateway.envoyproxy.io
+      kind: AIServiceBackend
+      name: envoy-ai-gateway-basic-gcp-anthropic
+  type: GCPCredentials
+  gcpCredentials:
+    projectName: kivoyo # Replace with your GCP project name
+    region: us-central1 # Replace with your GCP region
+    credentialsFile:
+      secretRef:
+        name: envoy-ai-gateway-basic-gcp-service-account-key-file
+
+---
+apiVersion: gateway.envoyproxy.io/v1alpha1
+kind: Backend
+metadata:
+  name: envoy-ai-gateway-basic-gcp
+  namespace: default
+spec:
+  endpoints:
+    - fqdn:
+        hostname: us-central1-aiplatform.googleapis.com
+        port: 443
+
+---
+apiVersion: gateway.networking.k8s.io/v1alpha3
+kind: BackendTLSPolicy
+metadata:
+  name: envoy-ai-gateway-basic-gcp-tls
+  namespace: default
+spec:
+  targetRefs:
+    - group: "gateway.envoyproxy.io"
+      kind: Backend
+      name: envoy-ai-gateway-basic-gcp
+  validation:
+    wellKnownCACertificates: "System"
+    hostname: us-central1-aiplatform.googleapis.com
+
+
+
+
+
+---
+
+apiVersion: gateway.envoyproxy.io/v1alpha1
+kind: BackendTrafficPolicy
+metadata:
+  name: envoy-ai-gateway-fallback-policy
+  namespace: default
+spec:
+  targetRefs:
+    - group: gateway.networking.k8s.io
+      kind: Gateway
+      name: envoy-ai-gateway-basic
+  retry:
+    numRetries: 3
+    perRetry:
+      backOff:
+        baseInterval: 100ms
+        maxInterval: 10s
+      timeout: 30s
+    retryOn:
+      httpStatusCodes:
+        - 500
+        - 502
+        - 503
+        - 504
+        - 401
+        - 404
+      triggers:
+        - connect-failure
+        - retriable-status-codes
+
+---
+
+apiVersion: aigateway.envoyproxy.io/v1alpha1
+kind: AIGatewayRoute
+metadata:
+  name: envoy-ai-gateway-fallback
+  namespace: default
+spec:
+  parentRefs:
+    - name: envoy-ai-gateway-basic
+      kind: Gateway
+      group: gateway.networking.k8s.io
+  rules:
+    - matches:
+        - headers:
+            - type: Exact
+              name: x-ai-eg-model
+              value: vertex-virtual-model
+      backendRefs:
+        - name: envoy-ai-gateway-qwen-secondary
+          modelNameOverride: qwen2.5:0.5b
+          priority: 0
+        - name: envoy-ai-gateway-basic-gcp
+          modelNameOverride: gemini-2.5-flash
+          priority: 1
