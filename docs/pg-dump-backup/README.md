@@ -40,29 +40,32 @@ sleep 10
 ### Step 2: Populate with Test Data
 
 ```bash
-docker exec test-postgres psql -U testuser -d testdb -c "\
-CREATE TABLE users (\
-  id SERIAL PRIMARY KEY,\
-  username VARCHAR(50) NOT NULL,\
-  email VARCHAR(100) NOT NULL,\
-  created_at TIMESTAMP DEFAULT NOW()\
-);\
-\
-CREATE TABLE products (\
-  id SERIAL PRIMARY KEY,\
-  name VARCHAR(100) NOT NULL,\
-  price DECIMAL(10,2) NOT NULL,\
-  stock INTEGER DEFAULT 0\
-);\
-\
-INSERT INTO users (username, email) VALUES\
-('john_doe', 'john@example.com'),\
-('jane_smith', 'jane@example.com'),\
-('bob_wilson', 'bob@example.com');\
-\
-INSERT INTO products (name, price, stock) VALUES\
-('Laptop', 999.99, 10),\n('Mouse', 25.50, 50),\n('Keyboard', 79.99, 30);\
-"
+docker exec -i test-postgres psql -U testuser -d testdb <<'EOF'
+CREATE TABLE users (
+    id SERIAL PRIMARY KEY,
+    username VARCHAR(50) NOT NULL,
+    email VARCHAR(100) NOT NULL,
+    created_at TIMESTAMP DEFAULT NOW()
+);
+
+CREATE TABLE products (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    price DECIMAL(10,2) NOT NULL,
+    stock INTEGER DEFAULT 0
+);
+
+INSERT INTO users (username, email) VALUES
+    ('john_doe', 'john@example.com'),
+    ('jane_smith', 'jane@example.com'),
+    ('bob_wilson', 'bob@example.com');
+
+INSERT INTO products (name, price, stock) VALUES
+    ('Laptop', 999.99, 10),
+    ('Mouse', 25.50, 50),
+    ('Keyboard', 79.99, 30);
+EOF
+
 
 docker exec test-postgres psql -U testuser -d testdb -c "SELECT COUNT(*) FROM users;"
 docker exec test-postgres psql -U testuser -d testdb -c "SELECT COUNT(*) FROM products;"
@@ -82,11 +85,35 @@ mkdir -p test-backups
 
 ls -lh test-backups/*.dump
 ```
+#### Step 3-1 : Test if backup.dump can be restore successfully
+```bash
+# Terminate active connections and drop/recreate the database
+docker exec -i test-postgres psql -U testuser -d postgres <<'EOF'
+SELECT pg_terminate_backend(pid)
+FROM pg_stat_activity
+WHERE datname = 'testdb'
+  AND pid <> pg_backend_pid();
+
+DROP DATABASE IF EXISTS testdb;
+CREATE DATABASE testdb;
+EOF
+
+```
+
+```bash
+# Restore the testdb
+docker exec -i test-postgres pg_restore -U testuser -d testdb /backup.dump
+```
+
+```bash
+docker exec test-postgres psql -U testuser -d testdb -c "SELECT COUNT(*) FROM users;"
+docker exec test-postgres psql -U testuser -d testdb -c "SELECT COUNT(*) FROM products;"
+```
 
 ### Step 4: Test Migration (Optional)
 
 ```bash
-docker exec test-postgres psql -U testuser -c "CREATE DATABASE testdb2;"
+docker exec test-postgres psql -U testuser -d postgres -c "CREATE DATABASE testdb2;"   
 
 export MODE=migrate
 export TARGET_DATABASE_URL="postgresql://testuser:testpass@localhost:5432/testdb2"
