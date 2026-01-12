@@ -22,6 +22,10 @@ cd ai-ops/docs/pg-dump-backup
 chmod +x pg_dump_tool.sh
 ```
 
+* prepare .pgpass env file
+```bash
+echo "localhost:5432:testdb:testuser:testpassword" > /home/$HOME/.pgpass && chmod 600 /home/$HOME/.pgpass
+```
 ### Step 1: Start PostgreSQL Container
 
 ```bash
@@ -76,7 +80,7 @@ docker exec test-postgres psql -U testuser -d testdb -c "SELECT COUNT(*) FROM pr
 ```bash
 export MODE=backup
 export STORAGE=local
-export SOURCE_DATABASE_URL="postgresql://testuser:testpass@localhost:5432/testdb"
+export SOURCE_DATABASE_URL="postgresql://testuser@localhost:5432/testdb"
 export BACKUP_DIR="./test-backups"
 
 mkdir -p test-backups
@@ -116,7 +120,7 @@ docker exec test-postgres psql -U testuser -d testdb -c "SELECT COUNT(*) FROM pr
 docker exec test-postgres psql -U testuser -d postgres -c "CREATE DATABASE testdb2;"   
 
 export MODE=migrate
-export TARGET_DATABASE_URL="postgresql://testuser:testpass@localhost:5432/testdb2"
+export TARGET_DATABASE_URL="postgresql://testuser@localhost:5432/testdb2"
 export CONFIRM_MIGRATION=true
 
 ./pg_dump_tool.sh
@@ -141,7 +145,7 @@ rm -rf test-backups
 ```bash
 export MODE=backup
 export STORAGE=local
-export SOURCE_DATABASE_URL="postgresql://user:password@localhost:5432/mydb"
+export SOURCE_DATABASE_URL="postgresql://user@localhost:5432/mydb"
 export BACKUP_DIR="./my-backups"
 ./pg_dump_tool.sh
 ```
@@ -151,7 +155,7 @@ export BACKUP_DIR="./my-backups"
 ```bash
 export MODE=backup
 export STORAGE=s3
-export SOURCE_DATABASE_URL="postgresql://user:password@localhost:5432/mydb"
+export SOURCE_DATABASE_URL="postgresql://user@localhost:5432/mydb"
 export S3_BUCKET="my-backup-bucket"
 export AWS_REGION="us-east-1"
 export S3_PREFIX="database-backups/"
@@ -170,8 +174,8 @@ export S3_PREFIX="database-backups/"
 | :------------------ | :--------------- | :------------------------------------ | :------------------------------------ |
 | `MODE`              | Yes              | Operation mode: backup or migrate     | `backup`                              |
 | `STORAGE`           | Yes              | Storage backend: local or s3          | `s3`                                  |
-| `SOURCE_DATABASE_URL` | Yes              | Source PostgreSQL connection URL      | `postgresql://user:pass@host:5432/db` |
-| `TARGET_DATABASE_URL` | If `MODE=migrate` | Target PostgreSQL connection URL      | `postgresql://user:pass@host2:5432/db`|
+| `SOURCE_DATABASE_URL` | Yes              | Source PostgreSQL connection URL      | `postgresql://user@host:5432/db` |
+| `TARGET_DATABASE_URL` | If `MODE=migrate` | Target PostgreSQL connection URL      | `postgresql://user@host2:5432/db`|
 | `BACKUP_DIR`        | If `STORAGE=local`| Local backup directory                | `./backups`                           |
 | `S3_BUCKET`         | If `STORAGE=s3`   | S3 bucket name                        | `my-backup-bucket`                    |
 | `AWS_REGION`        | If `STORAGE=s3`   | AWS region                            | `us-east-1`                           |
@@ -204,6 +208,9 @@ For connection issues:
 ```bash
 # Test database connection first
 psql "$SOURCE_DATABASE_URL" -c "SELECT 1;"
+
+# For .pgpass authentication, ensure the file has proper permissions:
+# chmod 600 ~/.pgpass
 ```
 
 The Docker test example above provides a complete, self-contained environment to test all script functionality before using it in production.
