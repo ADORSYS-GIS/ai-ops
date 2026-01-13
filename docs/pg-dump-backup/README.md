@@ -198,7 +198,7 @@ If you encounter version mismatch errors:
 ```bash
 # Install specific PostgreSQL version tools
 # Ubuntu/Debian:
-sudo apt-get install postgresql-client-15
+sudo apt-get install postgresql-client-18
 
 # Or set the version explicitly:
 export PG_VERSION=18
@@ -217,6 +217,5 @@ psql "$SOURCE_DATABASE_URL" -c "SELECT 1;"
 
 The Docker test example above provides a complete, self-contained environment to test all script functionality before using it in production.
 
-For mismatch version issue :
-
-Make sure the `pg_restore --version` that restore the dump file is *_higher_* than the `pg_dump --version` that create that dump file/
+⚠️ Warning – Version Mismatch
+Always use a `pg_restore` version that is newer than the `pg_dump` version used to generate the dump file.
