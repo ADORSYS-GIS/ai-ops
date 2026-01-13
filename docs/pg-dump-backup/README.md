@@ -30,6 +30,19 @@ echo "localhost:5432:testdb:testuser:testpass" > $HOME/.pgpass && chmod 600 $HOM
 
 ### Step 1: Start PostgreSQL Container
 
+> ⚠️ **Important: PostgreSQL Version Compatibility**
+>
+> This example uses **PostgreSQL 18**. The `pg_restore` command at [line 120](#step-3-1--test-if-backupdump-can-be-restore-successfully) will **fail** if your local PostgreSQL client version is **higher** than the server version (18 in this case).
+>
+> **Why?** PostgreSQL dump files created with `pg_dump` from a newer version may contain features incompatible with older `pg_restore` versions. Conversely, restoring inside a container with an older PostgreSQL version than your local tools can cause format mismatches.
+>
+> **Solution:** Ensure your local `pg_dump` version matches or is lower than the container's PostgreSQL version, or perform the restore operation inside the container (as shown in this guide).
+
+Check your local PostgreSQL client version:
+```bash
+pg_dump --version
+```
+
 ```bash
 docker pull postgres:18-alpine
 
@@ -112,9 +125,14 @@ docker cp test-backups/pg_backup_YOUR_DUMP_FILE.dump test-postgres:/backup.dump
 ```
 
 ```bash
-# Restore the testdb
+# Restore the testdb (using pg_restore inside the container to avoid version mismatch)
 docker exec -i test-postgres pg_restore -U testuser -d testdb /backup.dump
 ```
+
+> ⚠️ **Note:** The restore is performed **inside the container** using the container's `pg_restore` (PostgreSQL 18). If you attempt to restore from your local machine with a higher PostgreSQL version, you will encounter errors like:
+> ```
+> pg_restore: error: unsupported version (X.Y) in file header
+> ```
 
 ```bash
 docker exec test-postgres psql -U testuser -d testdb -c "SELECT COUNT(*) FROM users;"
@@ -193,29 +211,66 @@ export S3_PREFIX="database-backups/"
 
 ## 🛠️ Troubleshooting
 
-If you encounter version mismatch errors:
+### PostgreSQL Version Mismatch Errors
 
-```bash
-# Install specific PostgreSQL version tools
-# Ubuntu/Debian:
-sudo apt-get install postgresql-client-18
+> ⚠️ **Critical:** This documentation uses **PostgreSQL 18**. If your local PostgreSQL client tools are a **different version** than the server, you may encounter compatibility issues.
 
-# Or set the version explicitly:
-export PG_VERSION=18
-./pg_dump_tool.sh
+**Common error messages:**
+```
+pg_restore: error: unsupported version (X.Y) in file header
+pg_dump: error: server version: X.Y; pg_dump version: Y.Z
 ```
 
-For connection issues:
+**Solutions:**
+
+1. **Match your local PostgreSQL client version to the server:**
+   ```bash
+   # Check your current version
+   pg_dump --version
+   pg_restore --version
+   
+   # Install PostgreSQL 18 client tools (Ubuntu/Debian):
+   sudo apt-get install postgresql-client-18
+   
+   # Or on macOS with Homebrew:
+   brew install postgresql@18
+   ```
+
+2. **Perform operations inside the container** (recommended for testing):
+   ```bash
+   # Backup inside container
+   docker exec test-postgres pg_dump -U testuser -Fc testdb > backup.dump
+   
+   # Restore inside container
+   docker cp backup.dump test-postgres:/backup.dump
+   docker exec test-postgres pg_restore -U testuser -d testdb /backup.dump
+   ```
+
+3. **Set the PostgreSQL version explicitly:**
+   ```bash
+   export PG_VERSION=18
+   ./pg_dump_tool.sh
+   ```
+
+### For connection issues:
 
 ```bash
 # Test database connection first
 psql "$SOURCE_DATABASE_URL" -c "SELECT 1;"
 
 # For .pgpass authentication, ensure the file has proper permissions:
-# chmod 600 ~/.pgpass
+chmod 600 ~/.pgpass
 ```
 
-The Docker test example above provides a complete, self-contained environment to test all script functionality before using it in production.
+### Version Compatibility Rules
 
-⚠️ Warning – Version Mismatch
-Always use a `pg_restore` version that is newer than the `pg_dump` version used to generate the dump file.
+| Scenario | Result |
+|----------|--------|
+| `pg_dump` version **≤** server version | ✅ Works |
+| `pg_dump` version **>** server version | ⚠️ May work with warnings |
+| `pg_restore` version **≥** dump file version | ✅ Works |
+| `pg_restore` version **<** dump file version | ❌ **Fails** |
+
+> 💡 **Best Practice:** Always use `pg_restore` with a version **equal to or newer** than the `pg_dump` version that created the backup file.
+
+The Docker test example above provides a complete, self-contained environment to test all script functionality before using it in production.
