@@ -276,6 +276,8 @@ Wait for the gateway pod to be ready:
 ```sh
 kubectl wait --for=condition=Ready -n envoy-gateway-system \
   pods -l gateway.envoyproxy.io/owning-gateway-name=envoy-ai-gateway-basic
+   kubectl wait --timeout=3m -n envoy-ai-gateway-system \
+  deployment/phoenix --for=condition=Available
   ```
   **uninstall and reinstall eg with values file**
   ```sh
@@ -286,6 +288,33 @@ helm install eg oci://docker.io/envoyproxy/gateway-helm \
     --create-namespace \
     -f https://raw.githubusercontent.com/envoyproxy/ai-gateway/v0.4.0/manifests/envoy-gateway-values.yaml
 ```
+**restart everything**
+```sh
+# 1. Restart AI Gateway controller first
+kubectl rollout restart deployment -n envoy-ai-gateway-system ai-gateway-controller
+
+# 2. Wait for it to be ready
+kubectl rollout status deployment -n envoy-ai-gateway-system ai-gateway-controller
+
+# 3. Delete Envoy pods to force recreation
+kubectl delete pods -n envoy-gateway-system -l gateway.envoyproxy.io/owning-gateway-name=envoy-ai-gateway-basic
+
+# 4. Wait for new pods
+kubectl wait --for=condition=Ready -n envoy-gateway-system \
+    pods -l gateway.envoyproxy.io/owning-gateway-name=envoy-ai-gateway-basic --timeout=60s
+```
+After restarting, check if the ext_proc filter is being inserted:
+```sh
+kubectl logs -n envoy-ai-gateway-system deployment/ai-gateway-controller --tail=50 | grep "inserting AI Gateway extproc"
+```
+If you see output like inserting AI Gateway extproc filter into listener, the fix worked.
+
+Then verify OTEL env vars are in the sidecar:
+```sh
+ENVOY_POD=$(kubectl get pods -n envoy-gateway-system -l gateway.envoyproxy.io/owning-gateway-name=envoy-ai-gateway-basic -o jsonpath='{.items[0].metadata.name}')
+kubectl get pod -n envoy-gateway-system $ENVOY_POD -o json | jq '.spec.initContainers[] | select(.name=="ai-gateway-extproc") | .env'
+```
+You should see OTEL_EXPORTER_OTLP_ENDPOINT in the output.
 **Check Phoenix is receiving traces**
 ```sh
 kubectl logs -n envoy-ai-gateway-system deployment/phoenix | grep "POST /v1/traces"
