@@ -113,6 +113,10 @@ If you receive a valid JSON response with content, your service account is confi
 ```bash
 kubectl apply -f model.yaml
 ```
+**Wait for Pod to be Successfully Created**
+```bash
+kubectl wait --for=condition=Ready inferenceservice/qwen-secondary --timeout=600s
+```
 
 **Quick verification:**
 ```bash
@@ -122,7 +126,8 @@ kubectl get inferenceservice -n default
 ```
 **Expected Output**
 ```bash
-qwen-secondary-predictor-00001-deployment-58968c679b-7tvm6   2/2     Running             0          9m
+qwen-secondary   http://qwen-secondary.default.svc.cluster.local   True           100                              qwen-secondary-predictor-00001   4h9m
+
 ```
 
 
@@ -247,6 +252,9 @@ To test the fallback to GCP Vertex AI, simulate a failure in the primary provide
 kubectl delete isvc qwen-secondary
 sleep 30
 
+# Apply Backend-Tls-Policy
+kubectl apply -f Backend-tls-policy.yaml
+
 # Test again - should fallback to GCP Vertex AI
 curl -H "Content-Type: application/json" \
   -d '{
@@ -295,11 +303,7 @@ curl -N -H "Content-Type: application/json" \
 ```
 
 
-**Restore the primary model**
-```bash
-kubectl apply -f secondary-model.yaml 
-sleep 60 
-```
+
 
 ## Troubleshooting
 
