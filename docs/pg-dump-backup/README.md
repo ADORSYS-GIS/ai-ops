@@ -30,31 +30,87 @@ echo "localhost:5432:testdb:testuser:testpass" > $HOME/.pgpass && chmod 600 $HOM
 
 ### Step 1: Start PostgreSQL Container
 
-> ⚠️ **Important: PostgreSQL Version Compatibility**
->
-> This example uses **PostgreSQL 18**. The `pg_restore` command at [line 120](#step-3-1--test-if-backupdump-can-be-restore-successfully) will **fail** if your local PostgreSQL client version is **higher** than the server version (18 in this case).
->
-> **Why?** PostgreSQL dump files created with `pg_dump` from a newer version may contain features incompatible with older `pg_restore` versions. Conversely, restoring inside a container with an older PostgreSQL version than your local tools can cause format mismatches.
->
-> **Solution:** Ensure your local `pg_dump` version matches or is lower than the container's PostgreSQL version, or perform the restore operation inside the container (as shown in this guide).
+Choose **Option A** if you have PostgreSQL client tools installed locally, or **Option B** if you don't.
 
-Check your local PostgreSQL client version:
+---
+
+#### Option A: With Local PostgreSQL Installed (Automatic Version Matching)
+
+> 💡 **Automatic Version Matching:** The commands below automatically detect your local `pg_dump` version and start a matching PostgreSQL Docker container. This ensures compatibility between your local tools and the database server.
+
+First, detect your local PostgreSQL client version and set up the environment:
+
 ```bash
-pg_dump --version
+# Auto-detect local pg_dump version (extracts major version number)
+export PG_VERSION=$(pg_dump --version | grep -oE '[0-9]+' | head -1)
+echo "Detected local pg_dump version: $PG_VERSION"
+
+# Verify the version was detected
+if [ -z "$PG_VERSION" ]; then
+    echo "ERROR: Could not detect pg_dump version. See Option B below."
+    exit 1
+fi
 ```
 
+Now start a PostgreSQL container matching your local version:
+
 ```bash
-docker pull postgres:18-alpine
+# Pull and run PostgreSQL container matching your local version
+docker pull postgres:${PG_VERSION}-alpine
 
 docker run --name test-postgres \
   -e POSTGRES_USER=testuser \
   -e POSTGRES_PASSWORD=testpass \
   -e POSTGRES_DB=testdb \
   -p 5432:5432 \
-  -d postgres:18-alpine
+  -d postgres:${PG_VERSION}-alpine
 
+# Wait for PostgreSQL to be ready
 sleep 10
+
+# Verify the container is running with the correct version
+docker exec test-postgres psql -U testuser -d testdb -c "SELECT version();"
 ```
+
+> ⚠️ **Note:** If your local `pg_dump` version is very new (e.g., 17+), ensure the corresponding Docker image exists. Check available versions at [Docker Hub PostgreSQL](https://hub.docker.com/_/postgres/tags).
+
+---
+
+#### Option B: Without Local PostgreSQL (Docker-Only Mode)
+
+> 💡 **No local PostgreSQL required!** All operations will be performed inside Docker containers. This is ideal for CI/CD pipelines or machines without PostgreSQL installed.
+
+Choose a PostgreSQL version and set it manually:
+
+```bash
+# Set your desired PostgreSQL version (check Docker Hub for available versions)
+export PG_VERSION=16
+echo "Using PostgreSQL version: $PG_VERSION"
+```
+
+Start the PostgreSQL container:
+
+```bash
+# Pull and run PostgreSQL container
+docker pull postgres:${PG_VERSION}-alpine
+
+docker run --name test-postgres \
+  -e POSTGRES_USER=testuser \
+  -e POSTGRES_PASSWORD=testpass \
+  -e POSTGRES_DB=testdb \
+  -p 5432:5432 \
+  -d postgres:${PG_VERSION}-alpine
+
+# Wait for PostgreSQL to be ready
+sleep 10
+
+# Verify the container is running
+docker exec test-postgres psql -U testuser -d testdb -c "SELECT version();"
+```
+
+> 📝 **Important for Docker-Only Mode:** Since you don't have local `pg_dump`/`pg_restore`, you'll need to perform all backup and restore operations **inside the container**. See [Docker-Only Backup & Restore](#docker-only-backup--restore) section below.
+
+---
 
 ### Step 2: Populate with Test Data
 
@@ -125,14 +181,11 @@ docker cp test-backups/pg_backup_YOUR_DUMP_FILE.dump test-postgres:/backup.dump
 ```
 
 ```bash
-# Restore the testdb (using pg_restore inside the container to avoid version mismatch)
+# Restore the testdb (using pg_restore inside the container to ensure version compatibility)
 docker exec -i test-postgres pg_restore -U testuser -d testdb /backup.dump
 ```
 
-> ⚠️ **Note:** The restore is performed **inside the container** using the container's `pg_restore` (PostgreSQL 18). If you attempt to restore from your local machine with a higher PostgreSQL version, you will encounter errors like:
-> ```
-> pg_restore: error: unsupported version (X.Y) in file header
-> ```
+> 💡 **Why restore inside the container?** The restore is performed **inside the container** using the container's `pg_restore` (matching your `$PG_VERSION`). This ensures the `pg_restore` version matches the `pg_dump` version that created the backup, avoiding version mismatch errors.
 
 ```bash
 docker exec test-postgres psql -U testuser -d testdb -c "SELECT COUNT(*) FROM users;"
@@ -201,6 +254,8 @@ export S3_PREFIX="database-backups/"
 | `AWS_REGION`        | If `STORAGE=s3`   | AWS region                            | `us-east-1`                           |
 | `S3_PREFIX`         | No               | S3 key prefix                         | `database-backups/`                   |
 | `CONFIRM_MIGRATION` | If `MODE=migrate` | Safety flag for migrations            | `true`                                |
+| `PG_VERSION`        | No               | Override PostgreSQL version for tool selection | `16`                           |
+| `IGNORE_VERSION_MISMATCH` | No          | Bypass version mismatch check (not recommended) | `true`                       |
 
 ## 🔐 Security Best Practices
 
@@ -213,7 +268,7 @@ export S3_PREFIX="database-backups/"
 
 ### PostgreSQL Version Mismatch Errors
 
-> ⚠️ **Critical:** This documentation uses **PostgreSQL 18**. If your local PostgreSQL client tools are a **different version** than the server, you may encounter compatibility issues.
+The script (v1.1.0+) now **automatically detects** version mismatches and will fail with clear guidance if your local `pg_dump` version is higher than the server version.
 
 **Common error messages:**
 ```
@@ -221,22 +276,37 @@ pg_restore: error: unsupported version (X.Y) in file header
 pg_dump: error: server version: X.Y; pg_dump version: Y.Z
 ```
 
+**The script will show warnings like:**
+```
+[WARNING] ⚠️  VERSION MISMATCH DETECTED!
+[WARNING]    Local pg_dump version (17) is HIGHER than server version (16)
+[WARNING]    This may cause compatibility issues during backup/restore operations.
+```
+
 **Solutions:**
 
-1. **Match your local PostgreSQL client version to the server:**
+1. **Use the dynamic Docker setup** (recommended for testing):
+   
+   The Quick Test section now automatically matches your Docker container to your local `pg_dump` version:
+   ```bash
+   export PG_VERSION=$(pg_dump --version | grep -oE '[0-9]+' | head -1)
+   docker run -d postgres:${PG_VERSION}-alpine ...
+   ```
+
+2. **Install matching PostgreSQL client tools:**
    ```bash
    # Check your current version
    pg_dump --version
    pg_restore --version
    
-   # Install PostgreSQL 18 client tools (Ubuntu/Debian):
-   sudo apt-get install postgresql-client-18
+   # Install specific version (Ubuntu/Debian):
+   sudo apt-get install postgresql-client-<VERSION>
    
    # Or on macOS with Homebrew:
-   brew install postgresql@18
+   brew install postgresql@<VERSION>
    ```
 
-2. **Perform operations inside the container** (recommended for testing):
+3. **Perform operations inside the container:**
    ```bash
    # Backup inside container
    docker exec test-postgres pg_dump -U testuser -Fc testdb > backup.dump
@@ -246,9 +316,9 @@ pg_dump: error: server version: X.Y; pg_dump version: Y.Z
    docker exec test-postgres pg_restore -U testuser -d testdb /backup.dump
    ```
 
-3. **Set the PostgreSQL version explicitly:**
+4. **Override version detection** (not recommended):
    ```bash
-   export PG_VERSION=18
+   export IGNORE_VERSION_MISMATCH=true
    ./pg_dump_tool.sh
    ```
 
@@ -272,5 +342,88 @@ chmod 600 ~/.pgpass
 | `pg_restore` version **<** dump file version | ❌ **Fails** |
 
 > 💡 **Best Practice:** Always use `pg_restore` with a version **equal to or newer** than the `pg_dump` version that created the backup file.
+
+---
+
+## 🐳 Docker-Only Backup & Restore
+
+If you don't have PostgreSQL client tools installed locally, you can perform all backup and restore operations entirely within Docker containers.
+
+### Backup (Docker-Only)
+
+```bash
+# Set your PostgreSQL version
+export PG_VERSION=16
+
+# Create backup directory
+mkdir -p ./test-backups
+
+# Perform backup inside the container and copy to host
+docker exec test-postgres pg_dump -U testuser -Fc testdb > ./test-backups/backup_$(date +%Y%m%d_%H%M%S).dump
+
+# Verify the backup was created
+ls -lh ./test-backups/*.dump
+```
+
+### Restore (Docker-Only)
+
+```bash
+# Find your backup file
+BACKUP_FILE=$(ls -t ./test-backups/*.dump | head -1)
+echo "Restoring from: $BACKUP_FILE"
+
+# Copy backup into container
+docker cp "$BACKUP_FILE" test-postgres:/backup.dump
+
+# Terminate connections and recreate database
+docker exec -i test-postgres psql -U testuser -d postgres <<'EOF'
+SELECT pg_terminate_backend(pid)
+FROM pg_stat_activity
+WHERE datname = 'testdb'
+  AND pid <> pg_backend_pid();
+
+DROP DATABASE IF EXISTS testdb;
+CREATE DATABASE testdb;
+EOF
+
+# Restore the database
+docker exec test-postgres pg_restore -U testuser -d testdb /backup.dump
+
+# Verify the restore
+docker exec test-postgres psql -U testuser -d testdb -c "SELECT COUNT(*) FROM users;"
+docker exec test-postgres psql -U testuser -d testdb -c "SELECT COUNT(*) FROM products;"
+```
+
+### Restore from Unknown Version Dump File
+
+If you have a dump file but don't know which PostgreSQL version created it:
+
+```bash
+# Method 1: Check the dump file header
+head -c 100 ./test-backups/backup.dump | strings | grep -oE '[0-9]+\.[0-9]+' | head -1
+
+# Method 2: Try pg_restore --list (shows version info)
+# This requires a local pg_restore, but you can use Docker:
+docker run --rm -v $(pwd)/test-backups:/backups postgres:16-alpine \
+    pg_restore --list /backups/backup.dump 2>&1 | head -10
+```
+
+Once you know the version, start a matching container:
+
+```bash
+# Example: If dump was created with PostgreSQL 15
+export PG_VERSION=15
+docker run --name restore-postgres \
+  -e POSTGRES_USER=testuser \
+  -e POSTGRES_PASSWORD=testpass \
+  -e POSTGRES_DB=testdb \
+  -d postgres:${PG_VERSION}-alpine
+
+# Copy and restore
+docker cp ./test-backups/backup.dump restore-postgres:/backup.dump
+docker exec restore-postgres pg_restore -U testuser -d testdb /backup.dump
+```
+
+---
 
 The Docker test example above provides a complete, self-contained environment to test all script functionality before using it in production.

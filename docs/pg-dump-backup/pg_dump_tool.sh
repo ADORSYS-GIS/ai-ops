@@ -5,10 +5,9 @@ set -Eeuo pipefail
 # Global configuration
 #######################################
 readonly SCRIPT_NAME="$(basename "$0")"
-readonly SCRIPT_VERSION="1.0.0"
+readonly SCRIPT_VERSION="1.1.0"
 readonly TIMESTAMP="$(date +'%Y%m%d_%H%M%S')"
 readonly DEFAULT_BACKUP_PREFIX="pg_backup"
-readonly DEFAULT_POSTGRES_VERSION="18"
 
 #######################################
 # Color codes for output
@@ -60,43 +59,151 @@ check_command() {
 }
 
 #######################################
-# PostgreSQL tool discovery
+# Get local pg_dump/pg_restore version
+#######################################
+get_local_pg_version() {
+    local tool="$1"
+    local version_output
+    local major_version
+    
+    if command -v "$tool" >/dev/null 2>&1; then
+        version_output=$("$tool" --version 2>/dev/null | head -1)
+        # Extract major version number (e.g., "pg_dump (PostgreSQL) 16.2" -> "16")
+        major_version=$(echo "$version_output" | grep -oE '[0-9]+' | head -1)
+        echo "$major_version"
+    else
+        echo ""
+    fi
+}
+
+#######################################
+# Get server PostgreSQL version
+#######################################
+get_server_pg_version() {
+    local db_url="$1"
+    local server_version
+    
+    if command -v psql >/dev/null 2>&1; then
+        if server_version=$(psql -t -c "SHOW server_version_num;" "$db_url" 2>/dev/null | tr -d ' '); then
+            # Convert version number to major version (e.g., 150003 -> 15)
+            echo "$((server_version / 10000))"
+        else
+            echo ""
+        fi
+    else
+        echo ""
+    fi
+}
+
+#######################################
+# PostgreSQL tool discovery with version validation
 #######################################
 locate_pg_tools() {
-    local pg_version="${PG_VERSION:-$DEFAULT_POSTGRES_VERSION}"
+    local server_version=""
+    local local_pg_dump_version=""
+    local local_pg_restore_version=""
     
-    # Try to detect PostgreSQL version from source database if not specified
-    if [[ -z "${PG_VERSION:-}" ]] && command -v psql >/dev/null 2>&1; then
-        if pg_version_detected=$(psql -t -c "SHOW server_version_num;" "$SOURCE_DATABASE_URL" 2>/dev/null | head -1); then
-            # Convert version number to major version (e.g., 150003 -> 15)
-            pg_version=$((pg_version_detected / 10000))
-            log_info "Detected PostgreSQL version $pg_version from source database"
+    # Step 1: Detect local pg_dump and pg_restore versions
+    local_pg_dump_version=$(get_local_pg_version "pg_dump")
+    local_pg_restore_version=$(get_local_pg_version "pg_restore")
+    
+    if [[ -n "$local_pg_dump_version" ]]; then
+        log_info "Local pg_dump version: $local_pg_dump_version"
+    else
+        log_warning "Could not detect local pg_dump version"
+    fi
+    
+    if [[ -n "$local_pg_restore_version" ]]; then
+        log_info "Local pg_restore version: $local_pg_restore_version"
+    else
+        log_warning "Could not detect local pg_restore version"
+    fi
+    
+    # Step 2: Try to detect PostgreSQL server version from source database
+    server_version=$(get_server_pg_version "$SOURCE_DATABASE_URL")
+    
+    if [[ -n "$server_version" ]]; then
+        log_info "Source database PostgreSQL version: $server_version"
+        
+        # Step 3: Version compatibility check
+        if [[ -n "$local_pg_dump_version" ]] && [[ "$local_pg_dump_version" -gt "$server_version" ]]; then
+            log_warning "⚠️  VERSION MISMATCH DETECTED!"
+            log_warning "   Local pg_dump version ($local_pg_dump_version) is HIGHER than server version ($server_version)"
+            log_warning "   This may cause compatibility issues during backup/restore operations."
+            log_warning ""
+            log_warning "   Recommendations:"
+            log_warning "   1. Install PostgreSQL $server_version client tools:"
+            log_warning "      Ubuntu/Debian: sudo apt-get install postgresql-client-$server_version"
+            log_warning "      macOS: brew install postgresql@$server_version"
+            log_warning "   2. Or set PG_VERSION=$server_version to use versioned binaries"
+            log_warning "   3. Or ensure your target restore environment has pg_restore >= $local_pg_dump_version"
+            log_warning ""
+            
+            # Allow override with environment variable
+            if [[ "${IGNORE_VERSION_MISMATCH:-false}" != "true" ]]; then
+                log_warning "   Set IGNORE_VERSION_MISMATCH=true to proceed anyway (not recommended)"
+                fail "Version mismatch detected. See warnings above for resolution options."
+            else
+                log_warning "   IGNORE_VERSION_MISMATCH=true is set. Proceeding with caution..."
+            fi
+        fi
+    else
+        log_warning "Could not detect server PostgreSQL version. Skipping version compatibility check."
+    fi
+    
+    # Step 4: Determine which version to use for tool discovery
+    local target_version="${PG_VERSION:-}"
+    
+    if [[ -z "$target_version" ]]; then
+        # Use server version if detected, otherwise use local version
+        if [[ -n "$server_version" ]]; then
+            target_version="$server_version"
+        elif [[ -n "$local_pg_dump_version" ]]; then
+            target_version="$local_pg_dump_version"
+        else
+            fail "Could not determine PostgreSQL version. Please set PG_VERSION environment variable."
         fi
     fi
     
-    # Find pg_dump
+    log_info "Target PostgreSQL version for tools: $target_version"
+    
+    # Step 5: Find pg_dump binary
     PG_DUMP_BIN=""
-    for cand in "pg_dump-${pg_version}" "pg_dump${pg_version}" "pg_dump"; do
+    for cand in "pg_dump-${target_version}" "pg_dump${target_version}" "pg_dump"; do
         if command -v "$cand" >/dev/null 2>&1; then
             PG_DUMP_BIN="$cand"
             break
         fi
     done
     
-    # Find pg_restore
+    # Step 6: Find pg_restore binary
     PG_RESTORE_BIN=""
-    for cand in "pg_restore-${pg_version}" "pg_restore${pg_version}" "pg_restore"; do
+    for cand in "pg_restore-${target_version}" "pg_restore${target_version}" "pg_restore"; do
         if command -v "$cand" >/dev/null 2>&1; then
             PG_RESTORE_BIN="$cand"
             break
         fi
     done
     
-    if [[ -z "$PG_DUMP_BIN" ]] || [[ -z "$PG_RESTORE_BIN" ]]; then
-        fail "Could not find PostgreSQL tools for version $pg_version"
+    if [[ -z "$PG_DUMP_BIN" ]]; then
+        fail "Could not find pg_dump. Install PostgreSQL $target_version client tools or set PG_VERSION."
     fi
     
-    log_info "Using PG_DUMP_BIN='$PG_DUMP_BIN', PG_RESTORE_BIN='$PG_RESTORE_BIN'"
+    if [[ -z "$PG_RESTORE_BIN" ]]; then
+        fail "Could not find pg_restore. Install PostgreSQL $target_version client tools or set PG_VERSION."
+    fi
+    
+    # Step 7: Final version validation of selected tools
+    local selected_pg_dump_version=$(get_local_pg_version "$PG_DUMP_BIN")
+    local selected_pg_restore_version=$(get_local_pg_version "$PG_RESTORE_BIN")
+    
+    log_success "Using pg_dump: $PG_DUMP_BIN (version: ${selected_pg_dump_version:-unknown})"
+    log_success "Using pg_restore: $PG_RESTORE_BIN (version: ${selected_pg_restore_version:-unknown})"
+    
+    # Export versions for use in other functions
+    export DETECTED_SERVER_VERSION="$server_version"
+    export DETECTED_LOCAL_PG_DUMP_VERSION="$local_pg_dump_version"
+    export DETECTED_LOCAL_PG_RESTORE_VERSION="$local_pg_restore_version"
 }
 
 #######################################
