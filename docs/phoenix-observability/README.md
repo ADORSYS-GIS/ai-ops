@@ -20,10 +20,14 @@ You can choose between two approaches for your Kubernetes cluster:
 
 #### Create VM
 ```bash
-multipass launch --name aiops --cpus 10 --mem 30G --disk 50G
+multipass launch --name aiops --cpus 2 --mem 4G --disk 20G
 multipass shell aiops
 ```
-
+### Update and Upgrade system
+```sh
+sudo apt update 
+sudo apt ugrade
+```
 #### Install K3s
 ```bash
 curl -sfL https://get.k3s.io | sh -
@@ -31,7 +35,8 @@ mkdir ~/.kube
 sudo cp -r /etc/rancher/k3s/k3s.yaml ~/.kube/config 
 sudo chmod 644 ~/.kube/config
 export KUBECONFIG=~/.kube/config
-echo 'export KUBECONFIG=~/.kube/config' >> ~/.bashrc
+echo 'export KUBECONFIG="$HOME/.kube/config"' >> "$HOME/.${0##*/}rc"
+
 ```
 
 ### Option B: Using k3d (Docker-based)
