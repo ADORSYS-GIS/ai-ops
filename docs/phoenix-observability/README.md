@@ -255,6 +255,7 @@ EOF
 ```
 
 **Check if the ext_proc filter is being inserted:**
+
 For k3s
 ```sh
 kubectl logs -n envoy-ai-gateway-system deployment/ai-gateway-controller --tail=50 | grep "inserting AI Gateway extproc"
@@ -267,6 +268,7 @@ kubectl logs -n envoy-ai-gateway-system deployment/ai-gateway-controller \
 If you see output like inserting AI Gateway extproc filter into listener, the fix worked.
 
 **Then verify OTEL env vars are in the sidecar:**
+
 For k3s
 ```sh
 ENVOY_POD=$(kubectl get pods -n envoy-gateway-system -l gateway.envoyproxy.io/owning-gateway-name=envoy-ai-gateway-basic -o jsonpath='{.items[0].metadata.name}')
