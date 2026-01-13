@@ -300,3 +300,10 @@ Port-forward to access the Phoenix dashboard:
 kubectl port-forward -n envoy-ai-gateway-system svc/phoenix-svc 6006:6006
 ```
 Then open http://localhost:6006 in your browser to explore the traces.
+
+Run as many commands as you wish and notice the changes in the phoenix UI
+
+**References**
+- [AI-Gateway-docs](https://aigateway.envoyproxy.io/docs/capabilities/observability/tracing)
+
+- [Phoenix-docs](https://arize.com/docs/phoenix)
