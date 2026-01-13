@@ -143,18 +143,6 @@ kubectl wait pods --timeout=2m \
   -n envoy-gateway-system \
   --for=condition=Ready
   ```
-First, set the gateway URL:
-```sh
-export GATEWAY_URL="http://localhost:8080"
-```
-Then set up port forwarding (this will block the terminal):
-```sh
-export ENVOY_SERVICE=$(kubectl get svc -n envoy-gateway-system \
-  --selector=gateway.envoyproxy.io/owning-gateway-namespace=default,gateway.envoyproxy.io/owning-gateway-name=envoy-ai-gateway-basic \
-  -o jsonpath='{.items[0].metadata.name}')
-
-kubectl port-forward -n envoy-gateway-system svc/$ENVOY_SERVICE 8080:80
-```
 **Deploy kivoyo**
 Replace the <YOUR_KIVOYO_API_KEY_HERE> in the last line of this file with a valid API key
 ```sh
@@ -242,16 +230,6 @@ stringData:
   apiKey: <YOUR_KIVOYO_API_KEY_HERE>
 EOF
 ```
-**Test Kivoyo**
-```sh
-curl -i -X POST http://localhost:8080/v1/chat/completions \
-  -H "Content-Type: application/json" \
-  -d '{
-    "model": "gemini-2.5-flash",
-    "messages": [{"role": "user", "content": "Hello Kivoyo"}]
-  }'
-  ```
-  It should return 200 OK with some model response
 **Install Phoenix for LLM observability**
 ```sh
 # Install Phoenix using PostgreSQL storage.
@@ -315,6 +293,30 @@ ENVOY_POD=$(kubectl get pods -n envoy-gateway-system -l gateway.envoyproxy.io/ow
 kubectl get pod -n envoy-gateway-system $ENVOY_POD -o json | jq '.spec.initContainers[] | select(.name=="ai-gateway-extproc") | .env'
 ```
 You should see OTEL_EXPORTER_OTLP_ENDPOINT in the output.
+
+First, set the gateway URL:
+```sh
+export GATEWAY_URL="http://localhost:8080"
+```
+Then set up port forwarding (this will block the terminal):
+```sh
+export ENVOY_SERVICE=$(kubectl get svc -n envoy-gateway-system \
+  --selector=gateway.envoyproxy.io/owning-gateway-namespace=default,gateway.envoyproxy.io/owning-gateway-name=envoy-ai-gateway-basic \
+  -o jsonpath='{.items[0].metadata.name}')
+
+kubectl port-forward -n envoy-gateway-system svc/$ENVOY_SERVICE 8080:80
+```
+**Test Kivoyo**
+```sh
+curl -i -X POST http://localhost:8080/v1/chat/completions \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "gemini-2.5-flash",
+    "messages": [{"role": "user", "content": "Hello Kivoyo"}]
+  }'
+  ```
+  It should return 200 OK with some model response
+
 **Check Phoenix is receiving traces**
 ```sh
 kubectl logs -n envoy-ai-gateway-system deployment/phoenix | grep "POST /v1/traces"
