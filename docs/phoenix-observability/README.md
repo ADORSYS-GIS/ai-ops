@@ -99,8 +99,6 @@ chmod 700 get_helm.sh
 curl -sS https://webinstall.dev/k9s | sh
 ```
 
-### Install Envoy AI Gateway
-
 **Install Envoy Gateway**
 ```bash
 helm install eg oci://docker.io/envoyproxy/gateway-helm \
@@ -144,6 +142,7 @@ kubectl wait pods --timeout=2m \
   --for=condition=Ready
   ```
 **Deploy kivoyo**
+
 Replace the <YOUR_KIVOYO_API_KEY_HERE> in the last line of this file with a valid API key
 ```sh
 cat <<EOF | kubectl apply -f -
@@ -230,6 +229,7 @@ stringData:
   apiKey: <YOUR_KIVOYO_API_KEY_HERE>
 EOF
 ```
+
 **Install Phoenix for LLM observability**
 ```sh
 # Install Phoenix using PostgreSQL storage.
