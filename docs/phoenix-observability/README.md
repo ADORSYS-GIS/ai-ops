@@ -255,12 +255,6 @@ EOF
 ```
 
 **Check if the ext_proc filter is being inserted:**
-
-For k3s
-```sh
-kubectl logs -n envoy-ai-gateway-system deployment/ai-gateway-controller --tail=50 | grep "inserting AI Gateway extproc"
-```
-For k3d 
 ```sh
 kubectl logs -n envoy-ai-gateway-system deployment/ai-gateway-controller \
 | grep "inserting AI Gateway extproc"
