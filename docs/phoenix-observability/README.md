@@ -98,7 +98,39 @@ chmod 700 get_helm.sh
 ```bash
 curl -sS https://webinstall.dev/k9s | sh
 ```
+**Install Phoenix for LLM observability**
+```sh
+# Install Phoenix using PostgreSQL storage.
+helm install phoenix oci://registry-1.docker.io/arizephoenix/phoenix-helm \
+  --namespace envoy-ai-gateway-system \
+  --set auth.enableAuth=false \
+  --set server.port=6006
+  ```
+**Install AI Gateway CRDs**
+```bash
+helm upgrade -i aieg-crd oci://docker.io/envoyproxy/ai-gateway-crds-helm \
+  --version v0.4.0 \
+  --namespace envoy-ai-gateway-system \
+  --create-namespace
+```
 
+  **Configure AI Gateway with OpenTelemetry**
+```sh
+helm install aieg oci://docker.io/envoyproxy/ai-gateway-helm \
+  --version v0.4.0 \
+  --namespace envoy-ai-gateway-system \
+  --set "extProc.extraEnvVars[0].name=OTEL_EXPORTER_OTLP_ENDPOINT" \
+  --set "extProc.extraEnvVars[0].value=http://phoenix-svc.envoy-ai-gateway-system.svc.cluster.local:6006" \
+  --set "extProc.extraEnvVars[1].name=OTEL_METRICS_EXPORTER" \
+  --set "extProc.extraEnvVars[1].value=none"
+# OTEL_SERVICE_NAME defaults to "ai-gateway" if not set
+# OTEL_METRICS_EXPORTER=none because Phoenix only supports traces, not metrics
+```
+Wait for the gateway pod to be ready:
+```sh
+kubectl wait --for=condition=Ready -n envoy-gateway-system \
+  pods -l gateway.envoyproxy.io/owning-gateway-name=envoy-ai-gateway-basic
+```
 **Install Envoy Gateway**
 ```bash
 helm install eg oci://docker.io/envoyproxy/gateway-helm \
@@ -108,23 +140,6 @@ helm install eg oci://docker.io/envoyproxy/gateway-helm \
     -f https://raw.githubusercontent.com/envoyproxy/ai-gateway/v0.4.0/manifests/envoy-gateway-values.yaml
 
 kubectl wait --timeout=2m -n envoy-gateway-system deployment/envoy-gateway --for=condition=Available
-```
-
-**Install AI Gateway CRDs**
-```bash
-helm upgrade -i aieg-crd oci://docker.io/envoyproxy/ai-gateway-crds-helm \
-  --version v0.4.0 \
-  --namespace envoy-ai-gateway-system \
-  --create-namespace
-```
-**Install AI Gateway Resources**
-```bash
-helm upgrade -i aieg oci://docker.io/envoyproxy/ai-gateway-helm \
-  --version v0.4.0 \
-  --namespace envoy-ai-gateway-system \
-  --create-namespace
-
-kubectl wait --timeout=2m -n envoy-ai-gateway-system deployment/ai-gateway-controller --for=condition=Available
 ```
 **Verify Installation**
 ```bash
@@ -230,58 +245,7 @@ stringData:
 EOF
 ```
 
-**Install Phoenix for LLM observability**
-```sh
-# Install Phoenix using PostgreSQL storage.
-helm install phoenix oci://registry-1.docker.io/arizephoenix/phoenix-helm \
-  --namespace envoy-ai-gateway-system \
-  --set auth.enableAuth=false \
-  --set server.port=6006
-  ```
-**Configure AI Gateway with OpenTelemetry**
-```sh
-helm upgrade aieg oci://docker.io/envoyproxy/ai-gateway-helm \
-  --version v0.4.0 \
-  --namespace envoy-ai-gateway-system \
-  --set "extProc.extraEnvVars[0].name=OTEL_EXPORTER_OTLP_ENDPOINT" \
-  --set "extProc.extraEnvVars[0].value=http://phoenix-svc.envoy-ai-gateway-system.svc.cluster.local:6006" \
-  --set "extProc.extraEnvVars[1].name=OTEL_METRICS_EXPORTER" \
-  --set "extProc.extraEnvVars[1].value=none"
-# OTEL_SERVICE_NAME defaults to "ai-gateway" if not set
-# OTEL_METRICS_EXPORTER=none because Phoenix only supports traces, not metrics
-```
-Wait for the gateway pod to be ready:
-```sh
-kubectl wait --for=condition=Ready -n envoy-gateway-system \
-  pods -l gateway.envoyproxy.io/owning-gateway-name=envoy-ai-gateway-basic
-   kubectl wait --timeout=3m -n envoy-ai-gateway-system \
-  deployment/phoenix --for=condition=Available
-  ```
-  **uninstall and reinstall eg with values file**
-  ```sh
-helm uninstall eg -n envoy-gateway-system
-helm install eg oci://docker.io/envoyproxy/gateway-helm \
-    --version v1.6.0 \
-    --namespace envoy-gateway-system \
-    --create-namespace \
-    -f https://raw.githubusercontent.com/envoyproxy/ai-gateway/v0.4.0/manifests/envoy-gateway-values.yaml
-```
-**restart everything**
-```sh
-# 1. Restart AI Gateway controller first
-kubectl rollout restart deployment -n envoy-ai-gateway-system ai-gateway-controller
-
-# 2. Wait for it to be ready
-kubectl rollout status deployment -n envoy-ai-gateway-system ai-gateway-controller
-
-# 3. Delete Envoy pods to force recreation
-kubectl delete pods -n envoy-gateway-system -l gateway.envoyproxy.io/owning-gateway-name=envoy-ai-gateway-basic
-
-# 4. Wait for new pods
-kubectl wait --for=condition=Ready -n envoy-gateway-system \
-    pods -l gateway.envoyproxy.io/owning-gateway-name=envoy-ai-gateway-basic --timeout=60s
-```
-After restarting, check if the ext_proc filter is being inserted:
+check if the ext_proc filter is being inserted:
 ```sh
 kubectl logs -n envoy-ai-gateway-system deployment/ai-gateway-controller --tail=50 | grep "inserting AI Gateway extproc"
 ```
@@ -293,7 +257,7 @@ ENVOY_POD=$(kubectl get pods -n envoy-gateway-system -l gateway.envoyproxy.io/ow
 kubectl get pod -n envoy-gateway-system $ENVOY_POD -o json | jq '.spec.initContainers[] | select(.name=="ai-gateway-extproc") | .env'
 ```
 You should see OTEL_EXPORTER_OTLP_ENDPOINT in the output.
-
+kubectl logs -n envoy-ai-gateway-system deployment/phoenix | grep "POST /v1/traces"
 Set the gateway URL:
 ```sh
 export GATEWAY_URL="http://localhost:8080"
@@ -329,6 +293,6 @@ INFO:     10.42.0.19:44946 - "POST /v1/traces HTTP/1.1" 200 OK
 **Access Phoenix UI**
 Port-forward to access the Phoenix dashboard:
 ```sh
-kubectl port-forward -n envoy-ai-gateway-system svc/phoenix 6006:6006
+kubectl port-forward -n envoy-ai-gateway-system svc/phoenix-svc 6006:6006
 ```
 Then open http://localhost:6006 in your browser to explore the traces.
