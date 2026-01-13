@@ -26,7 +26,7 @@ multipass shell aiops
 ### Update and Upgrade system
 ```sh
 sudo apt update 
-sudo apt ugrade
+sudo apt upgrade
 ```
 #### Install K3s
 ```bash
