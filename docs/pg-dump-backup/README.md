@@ -26,17 +26,19 @@ chmod +x pg_dump_tool.sh
 ```bash
 echo "localhost:5432:testdb:testuser:testpass" > $HOME/.pgpass && chmod 600 $HOME/.pgpass
 ```
+
+
 ### Step 1: Start PostgreSQL Container
 
 ```bash
-docker pull postgres:15-alpine
+docker pull postgres:18-alpine
 
 docker run --name test-postgres \
   -e POSTGRES_USER=testuser \
   -e POSTGRES_PASSWORD=testpass \
   -e POSTGRES_DB=testdb \
   -p 5432:5432 \
-  -d postgres:15-alpine
+  -d postgres:18-alpine
 
 sleep 10
 ```
@@ -105,6 +107,11 @@ EOF
 ```
 
 ```bash
+# Mount the dump fil into the docker container
+docker cp test-backups/pg_backup_YOUR_DUMP_FILE.dump test-postgres:/backup.dump
+```
+
+```bash
 # Restore the testdb
 docker exec -i test-postgres pg_restore -U testuser -d testdb /backup.dump
 ```
@@ -162,11 +169,6 @@ export S3_PREFIX="database-backups/"
 ./pg_dump_tool.sh
 ```
 
-## 📋 Prerequisites
-
-*   PostgreSQL Client Tools: `pg_dump`, `pg_restore`, `psql`
-*   AWS CLI (for S3 storage option)
-*   Bash 4.0+
 
 ## ⚙️ Configuration
 
@@ -199,7 +201,7 @@ If you encounter version mismatch errors:
 sudo apt-get install postgresql-client-15
 
 # Or set the version explicitly:
-export PG_VERSION=15
+export PG_VERSION=18
 ./pg_dump_tool.sh
 ```
 
@@ -214,3 +216,7 @@ psql "$SOURCE_DATABASE_URL" -c "SELECT 1;"
 ```
 
 The Docker test example above provides a complete, self-contained environment to test all script functionality before using it in production.
+
+For mismatch version issue :
+
+Make sure the `pg_restore --version` that restore the dump file is *_higher_* than the `pg_dump --version` that create that dump file/

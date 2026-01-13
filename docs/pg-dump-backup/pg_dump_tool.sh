@@ -8,7 +8,7 @@ readonly SCRIPT_NAME="$(basename "$0")"
 readonly SCRIPT_VERSION="1.0.0"
 readonly TIMESTAMP="$(date +'%Y%m%d_%H%M%S')"
 readonly DEFAULT_BACKUP_PREFIX="pg_backup"
-readonly DEFAULT_POSTGRES_VERSION="15"
+readonly DEFAULT_POSTGRES_VERSION="18"
 
 #######################################
 # Color codes for output
