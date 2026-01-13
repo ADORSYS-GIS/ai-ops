@@ -130,7 +130,7 @@ kubectl wait --timeout=2m -n envoy-ai-gateway-system deployment/ai-gateway-contr
 ```bash
 kubectl get pods -n envoy-ai-gateway-system
 ```
-Let's deploy a basic AI Gateway setup that includes a test backend:
+Let's deploy a basic AI Gateway setup:
 ```sh
 kubectl apply -f https://raw.githubusercontent.com/envoyproxy/ai-gateway/main/examples/basic/basic.yaml
 ```
@@ -143,7 +143,7 @@ kubectl wait pods --timeout=2m \
   ```
 **Deploy kivoyo**
 
-Replace the <YOUR_KIVOYO_API_KEY_HERE> in the last line of this file with a valid API key
+Replace the <YOUR_KIVOYO_LITELLM_API_KEY_HERE> in the last line of this file with a valid API key
 ```sh
 cat <<EOF | kubectl apply -f -
 apiVersion: aigateway.envoyproxy.io/v1alpha1
@@ -294,7 +294,7 @@ kubectl get pod -n envoy-gateway-system $ENVOY_POD -o json | jq '.spec.initConta
 ```
 You should see OTEL_EXPORTER_OTLP_ENDPOINT in the output.
 
-First, set the gateway URL:
+Set the gateway URL:
 ```sh
 export GATEWAY_URL="http://localhost:8080"
 ```
