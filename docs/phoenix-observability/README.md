@@ -103,6 +103,7 @@ curl -sS https://webinstall.dev/k9s | sh
 # Install Phoenix using PostgreSQL storage.
 helm install phoenix oci://registry-1.docker.io/arizephoenix/phoenix-helm \
   --namespace envoy-ai-gateway-system \
+  --create-namespace \
   --set auth.enableAuth=false \
   --set server.port=6006
   ```
@@ -126,11 +127,7 @@ helm install aieg oci://docker.io/envoyproxy/ai-gateway-helm \
 # OTEL_SERVICE_NAME defaults to "ai-gateway" if not set
 # OTEL_METRICS_EXPORTER=none because Phoenix only supports traces, not metrics
 ```
-Wait for the gateway pod to be ready:
-```sh
-kubectl wait --for=condition=Ready -n envoy-gateway-system \
-  pods -l gateway.envoyproxy.io/owning-gateway-name=envoy-ai-gateway-basic
-```
+
 **Install Envoy Gateway**
 ```bash
 helm install eg oci://docker.io/envoyproxy/gateway-helm \
@@ -144,6 +141,13 @@ kubectl wait --timeout=2m -n envoy-gateway-system deployment/envoy-gateway --for
 **Verify Installation**
 ```bash
 kubectl get pods -n envoy-ai-gateway-system
+```
+You should see all pods running
+```text
+NAME                                     READY   STATUS    RESTARTS   AGE
+ai-gateway-controller-6f4cd954d9-h7vdv   1/1     Running   0          2m
+phoenix-8f546998b-ztwzq                  1/1     Running   0          2m28s
+phoenix-postgresql-0                     1/1     Running   0          2m28s
 ```
 Let's deploy a basic AI Gateway setup:
 ```sh
@@ -257,7 +261,7 @@ ENVOY_POD=$(kubectl get pods -n envoy-gateway-system -l gateway.envoyproxy.io/ow
 kubectl get pod -n envoy-gateway-system $ENVOY_POD -o json | jq '.spec.initContainers[] | select(.name=="ai-gateway-extproc") | .env'
 ```
 You should see OTEL_EXPORTER_OTLP_ENDPOINT in the output.
-kubectl logs -n envoy-ai-gateway-system deployment/phoenix | grep "POST /v1/traces"
+
 Set the gateway URL:
 ```sh
 export GATEWAY_URL="http://localhost:8080"
