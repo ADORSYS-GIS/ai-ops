@@ -2,7 +2,7 @@
 # AI Gateway Observability with Phoenix and Kivoyo Backend
 ## Overview
 
-This guide walks through setting up observability for Envoy AI Gateway using Phoenix, specifically for monitoring traffic to your Kivoyo OpenAI-compatible backend. By the end of this documentation, you'll have:
+This guide walks through setting up [observability](https://docs.honeycomb.io/get-started/basics/observability/introduction/) for Envoy AI Gateway using Phoenix for tracing, specifically for monitoring traffic to your Kivoyo OpenAI-compatible backend. By the end of this documentation, you'll have:
 
     ✅ Phoenix installed and running alongside your Kivoyo setup
 
@@ -162,7 +162,7 @@ kubectl wait pods --timeout=2m \
   ```
 **Deploy kivoyo**
 
-Replace the <YOUR_KIVOYO_LITELLM_API_KEY_HERE> in the last line of this file with a valid API key
+Replace the <YOUR_KIVOYO_LITELLM_API_KEY_HERE> in the last line of this file with a valid litellm API key from kivoyo
 ```sh
 cat <<EOF | kubectl apply -f -
 apiVersion: aigateway.envoyproxy.io/v1alpha1
@@ -249,13 +249,13 @@ stringData:
 EOF
 ```
 
-check if the ext_proc filter is being inserted:
+**Check if the ext_proc filter is being inserted:**
 ```sh
 kubectl logs -n envoy-ai-gateway-system deployment/ai-gateway-controller --tail=50 | grep "inserting AI Gateway extproc"
 ```
 If you see output like inserting AI Gateway extproc filter into listener, the fix worked.
 
-Then verify OTEL env vars are in the sidecar:
+**Then verify OTEL env vars are in the sidecar:**
 ```sh
 ENVOY_POD=$(kubectl get pods -n envoy-gateway-system -l gateway.envoyproxy.io/owning-gateway-name=envoy-ai-gateway-basic -o jsonpath='{.items[0].metadata.name}')
 kubectl get pod -n envoy-gateway-system $ENVOY_POD -o json | jq '.spec.initContainers[] | select(.name=="ai-gateway-extproc") | .env'
@@ -301,9 +301,11 @@ kubectl port-forward -n envoy-ai-gateway-system svc/phoenix-svc 6006:6006
 ```
 Then open http://localhost:6006 in your browser to explore the traces.
 
-Run as many commands as you wish and notice the changes in the phoenix UI
+Run as many requests as you wish and notice the changes in the phoenix UI
 
 **References**
 - [AI-Gateway-docs](https://aigateway.envoyproxy.io/docs/capabilities/observability/tracing)
 
 - [Phoenix-docs](https://arize.com/docs/phoenix)
+
+- [what is observability? - honeycomb](https://docs.honeycomb.io/get-started/basics/observability/introduction/)
