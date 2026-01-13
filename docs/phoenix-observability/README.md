@@ -255,15 +255,31 @@ EOF
 ```
 
 **Check if the ext_proc filter is being inserted:**
+For k3s
 ```sh
 kubectl logs -n envoy-ai-gateway-system deployment/ai-gateway-controller --tail=50 | grep "inserting AI Gateway extproc"
+```
+For k3d 
+```sh
+kubectl logs -n envoy-ai-gateway-system deployment/ai-gateway-controller \
+| grep "inserting AI Gateway extproc"
 ```
 If you see output like inserting AI Gateway extproc filter into listener, the fix worked.
 
 **Then verify OTEL env vars are in the sidecar:**
+For k3s
 ```sh
 ENVOY_POD=$(kubectl get pods -n envoy-gateway-system -l gateway.envoyproxy.io/owning-gateway-name=envoy-ai-gateway-basic -o jsonpath='{.items[0].metadata.name}')
 kubectl get pod -n envoy-gateway-system $ENVOY_POD -o json | jq '.spec.initContainers[] | select(.name=="ai-gateway-extproc") | .env'
+```
+For k3d
+```sh
+ENVOY_POD=$(kubectl get pods -n envoy-gateway-system \
+  -l gateway.envoyproxy.io/owning-gateway-name=envoy-ai-gateway-basic \
+  -o jsonpath='{.items[0].metadata.name}')
+
+kubectl get pod -n envoy-gateway-system "$ENVOY_POD" -o json \
+| jq '.spec.containers[] | select(.name=="ai-gateway-extproc") | .env'
 ```
 You should see OTEL_EXPORTER_OTLP_ENDPOINT in the output.
 
