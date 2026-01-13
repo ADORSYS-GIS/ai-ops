@@ -64,7 +64,7 @@ k3d cluster create aiops \
 
 # Set kubeconfig
 export KUBECONFIG="$(k3d kubeconfig write aiops)"
-echo "export KUBECONFIG=$(k3d kubeconfig write aiops)" >> ~/.bashrc
+echo "export KUBECONFIG=$(k3d kubeconfig write aiops)" >> "$HOME/.${0##*/}rc"
 
 # Verify cluster
 kubectl cluster-info
@@ -165,7 +165,7 @@ kubectl wait pods --timeout=2m \
   -n envoy-gateway-system \
   --for=condition=Ready
   ```
-**Deploy kivoyo**
+**Configure connection to kivoyo**
 
 Replace the <YOUR_KIVOYO_LITELLM_API_KEY_HERE> in the last line of this file with a valid litellm API key from kivoyo
 ```sh
