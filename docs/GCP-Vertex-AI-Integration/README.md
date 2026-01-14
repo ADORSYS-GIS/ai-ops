@@ -1,15 +1,16 @@
 # Envoy AI Gateway with GCP Vertex AI Integration
 
-Complete guide for integrating Google Cloud Vertex AI as a provider in the Envoy AI Gateway with intelligent fallback routing to self-hosted models.
+Complete guide for integrating Google Cloud Vertex AI as a provider in the Envoy AI Gateway with intelligent fallback routing between multiple GCP Vertex AI models.
 
 ## Overview
 
 This integration enables:
-- **Primary Provider**: Self-hosted models via KServe (Qwen 2.5:0.5b)
+- **Primary Provider**: GCP Vertex AI (Gemini 2.5 Pro - intentionally broken for demo)
 - **Fallback Provider**: GCP Vertex AI (Gemini 2.5 Flash)
 - **Automatic Failover**: Seamless switching between providers on errors
 - **Streaming Support**: Server-sent events for real-time responses
 - **OpenAI-Compatible API**: Standard interface for all providers
+
 
 
 ## Prerequisites
@@ -25,22 +26,168 @@ This integration enables:
 - GCP project with Vertex AI API enabled
 - Service account with appropriate permissions
 
-##  Environment Setup
+## Part 1: Environment Setup
 
-For  Environment setup use the [Model Virtualization & Provider Fallback Guide ](../model-virtualization-provider-fallback.md). Follow the Environment Setup entirely.
 
-##  GCP Service Account Configuration
+You can choose between two approaches for your Kubernetes cluster:
+
+### Option A: Using Multipass VM
+
+#### Create VM
+```bash
+multipass launch --name aiops --cpus 2 --mem 4G --disk 20G
+multipass shell aiops
+```
+### Update and Upgrade system
+```sh
+sudo apt update 
+sudo apt upgrade
+```
+#### Install K3s
+```bash
+curl -sfL https://get.k3s.io | sh -
+mkdir ~/.kube
+sudo cp -r /etc/rancher/k3s/k3s.yaml ~/.kube/config 
+sudo chmod 644 ~/.kube/config
+export KUBECONFIG=~/.kube/config
+echo 'export KUBECONFIG="$HOME/.kube/config"' >> "$HOME/.${0##*/}rc"
+
+```
+
+### Option B: Using k3d (Docker-based)
+
+**Prerequisites**: Ensure Docker is installed and running on your system.
+
+#### Install k3d
+```bash
+# Linux/macOS
+curl -s https://raw.githubusercontent.com/k3d-io/k3d/main/install.sh | bash
+
+# Or using wget
+wget -q -O - https://raw.githubusercontent.com/k3d-io/k3d/main/install.sh | bash
+
+# Verify installation
+k3d version
+```
+
+#### Create k3d Cluster
+```bash
+# Create cluster with appropriate resources
+k3d cluster create aiops \
+  --image rancher/k3s:v1.32.0-k3s1 \
+  --wait
+
+# Set kubeconfig
+export KUBECONFIG="$(k3d kubeconfig write aiops)"
+echo "export KUBECONFIG=$(k3d kubeconfig write aiops)" >> "$HOME/.${0##*/}rc"
+
+# Verify cluster
+kubectl cluster-info
+kubectl get nodes
+
+```
+
+
+#### k3d Cluster Management Commands
+```bash
+# Stop cluster
+k3d cluster stop aiops
+
+# Start cluster
+k3d cluster start aiops
+
+# Delete cluster
+k3d cluster delete aiops
+
+# List clusters
+k3d cluster list
+```
+
+---
+
+### Common Setup (Both Options)
+
+### Install Helm
+```bash
+curl -fsSL -o get_helm.sh https://raw.githubusercontent.com/helm/helm/master/scripts/get-helm-3
+chmod 700 get_helm.sh
+./get_helm.sh
+```
+
+### Install K9s (Optional)
+```bash
+curl -sS https://webinstall.dev/k9s | sh
+```
+**Install Phoenix for LLM observability**
+```sh
+# Install Phoenix using PostgreSQL storage.
+helm install phoenix oci://registry-1.docker.io/arizephoenix/phoenix-helm \
+  --namespace envoy-ai-gateway-system \
+  --create-namespace \
+  --set auth.enableAuth=false \
+  --set server.port=6006
+  ```
+**Install AI Gateway CRDs**
+```bash
+helm upgrade -i aieg-crd oci://docker.io/envoyproxy/ai-gateway-crds-helm \
+  --version v0.0.0-latest \
+  --namespace envoy-ai-gateway-system \
+  --create-namespace
+```
+**Install AI Gateway Resources**
+```bash
+helm upgrade -i aieg oci://docker.io/envoyproxy/ai-gateway-helm \
+  --version v0.0.0-latest \
+  --namespace envoy-ai-gateway-system \
+  --create-namespace
+
+kubectl wait --timeout=2m -n envoy-ai-gateway-system deployment/ai-gateway-controller --for=condition=Available
+```
+
+**Install Envoy Gateway**
+```bash
+helm install eg oci://docker.io/envoyproxy/gateway-helm \
+    --version v1.6.0 \
+    --namespace envoy-gateway-system \
+    --create-namespace \
+    -f https://raw.githubusercontent.com/envoyproxy/ai-gateway/v0.4.0/manifests/envoy-gateway-values.yaml
+
+kubectl wait --timeout=2m -n envoy-gateway-system deployment/envoy-gateway --for=condition=Available
+```
+**Verify Installation**
+```bash
+kubectl get pods -n envoy-ai-gateway-system
+```
+You should see all pods running
+```text
+NAME                                     READY   STATUS    RESTARTS   AGE
+ai-gateway-controller-6f4cd954d9-h7vdv   1/1     Running   0          2m
+phoenix-8f546998b-ztwzq                  1/1     Running   0          2m28s
+phoenix-postgresql-0                     1/1     Running   0          2m28s
+```
+
+
+## Part 2: GCP Service Account Configuration
 
 ### 2.1 Install and Configure gcloud CLI
 
 Follow the [official installation guide](https://cloud.google.com/sdk/docs/install-sdk) for your operating system.
+
+**Important:** Before proceeding, define your GCP Project ID   as an environment variable. This ensures consistency and avoids hardcoding values throughout the setup.
+```bash
+# Set your GCP Project ID (replace with your actual project ID)
+export PROJECT_ID="your-gcp-project-id" # Replace it with yout own Project ID 
+
+# Verify the variable is set
+echo $PROJECT_ID
+```
 
 ```bash
 # Initialize gcloud
 gcloud init
 
 # Set your project
-gcloud config set project YOUR_PROJECT_ID
+gcloud config set project $PROJECT_ID
 ```
 
 ### 2.2 Enable Required APIs
@@ -68,26 +215,27 @@ gcloud iam service-accounts create envoy-ai-gateway \
 
 # Grant necessary permissions
 gcloud projects add-iam-policy-binding YOUR_PROJECT_ID \
-  --member="serviceAccount:envoy-ai-gateway@YOUR_PROJECT_ID.iam.gserviceaccount.com" \
+  --member="serviceAccount:envoy-ai-gateway@$PROJECT_ID.iam.gserviceaccount.com" \
   --role="roles/aiplatform.user"
 
 gcloud projects add-iam-policy-binding YOUR_PROJECT_ID \
-  --member="serviceAccount:envoy-ai-gateway@YOUR_PROJECT_ID.iam.gserviceaccount.com" \
+  --member="serviceAccount:envoy-ai-gateway@$PROJECT_ID.iam.gserviceaccount.com" \
   --role="roles/serviceusage.serviceUsageConsumer"
 
 # Create and download service account key
 gcloud iam service-accounts keys create ./service-account-key.json \
-  --iam-account=envoy-ai-gateway@YOUR_PROJECT_ID.iam.gserviceaccount.com
+  --iam-account=envoy-ai-gateway@$PROJECT_ID.iam.gserviceaccount.com
 
 # Verify the key file
 cat ./service-account-key.json | jq .
 ```
 
 ### 2.4 Test Service Account Authentication
+**Don't Forget to Replace the placeholder for the service account key file with the right name and path same while creating the secret in 3.1 of Part3.**
 
 ```bash
 # Activate the service account
-gcloud auth activate-service-account --key-file=./service-account-key.json
+gcloud auth activate-service-account --key-file=./<service-account-file.json>
 
 # Get an access token
 ACCESS_TOKEN=$(gcloud auth print-access-token)
@@ -96,7 +244,7 @@ ACCESS_TOKEN=$(gcloud auth print-access-token)
 curl -X POST \
   -H "Authorization: Bearer $ACCESS_TOKEN" \
   -H "Content-Type: application/json" \
-  "https://us-central1-aiplatform.googleapis.com/v1/projects/YOUR_PROJECT_ID/locations/us-central1/publishers/google/models/gemini-2.0-flash-exp:generateContent" \
+  "https://us-central1-aiplatform.googleapis.com/v1/projects/$PROJECT_ID/locations/us-central1/publishers/google/models/gemini-2.0-flash-exp:generateContent" \
   -d '{
     "contents": [{
       "role": "user",
@@ -107,38 +255,14 @@ curl -X POST \
 
 If you receive a valid JSON response with content, your service account is configured correctly.
 
-##  Deploy Self-Hosted Model with KServe To Use For Fallback Logic 
+## Part 3: Configure GCP Vertex AI Backend
 
-**Apply Inference Service**
-```bash
-kubectl apply -f model.yaml
-```
-**Wait for Pod to be Successfully Created**
-```bash
-kubectl wait --for=condition=Ready inferenceservice/qwen-secondary --timeout=600s
-```
-
-**Quick verification:**
-```bash
-# Check if KServe model is deployed
-kubectl get inferenceservice -n default
-
-```
-**Expected Output**
-```bash
-qwen-secondary   http://qwen-secondary.default.svc.cluster.local   True           100                              qwen-secondary-predictor-00001   4h9m
-
-```
-
-
-## Part 4: Configure GCP Vertex AI Backend
-
-### 4.1 Create Kubernetes Secret
+### 3.1 Create Kubernetes Secret
 
 ```bash
 # Create secret from your service account key file
 kubectl create secret generic envoy-ai-gateway-basic-gcp-service-account-key-file \
-  --from-file=service_account.json=./<service-account-key-file> \
+  --from-file=service_account.json=./<service-account-file.json> \
   -n default
 
 # Verify secret creation
@@ -149,7 +273,7 @@ kubectl get secret envoy-ai-gateway-basic-gcp-service-account-key-file -n defaul
   -o jsonpath='{.data.service_account\.json}' | base64 -d | jq .
 ```
 
-### 4.2 Apply Gateway Configuration
+### 3.2 Apply Gateway Configuration
 
 Create and apply the base gateway configuration:
 
@@ -157,22 +281,11 @@ Create and apply the base gateway configuration:
 # Apply basic gateway setup 
 kubectl apply -f basic.yaml
 
-
 # Verify gateway pods are running
 kubectl get pods -n envoy-gateway-system -l gateway.envoyproxy.io/owning-gateway-name=envoy-ai-gateway-basic
 ```
 
-### 4.3 Deploy KServe Backend Configuration
-
-```bash
-# Apply KServe model backend (kserve-model.yaml)
-kubectl apply -f kserve-backend.yaml
-
-# Verify AIServiceBackend
-kubectl get aiservicebackend envoy-ai-gateway-qwen-secondary -n default
-```
-
-### 4.4 Deploy GCP Vertex AI Configuration
+### 3.3 Deploy GCP Vertex AI Configuration
 
 Update `gcp_vertex.yaml` with your GCP project details:
 
@@ -181,7 +294,7 @@ Update `gcp_vertex.yaml` with your GCP project details:
 spec:
   gcpCredentials:
     projectName: YOUR_PROJECT_ID  # Replace with your GCP project ID
-    region: us-central1           # Replace with your preferred region
+    region: YOUR_REGION         # Replace with your preferred region
 ```
 
 Apply the configuration:
@@ -190,11 +303,26 @@ Apply the configuration:
 # Apply GCP Vertex AI backend configuration
 kubectl apply -f gcp_vertex.yaml
 
+# Apply GCP Vertex AI broken backend Configurtion
+kubectl apply -f gcp_vertex_broken.yaml 
+
 # Verify all resources are created
 kubectl get aiservicebackend,backendsecuritypolicy,backend,aigatewayroute -n default
 ```
 
-### 4.5 Verify Configuration Status
+### 3.4 Apply Backend TLS Policy
+
+The `BackendTLSPolicy` is required to establish secure HTTPS connections to GCP's API endpoints:
+
+```bash
+# Apply TLS policies for GCP backends
+kubectl apply -f Backend-tls-policy.yaml
+
+# Verify TLS policies are applied
+kubectl get backendtlspolicy -n default
+```
+
+### 3.5 Verify Configuration Status
 
 ```bash
 # Check AIServiceBackend status
@@ -211,51 +339,24 @@ POD_NAME=$(kubectl get pods -n envoy-gateway-system -l gateway.envoyproxy.io/own
 kubectl logs -n envoy-gateway-system $POD_NAME --tail=50
 ```
 
-## Part 5: Testing the Integration
+## Part 4: Testing the Integration
 
-### 5.1 Test Primary Provider (KServe Model)
+### 4.1 Configure Port Forwarding
 
-**Configure Port Forwarding**
 ```bash
-# In another terminal
+# Get the Envoy service name
 export ENVOY_SERVICE=$(kubectl get svc -n envoy-gateway-system \
   --selector=gateway.envoyproxy.io/owning-gateway-namespace=default,gateway.envoyproxy.io/owning-gateway-name=envoy-ai-gateway-basic \
   -o jsonpath='{.items[0].metadata.name}')
 
+# Port forward to access the gateway
 kubectl port-forward -n envoy-gateway-system svc/$ENVOY_SERVICE 8080:80
-
 ```
-
+**Test the working GCP Model First**
 
 ```bash
-# Test the KServe model directly
+# In another terminal, set the gateway URL
 export GATEWAY_URL="http://localhost:8080"
-
-curl -H "Content-Type: application/json" \
-  -d '{
-    "model": "vertex-virtual-model",
-    "messages": [
-      {"role": "user", "content": "What is artificial intelligence?"}
-    ]
-  }' \
-  $GATEWAY_URL/v1/chat/completions
-```
-
-Expected behavior: The request should be routed to the KServe model (Priority 0: qwen2.5:0.5b).
-
-### 5.2 Test Fallback Mechanism And The GCP Integration
-
-To test the fallback to GCP Vertex AI, simulate a failure in the primary provider:
-
-```bash
-# delete inference service 
-kubectl delete isvc qwen-secondary
-sleep 30
-
-# Apply Backend-Tls-Policy
-kubectl apply -f Backend-tls-policy.yaml
-
-# Test again - should fallback to GCP Vertex AI
 curl -H "Content-Type: application/json" \
   -d '{
     "model": "vertex-virtual-model",
@@ -266,28 +367,78 @@ curl -H "Content-Type: application/json" \
   $GATEWAY_URL/v1/chat/completions
 
 ```
-```bash
-for i in 1 2 3 4 5; do                    
-  curl -H "Content-Type: application/json" \
-    -d '{
-      "model": "vertex-virtual-model",
-      "messages": [
-        {"role": "user", "content": "Explain AI in one sentence."}
-      ]
-    }' \
-    $GATEWAY_URL/v1/chat/completions
-done
 
+**Note:** If you are working with Multipass, use:
+```bash
+kubectl port-forward --address 0.0.0.0 -n envoy-gateway-system svc/$ENVOY_SERVICE 8080:80
 ```
-**Check Logs**
+
+Then access the gateway using your VM's IP address.
+
+### 4.2 Test Fallback Mechanism
+
+The configuration includes a deliberately broken primary backend (`envoy-ai-gateway-gcp-broken`) that points to a non-existent hostname. This demonstrates the automatic fallback to the working backend.
+
+**Switch  to broken backend in gcp_vertex.yaml file for the primary model**
+**Expected Configuration**
+```bash
+backendRefs:
+        - name: envoy-ai-gateway-gcp-broken # Replace here with broken backend "envoy-ai-gateway-gcp-broken"
+          modelNameOverride: gemini-2.5-pro
+          priority: 0
+        - name: envoy-ai-gateway-basic-gcp
+          modelNameOverride: gemini-2.5-flash
+          priority: 1
+```
+**Test Fallback**
+```bash
+kubectl apply -f gcp_vertex.yaml
+# Test the virtual model - should fallback to working backend
+curl -H "Content-Type: application/json" \
+  -d '{
+    "model": "vertex-virtual-model",
+    "messages": [
+      {"role": "user", "content": "What is cloud computing?"}
+    ]
+  }' \
+  $GATEWAY_URL/v1/chat/completions
+```
+
+**Expected Behavior:**
+1. First attempt: Routes to `envoy-ai-gateway-gcp-broken` (Priority 0) with `gemini-2.5-pro`
+2. Connection fails due to non-existent hostname
+3. Gateway automatically retries with `envoy-ai-gateway-basic-gcp` (Priority 1) with `gemini-2.5-flash`
+4. Request succeeds and returns response
+
+
+
+
+### 4.3 Monitor Gateway Logs
+
+Watch the logs to see the retry and fallback mechanism in action:
+
 ```bash
 # View gateway logs
 POD_NAME=$(kubectl get pods -n envoy-gateway-system -l gateway.envoyproxy.io/owning-gateway-name=envoy-ai-gateway-basic -o jsonpath='{.items[0].metadata.name}')
-kubectl logs -n envoy-gateway-system $POD_NAME --tail=50
+
+# Follow logs in real-time
+kubectl logs -n envoy-gateway-system $POD_NAME -f
+
+# In another terminal, make requests and observe the logs
 ```
 
+You should see log entries showing:
+- Initial connection attempt to the broken backend
+- Connection failure
+- Retry attempt to the fallback backend
+- Successful response
 
-### 5.3 Test Streaming Responses
+**Example of Output**
+```bash
+{":authority":"us-central1-aiplatform.googleapis.com","bytes_received":166,"bytes_sent":7248,"connection_termination_details":null,"downstream_local_address":"127.0.0.1:10080","downstream_remote_address":"127.0.0.1:38676","duration":24939,"method":"POST","protocol":"HTTP/1.1","requested_server_name":null,"response_code":200,"response_code_details":"via_upstream","response_flags":"-","route_name":"httproute/default/envoy-ai-gateway-fallback/rule/0/match/0/*","start_time":"2026-01-14T09:10:53.669Z","upstream_cluster":"httproute/default/envoy-ai-gateway-fallback/rule/0","upstream_host":"142.250.179.74:443","upstream_local_address":"10.42.0.13:32968","upstream_transport_failure_reason":null,"user-agent":"curl/8.5.0","x-envoy-origin-path":"/v1/projects/kivoyo/locations/us-central1/publishers/google/models/gemini-2.5-pro:streamGenerateContent?alt=sse","x-envoy-upstream-service-time":null,"x-forwarded-for":"10.42.0.13","x-request-id":"1997f95e-a64d-48b5-b0b1-6e8b08a5c1e5"}
+```
+
+### 4.5 Test Streaming Responses
 
 ```bash
 # Test with streaming enabled
@@ -303,96 +454,67 @@ curl -N -H "Content-Type: application/json" \
 ```
 
 
+## Part 5 : Monitoring and Observability With Phoenx
 
+**Verify OTEL env vars are in the sidecar:**
 
-## Troubleshooting
-
-### Error: Authentication Failed
-
-**Symptoms:**
-- 401 Unauthorized errors
-- "Invalid credentials" messages
-
-**Solution:**
-```bash
-# Verify service account has correct permissions
-gcloud projects get-iam-policy YOUR_PROJECT_ID \
-  --flatten="bindings[].members" \
-  --filter="bindings.members:serviceAccount:envoy-ai-gateway@YOUR_PROJECT_ID.iam.gserviceaccount.com"
-
-# Check secret is correctly formatted
-kubectl get secret envoy-ai-gateway-basic-gcp-service-account-key-file -n default \
-  -o jsonpath='{.data.service_account\.json}' | base64 -d | jq 'has("project_id", "private_key", "client_email")'
-
-# Recreate secret if needed
-kubectl delete secret envoy-ai-gateway-basic-gcp-service-account-key-file -n default
-kubectl create secret generic envoy-ai-gateway-basic-gcp-service-account-key-file \
-  --from-file=service_account.json=./service-account-key.json \
-  -n default
+For k3s
+```sh
+ENVOY_POD=$(kubectl get pods -n envoy-gateway-system -l gateway.envoyproxy.io/owning-gateway-name=envoy-ai-gateway-basic -o jsonpath='{.items[0].metadata.name}')
+kubectl get pod -n envoy-gateway-system $ENVOY_POD -o json | jq '.spec.initContainers[] | select(.name=="ai-gateway-extproc") | .env'
 ```
+For k3d
+```sh
+ENVOY_POD=$(kubectl get pods -n envoy-gateway-system \
+  -l gateway.envoyproxy.io/owning-gateway-name=envoy-ai-gateway-basic \
+  -o jsonpath='{.items[0].metadata.name}')
 
-### Error: Model Not Found
-
-**Symptoms:**
-- 404 Not Found errors
-- Model name errors
-
-**Solution:**
-```bash
-# List available models in your region
-gcloud ai models list --region=us-central1 --project=YOUR_PROJECT_ID
-
-# Update modelNameOverride in gcp_vertex.yaml to match available models
-# Common models: gemini-2.0-flash-exp, gemini-1.5-pro, gemini-1.5-flash
+kubectl get pod -n envoy-gateway-system "$ENVOY_POD" -o json \
+| jq '.spec.containers[] | select(.name=="ai-gateway-extproc") | .env'
 ```
+You should see OTEL_EXPORTER_OTLP_ENDPOINT in the output.
 
+Set the gateway URL:
+```sh
+export GATEWAY_URL="http://localhost:8080"
 
-## Monitoring and Observability
-
-### View Request Logs
-
-```bash
-# Real-time log streaming
-POD_NAME=$(kubectl get pods -n envoy-gateway-system -l gateway.envoyproxy.io/owning-gateway-name=envoy-ai-gateway-basic -o jsonpath='{.items[0].metadata.name}')
-kubectl logs -n envoy-gateway-system $POD_NAME -f
-
-# Filter for errors
-kubectl logs -n envoy-gateway-system $POD_NAME | grep -i error
-
-# Filter for specific backend
-kubectl logs -n envoy-gateway-system $POD_NAME | grep -i gcp
+# Send 5 test requests
+for i in 1 2 3 4 5; do
+  echo "Request $i:"
+  curl -H "Content-Type: application/json" \
+    -d '{
+      "model": "vertex-virtual-model",
+      "messages": [
+        {"role": "user", "content": "Explain AI in one sentence."}
+      ]
+    }' \
+    $GATEWAY_URL/v1/chat/completions
+  echo -e "\n---\n"
+done
 ```
+  It should return 200 OK with some model response
 
-
-
-### Metrics Collection
-
-**Install Promtheus**
-```bash
-kubectl apply -f https://raw.githubusercontent.com/envoyproxy/ai-gateway/main/examples/monitoring/monitoring.yaml
+**Check Phoenix is receiving traces**
+```sh
+kubectl logs -n envoy-ai-gateway-system deployment/phoenix | grep "POST /v1/traces"
 ```
-**Let's wait for a while until the Prometheus is up and running.**
-```bash
-kubectl wait --for=condition=ready pod -l app=prometheus -n monitoring
+You should get 
+```text
+kubectl logs -n envoy-ai-gateway-system deployment/phoenix | grep "POST /v1/traces"
+INFO:     10.42.0.27:44010 - "POST /v1/traces HTTP/1.1" 200 OK
+INFO:     10.42.0.27:54288 - "POST /v1/traces HTTP/1.1" 200 OK
+INFO:     10.42.0.27:45630 - "POST /v1/traces HTTP/1.1" 200 OK
+INFO:     10.42.0.27:37096 - "POST /v1/traces HTTP/1.1" 200 OK
+INFO:     10.42.0.27:33760 - "POST /v1/traces HTTP/1.1" 200 OK
 ```
-**To access the Prometheus dashboard, you need to port-forward the Prometheus service to your local machine like this:**
-```bash
-kubectl port-forward -n monitoring svc/prometheus 9090:9090
+**Access Phoenix UI**
+Port-forward to access the Phoenix dashboard:
+```sh
+kubectl port-forward -n envoy-ai-gateway-system svc/phoenix-svc 6006:6006
 ```
-**Note: if you are working in multipass then port forward this way and then use the vm's ip to access the dasboard on your host machine**
-```bash
-kubectl port-forward --address 0.0.0.0 -n monitoring svc/prometheus 9090:9090
-```
-**Make Requests To Vertex AI model Then Navigate the dashboard or make a curl request instead like:**
-```bash
-# Get total number of AI tokens processed by your Envoy AI Gateway
-curl http://localhost:9090/api/v1/query --data-urlencode \
-  'query=sum(gen_ai_client_token_usage_sum{gateway_envoyproxy_io_owning_gateway_name = "envoy-ai-gateway-basic"}) by (gen_ai_request_model, gen_ai_token_type)' \
-  | jq '.data.result[]'
-```
+Then open http://localhost:6006 in your browser to explore the traces.
 
-
-
+Run as many requests as you wish and notice the changes in the phoenix UI
 
 ## Cleanup
 
@@ -417,9 +539,8 @@ helm uninstall eg -n envoy-gateway-system
 kubectl delete namespace envoy-gateway-system
 
 # Delete k3d cluster
-k3d cluster delete ai-gateway
+k3d cluster delete <cluster-name>
 ```
-
 
 
 
