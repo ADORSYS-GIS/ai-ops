@@ -4,17 +4,33 @@ A production-ready shell script for PostgreSQL database backup and migration ope
 
 ## ✨ Features
 
-*   **Dual Modes**: Backup-only or backup-with-migration operations
-*   **Multiple Storage Backends**: Local filesystem or AWS S3
-*   **Production Safe**: Non-interactive operation with comprehensive error handling
-*   **Version Aware**: Auto-detects PostgreSQL version and uses appropriate tools
+- **Dual Modes**: Backup-only or backup-with-migration operations
+- **Multiple Storage Backends**: Local filesystem or AWS S3
+- **Production Safe**: Non-interactive operation with comprehensive error handling
+- **Version Aware**: Auto-detects PostgreSQL version and uses appropriate tools
 
 ## 🐳 Quick Test with Docker
 
 ### Prerequisites
 
-*   Install Docker: [Docker Installation Guide](https://docs.docker.com/get-docker/)
-*   Download the script:
+- **PostgreSQL Client Tools** (`pg_dump`, `pg_restore`, `psql`): Required to run the script. Install if not present:
+
+  ```bash
+  # Ubuntu/Debian
+  sudo apt-get update && sudo apt-get install -y postgresql-client
+
+  # macOS (Homebrew)
+  brew install libpq && brew link --force libpq
+
+  # RHEL/CentOS/Fedora
+  sudo dnf install -y postgresql
+
+  # Alpine
+  apk add --no-cache postgresql-client
+  ```
+
+- Install Docker: [Docker Installation Guide](https://docs.docker.com/get-docker/)
+- Download the script:
 
 ```bash
 git clone https://github.com/ADORSYS-GIS/ai-ops.git
@@ -22,34 +38,32 @@ cd ai-ops/docs/pg-dump-backup
 chmod +x pg_dump_tool.sh
 ```
 
-* prepare .pgpass env file
+- prepare .pgpass env file
+
 ```bash
 echo "localhost:5432:testdb:testuser:testpass" > $HOME/.pgpass && chmod 600 $HOME/.pgpass
 ```
 
-
 ### Step 1: Start PostgreSQL Container
 
-Choose **Option A** if you have PostgreSQL client tools installed locally, or **Option B** if you don't.
-
----
-
-#### Option A: With Local PostgreSQL Installed (Automatic Version Matching)
+Detect your local PostgreSQL client version and start a matching Docker container:
 
 > 💡 **Automatic Version Matching:** The commands below automatically detect your local `pg_dump` version and start a matching PostgreSQL Docker container. This ensures compatibility between your local tools and the database server.
 
-First, detect your local PostgreSQL client version and set up the environment:
-
 ```bash
-# Auto-detect local pg_dump version (extracts major version number)
-export PG_VERSION=$(pg_dump --version | grep -oE '[0-9]+' | head -1)
-echo "Detected local pg_dump version: $PG_VERSION"
+# Detect your local pg_dump version
+if ! command -v pg_dump &> /dev/null; then
+    echo "ERROR: pg_dump not found. Install PostgreSQL client tools."
 
-# Verify the version was detected
-if [ -z "$PG_VERSION" ]; then
-    echo "ERROR: Could not detect pg_dump version. See Option B below."
-    exit 1
-fi
+# Verify the version was detected    
+else
+    export PG_VERSION=$(pg_dump --version 2>/dev/null | grep -oE '[0-9]+' | head -1)
+    if [ -z "$PG_VERSION" ]; then
+        echo "ERROR: Could not detect pg_dump version."
+    else
+        echo "Detected pg_dump version: $PG_VERSION"
+    fi
+fi   
 ```
 
 Now start a PostgreSQL container matching your local version:
@@ -73,42 +87,6 @@ docker exec test-postgres psql -U testuser -d testdb -c "SELECT version();"
 ```
 
 > ⚠️ **Note:** If your local `pg_dump` version is very new (e.g., 17+), ensure the corresponding Docker image exists. Check available versions at [Docker Hub PostgreSQL](https://hub.docker.com/_/postgres/tags).
-
----
-
-#### Option B: Without Local PostgreSQL (Docker-Only Mode)
-
-> 💡 **No local PostgreSQL required!** All operations will be performed inside Docker containers. This is ideal for CI/CD pipelines or machines without PostgreSQL installed.
-
-Choose a PostgreSQL version and set it manually:
-
-```bash
-# Set your desired PostgreSQL version (check Docker Hub for available versions)
-export PG_VERSION=16
-echo "Using PostgreSQL version: $PG_VERSION"
-```
-
-Start the PostgreSQL container:
-
-```bash
-# Pull and run PostgreSQL container
-docker pull postgres:${PG_VERSION}-alpine
-
-docker run --name test-postgres \
-  -e POSTGRES_USER=testuser \
-  -e POSTGRES_PASSWORD=testpass \
-  -e POSTGRES_DB=testdb \
-  -p 5432:5432 \
-  -d postgres:${PG_VERSION}-alpine
-
-# Wait for PostgreSQL to be ready
-sleep 10
-
-# Verify the container is running
-docker exec test-postgres psql -U testuser -d testdb -c "SELECT version();"
-```
-
-> 📝 **Important for Docker-Only Mode:** Since you don't have local `pg_dump`/`pg_restore`, you'll need to perform all backup and restore operations **inside the container**. See [Docker-Only Backup & Restore](#docker-only-backup--restore) section below.
 
 ---
 
@@ -160,7 +138,9 @@ mkdir -p test-backups
 
 ls -lh test-backups/*.dump
 ```
+
 #### Step 3-1 : Test if backup.dump can be restore successfully
+
 ```bash
 # Terminate active connections and drop/recreate the database
 docker exec -i test-postgres psql -U testuser -d postgres <<'EOF'
@@ -195,7 +175,7 @@ docker exec test-postgres psql -U testuser -d testdb -c "SELECT COUNT(*) FROM pr
 ### Step 4: Test Migration (Optional)
 
 ```bash
-docker exec test-postgres psql -U testuser -d postgres -c "CREATE DATABASE testdb2;"   
+docker exec test-postgres psql -U testuser -d postgres -c "CREATE DATABASE testdb2;"
 
 export MODE=migrate
 export TARGET_DATABASE_URL="postgresql://testuser@localhost:5432/testdb2"
@@ -240,29 +220,43 @@ export S3_PREFIX="database-backups/"
 ./pg_dump_tool.sh
 ```
 
-
 ## ⚙️ Configuration
 
-| Variable            | Required         | Description                           | Example                               |
-| :------------------ | :--------------- | :------------------------------------ | :------------------------------------ |
-| `MODE`              | Yes              | Operation mode: backup or migrate     | `backup`                              |
-| `STORAGE`           | Yes              | Storage backend: local or s3          | `s3`                                  |
-| `SOURCE_DATABASE_URL` | Yes              | Source PostgreSQL connection URL      | `postgresql://user@host:5432/db` |
-| `TARGET_DATABASE_URL` | If `MODE=migrate` | Target PostgreSQL connection URL      | `postgresql://user@host2:5432/db`|
-| `BACKUP_DIR`        | If `STORAGE=local`| Local backup directory                | `./backups`                           |
-| `S3_BUCKET`         | If `STORAGE=s3`   | S3 bucket name                        | `my-backup-bucket`                    |
-| `AWS_REGION`        | If `STORAGE=s3`   | AWS region                            | `us-east-1`                           |
-| `S3_PREFIX`         | No               | S3 key prefix                         | `database-backups/`                   |
-| `CONFIRM_MIGRATION` | If `MODE=migrate` | Safety flag for migrations            | `true`                                |
-| `PG_VERSION`        | No               | Override PostgreSQL version for tool selection | `16`                           |
-| `IGNORE_VERSION_MISMATCH` | No          | Bypass version mismatch check (not recommended) | `true`                       |
+### Required Environment Variables
+
+| Variable              | Required           | Description                                | Example                           |
+| :-------------------- | :----------------- | :----------------------------------------- | :-------------------------------- |
+| `MODE`                | Yes                | Operation mode: `backup` or `migrate`      | `backup`                          |
+| `STORAGE`             | Yes                | Storage backend: `local` or `s3`           | `s3`                              |
+| `SOURCE_DATABASE_URL` | Yes                | Source PostgreSQL connection URL           | `postgresql://user@host:5432/db`  |
+| `TARGET_DATABASE_URL` | If `MODE=migrate`  | Target PostgreSQL connection URL           | `postgresql://user@host2:5432/db` |
+| `BACKUP_DIR`          | If `STORAGE=local` | Local backup directory                     | `./backups`                       |
+| `S3_BUCKET`           | If `STORAGE=s3`    | S3 bucket name                             | `my-backup-bucket`                |
+| `AWS_REGION`          | If `STORAGE=s3`    | AWS region                                 | `us-east-1`                       |
+| `CONFIRM_MIGRATION`   | If `MODE=migrate`  | Safety flag for migrations (must be `true`)| `true`                            |
+
+### Optional Environment Variables
+
+| Variable                  | Description                                                      | Example             |
+| :------------------------ | :--------------------------------------------------------------- | :------------------ |
+| `S3_PREFIX`               | S3 key prefix for backup files                                   | `database-backups/` |
+| `S3_STORAGE_CLASS`        | S3 storage class for uploaded backups                            | `STANDARD_IA`       |
+| `S3_RETENTION_DAYS`       | Set S3 object retention policy (days)                            | `30`                |
+| `BACKUP_PREFIX`           | Custom prefix for backup filenames (default: `pg_backup`)        | `myapp_backup`      |
+| `LOCAL_RETENTION_DAYS`    | Auto-delete local backups older than N days                      | `7`                 |
+| `PG_VERSION`              | Override PostgreSQL version for tool selection                   | `16`                |
+| `PG_DUMP_JOBS`            | Number of parallel jobs for pg_dump (requires directory format)  | `4`                 |
+| `PG_DUMP_EXTRA_OPTS`      | Additional pg_dump options                                       | `--exclude-table=logs` |
+| `PG_RESTORE_JOBS`         | Number of parallel jobs for pg_restore                           | `4`                 |
+| `PG_RESTORE_EXTRA_OPTS`   | Additional pg_restore options                                    | `--no-owner`        |
+| `IGNORE_VERSION_MISMATCH` | Bypass version mismatch check (not recommended)                  | `true`              |
 
 ## 🔐 Security Best Practices
 
-*   Use `.pgpass` file for database authentication
-*   Set appropriate file permissions on the script
-*   Store environment variables securely
-*   Use IAM roles instead of access keys for S3 when possible
+- Use `.pgpass` file for database authentication
+- Set appropriate file permissions on the script
+- Store environment variables securely
+- Use IAM roles instead of access keys for S3 when possible
 
 ## 🛠️ Troubleshooting
 
@@ -271,12 +265,14 @@ export S3_PREFIX="database-backups/"
 The script (v1.1.0+) now **automatically detects** version mismatches and will fail with clear guidance if your local `pg_dump` version is higher than the server version.
 
 **Common error messages:**
+
 ```
 pg_restore: error: unsupported version (X.Y) in file header
 pg_dump: error: server version: X.Y; pg_dump version: Y.Z
 ```
 
 **The script will show warnings like:**
+
 ```
 [WARNING] ⚠️  VERSION MISMATCH DETECTED!
 [WARNING]    Local pg_dump version (17) is HIGHER than server version (16)
@@ -286,31 +282,34 @@ pg_dump: error: server version: X.Y; pg_dump version: Y.Z
 **Solutions:**
 
 1. **Use the dynamic Docker setup** (recommended for testing):
-   
+
    The Quick Test section now automatically matches your Docker container to your local `pg_dump` version:
+
    ```bash
    export PG_VERSION=$(pg_dump --version | grep -oE '[0-9]+' | head -1)
    docker run -d postgres:${PG_VERSION}-alpine ...
    ```
 
 2. **Install matching PostgreSQL client tools:**
+
    ```bash
    # Check your current version
    pg_dump --version
    pg_restore --version
-   
+
    # Install specific version (Ubuntu/Debian):
    sudo apt-get install postgresql-client-<VERSION>
-   
+
    # Or on macOS with Homebrew:
    brew install postgresql@<VERSION>
    ```
 
 3. **Perform operations inside the container:**
+
    ```bash
    # Backup inside container
    docker exec test-postgres pg_dump -U testuser -Fc testdb > backup.dump
-   
+
    # Restore inside container
    docker cp backup.dump test-postgres:/backup.dump
    docker exec test-postgres pg_restore -U testuser -d testdb /backup.dump
@@ -334,22 +333,22 @@ chmod 600 ~/.pgpass
 
 ### Version Compatibility Rules
 
-| Scenario | Result |
-|----------|--------|
-| `pg_dump` version **≤** server version | ✅ Works |
-| `pg_dump` version **>** server version | ⚠️ May work with warnings |
-| `pg_restore` version **≥** dump file version | ✅ Works |
-| `pg_restore` version **<** dump file version | ❌ **Fails** |
+| Scenario                                     | Result                    |
+| -------------------------------------------- | ------------------------- |
+| `pg_dump` version **≤** server version       | ✅ Works                  |
+| `pg_dump` version **>** server version       | ⚠️ May work with warnings |
+| `pg_restore` version **≥** dump file version | ✅ Works                  |
+| `pg_restore` version **<** dump file version | ❌ **Fails**              |
 
 > 💡 **Best Practice:** Always use `pg_restore` with a version **equal to or newer** than the `pg_dump` version that created the backup file.
 
 ---
 
-## 🐳 Docker-Only Backup & Restore
+## 🐳 Manual Docker Backup & Restore (Alternative)
 
-If you don't have PostgreSQL client tools installed locally, you can perform all backup and restore operations entirely within Docker containers.
+> ⚠️ **Note:** The `pg_dump_tool.sh` script **requires local PostgreSQL client tools** (`pg_dump`, `pg_restore`). If you cannot install them, use the manual Docker commands below as an alternative approach. These commands do NOT use the script.
 
-### Backup (Docker-Only)
+### Backup (Manual Docker)
 
 ```bash
 # Set your PostgreSQL version
@@ -365,7 +364,7 @@ docker exec test-postgres pg_dump -U testuser -Fc testdb > ./test-backups/backup
 ls -lh ./test-backups/*.dump
 ```
 
-### Restore (Docker-Only)
+### Restore (Manual Docker)
 
 ```bash
 # Find your backup file
