@@ -134,12 +134,17 @@ helm upgrade -i aieg-crd oci://docker.io/envoyproxy/ai-gateway-crds-helm \
   --namespace envoy-ai-gateway-system \
   --create-namespace
 ```
-**Install AI Gateway Resources**
+**Install AI Gateway Resources and Configure with Open Telemetry**
 ```bash
-helm upgrade -i aieg oci://docker.io/envoyproxy/ai-gateway-helm \
+helm install aieg oci://docker.io/envoyproxy/ai-gateway-helm \
   --version v0.0.0-latest \
   --namespace envoy-ai-gateway-system \
-  --create-namespace
+  --set "extProc.extraEnvVars[0].name=OTEL_EXPORTER_OTLP_ENDPOINT" \
+  --set "extProc.extraEnvVars[0].value=http://phoenix-svc.envoy-ai-gateway-system.svc.cluster.local:6006" \
+  --set "extProc.extraEnvVars[1].name=OTEL_METRICS_EXPORTER" \
+  --set "extProc.extraEnvVars[1].value=none"
+# OTEL_SERVICE_NAME defaults to "ai-gateway" if not set
+# OTEL_METRICS_EXPORTER=none because Phoenix only supports traces, not metrics
 
 kubectl wait --timeout=2m -n envoy-ai-gateway-system deployment/ai-gateway-controller --for=condition=Available
 ```
@@ -454,7 +459,14 @@ curl -N -H "Content-Type: application/json" \
 ```
 
 
-## Part 5 : Monitoring and Observability With Phoenx
+## Part 5 : Monitoring and Observability With Phoenix
+
+**Check if the ext_proc filter is being inserted:**
+```sh
+kubectl logs -n envoy-ai-gateway-system deployment/ai-gateway-controller \
+| grep "inserting AI Gateway extproc"
+```
+If you see output like inserting AI Gateway extproc filter into listener, the fix worked.
 
 **Verify OTEL env vars are in the sidecar:**
 
@@ -515,6 +527,26 @@ kubectl port-forward -n envoy-ai-gateway-system svc/phoenix-svc 6006:6006
 Then open http://localhost:6006 in your browser to explore the traces.
 
 Run as many requests as you wish and notice the changes in the phoenix UI
+
+## Troubleshooting
+ Just in case 
+ ```bash
+ # Restart AI Gateway controller first
+kubectl rollout restart deployment -n envoy-ai-gateway-system ai-gateway-controller
+
+   # Wait for it to be ready
+
+kubectl rollout status deployment -n envoy-ai-gateway-system ai-gateway-controller
+
+    # Delete Envoy pods to force recreation
+
+kubectl delete pods -n envoy-gateway-system -l gateway.envoyproxy.io/owning-gateway-name=envoy-ai-gateway-basic
+
+    # Wait for new pods
+
+kubectl wait --for=condition=Ready -n envoy-gateway-system \
+    pods -l gateway.envoyproxy.io/owning-gateway-name=envoy-ai-gateway-basic --timeout=60s
+```
 
 ## Cleanup
 
