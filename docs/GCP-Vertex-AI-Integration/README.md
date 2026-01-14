@@ -362,7 +362,7 @@ kubectl port-forward -n envoy-gateway-system svc/$ENVOY_SERVICE 8080:80
 ```bash
 # In another terminal, set the gateway URL
 export GATEWAY_URL="http://localhost:8080"
-curl -H "Content-Type: application/json" \
+curl -v -H "Content-Type: application/json" \
   -d '{
     "model": "vertex-virtual-model",
     "messages": [
@@ -387,19 +387,43 @@ The configuration includes a deliberately broken primary backend (`envoy-ai-gate
 **Switch  to broken backend in gcp_vertex.yaml file for the primary model**
 **Expected Configuration**
 ```bash
-backendRefs:
-        - name: envoy-ai-gateway-gcp-broken # Replace here with broken backend "envoy-ai-gateway-gcp-broken"
-          modelNameOverride: gemini-2.5-pro
-          priority: 0
-        - name: envoy-ai-gateway-basic-gcp
-          modelNameOverride: gemini-2.5-flash
-          priority: 1
+kubectl patch aigatewayroute envoy-ai-gateway-fallback -n default --type='json' -p='[
+  {
+    "op": "replace",
+    "path": "/spec/rules/0/backendRefs",
+    "value": [
+      {
+        "name": "envoy-ai-gateway-gcp-broken",
+        "modelNameOverride": "gemini-2.5-pro",
+        "priority": 0
+      },
+      {
+        "name": "envoy-ai-gateway-basic-gcp",
+        "modelNameOverride": "gemini-2.5-flash",
+        "priority": 1
+      }
+    ]
+  }
+]'
+```
+**verified if the patch worked**
+```bash
+kubectl describe aigatewayroute envoy-ai-gateway-fallback -n default 
+```
+**You should get something like this  where the backend name has been replaced with "envoy-ai-gateway-gcp-broken"**
+
+```bash
+ Backend Refs:
+      Model Name Override:  gemini-2.5-pro
+      Name:                 envoy-ai-gateway-gcp-broken
+      Priority:             0
+   
 ```
 **Test Fallback**
 ```bash
 kubectl apply -f gcp_vertex.yaml
 # Test the virtual model - should fallback to working backend
-curl -H "Content-Type: application/json" \
+curl -v -H "Content-Type: application/json" \
   -d '{
     "model": "vertex-virtual-model",
     "messages": [
@@ -413,7 +437,7 @@ curl -H "Content-Type: application/json" \
 1. First attempt: Routes to `envoy-ai-gateway-gcp-broken` (Priority 0) with `gemini-2.5-pro`
 2. Connection fails due to non-existent hostname
 3. Gateway automatically retries with `envoy-ai-gateway-basic-gcp` (Priority 1) with `gemini-2.5-flash`
-4. Request succeeds and returns response
+4. Request succeeds and returns response; In other words it is the `gemini-2.5-flash` that receives the request and responds intead of the `gemini-2.5-pro`.
 
 
 
@@ -493,7 +517,7 @@ export GATEWAY_URL="http://localhost:8080"
 # Send 5 test requests
 for i in 1 2 3 4 5; do
   echo "Request $i:"
-  curl -H "Content-Type: application/json" \
+  curl -v -H "Content-Type: application/json" \
     -d '{
       "model": "vertex-virtual-model",
       "messages": [
