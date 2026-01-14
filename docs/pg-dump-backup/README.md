@@ -125,6 +125,9 @@ docker exec test-postgres psql -U testuser -d testdb -c "SELECT COUNT(*) FROM pr
 ```
 
 ### Step 3: Test Backup Script
+```bash
+cd docs/pg-dump-backup
+```
 
 ```bash
 export MODE=backup
@@ -156,7 +159,7 @@ EOF
 ```
 
 ```bash
-# Mount the dump fil into the docker container
+# Mount the dump file into the docker container
 docker cp test-backups/pg_backup_YOUR_DUMP_FILE.dump test-postgres:/backup.dump
 ```
 
@@ -175,16 +178,28 @@ docker exec test-postgres psql -U testuser -d testdb -c "SELECT COUNT(*) FROM pr
 ### Step 4: Test Migration (Optional)
 
 ```bash
-docker exec test-postgres psql -U testuser -d postgres -c "CREATE DATABASE testdb2;"
+docker run --name test-postgres-2 \
+  -e POSTGRES_USER=testuser \
+  -e POSTGRES_PASSWORD=testpass \
+  -e POSTGRES_DB=testdb2 \
+  -p 5431:5432 \
+  -d postgres:${PG_VERSION}-alpine
+```
 
+```bash
+# Update secret with new credentials
+echo "localhost:5431:testdb2:testuser:testpass" >> $HOME/.pgpass
+```
+
+```bash
 export MODE=migrate
-export TARGET_DATABASE_URL="postgresql://testuser@localhost:5432/testdb2"
+export TARGET_DATABASE_URL="postgresql://testuser@localhost:5431/testdb2"
 export CONFIRM_MIGRATION=true
 
 ./pg_dump_tool.sh
 
-docker exec test-postgres psql -U testuser -d testdb2 -c "SELECT COUNT(*) FROM users;"
-docker exec test-postgres psql -U testuser -d testdb2 -c "SELECT COUNT(*) FROM products;"
+docker exec test-postgres-2 psql -U testuser -d testdb2 -c "SELECT COUNT(*) FROM users;"
+docker exec test-postgres-2 psql -U testuser -d testdb2 -c "SELECT COUNT(*) FROM products;"
 ```
 
 ### Step 5: Clean Up
@@ -196,6 +211,13 @@ docker rm test-postgres
 rm -rf test-backups
 ```
 
+
+```bash
+# If migration has been tested
+docker stop test-postgres-2
+docker rm test-postgres-2
+
+```
 ## 🚀 Quick Start Examples
 
 ### 1. Simple Local Backup
