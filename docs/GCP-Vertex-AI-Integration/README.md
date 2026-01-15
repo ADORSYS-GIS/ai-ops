@@ -293,6 +293,7 @@ kubectl get pods -n envoy-gateway-system -l gateway.envoyproxy.io/owning-gateway
 ### 3.3 Deploy GCP Vertex AI Configuration
 
 Update `gcp_vertex.yaml` with your GCP project details:
+**By default you can use `us-central1` as GCP_REGION**
 
 ```yaml
 # In gcp_vertex.yaml, update these values:
