@@ -1,0 +1,29 @@
+
+apiVersion: gateway.networking.k8s.io/v1
+kind: BackendTLSPolicy
+metadata:
+  name: envoy-ai-gateway-basic-gcp-tls
+  namespace: default
+spec:
+  targetRefs:
+    - group: "gateway.envoyproxy.io"
+      kind: Backend
+      name: envoy-ai-gateway-basic-gcp
+  validation:
+    wellKnownCACertificates: "System"
+    hostname: us-central1-aiplatform.googleapis.com
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: BackendTLSPolicy
+metadata:
+  name: envoy-ai-gateway-gcp-broken-tls
+  namespace: default
+spec:
+  targetRefs:
+    - group: gateway.envoyproxy.io
+      kind: Backend
+      name: envoy-ai-gateway-gcp-broken
+  validation:
+    wellKnownCACertificates: System
+    hostname: us-central1-aiplatform.googleapis.com
+
