@@ -178,14 +178,6 @@ phoenix-postgresql-0                     1/1     Running   0          2m28s
 
 Follow the [official installation guide](https://cloud.google.com/sdk/docs/install-sdk) for your operating system.
 
-**Important:** Before proceeding, define your GCP Project ID   as an environment variable. This ensures consistency and avoids hardcoding values throughout the setup.
-```bash
-# Set your GCP Project ID (replace with your actual project ID)
-export PROJECT_ID="your-gcp-project-id" # Replace it with yout own Project ID 
-
-# Verify the variable is set
-echo $PROJECT_ID
-```
 
 ```bash
 # Initialize gcloud
@@ -193,6 +185,14 @@ gcloud init
 
 # Set your project
 gcloud config set project $PROJECT_ID
+```
+**Important:**  Define your GCP Project ID   as an environment variable. This ensures consistency and avoids hardcoding values throughout the setup.
+```bash
+# Set your GCP Project ID (replace with your actual project ID)
+export PROJECT_ID="your-gcp-project-id" # Replace it with yout own Project ID 
+
+# Verify the variable is set
+echo $PROJECT_ID
 ```
 
 ### 2.2 Enable Required APIs
@@ -219,11 +219,11 @@ gcloud iam service-accounts create envoy-ai-gateway \
   --description="Service account for Envoy AI Gateway to access Vertex AI"
 
 # Grant necessary permissions
-gcloud projects add-iam-policy-binding YOUR_PROJECT_ID \
+gcloud projects add-iam-policy-binding $PROJECT_ID \
   --member="serviceAccount:envoy-ai-gateway@$PROJECT_ID.iam.gserviceaccount.com" \
   --role="roles/aiplatform.user"
 
-gcloud projects add-iam-policy-binding YOUR_PROJECT_ID \
+gcloud projects add-iam-policy-binding $PROJECT_ID \
   --member="serviceAccount:envoy-ai-gateway@$PROJECT_ID.iam.gserviceaccount.com" \
   --role="roles/serviceusage.serviceUsageConsumer"
 
