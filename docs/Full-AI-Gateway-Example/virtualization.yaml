@@ -1,0 +1,132 @@
+apiVersion: aigateway.envoyproxy.io/v1alpha1
+kind: AIGatewayRoute
+metadata:
+  name: envoy-ai-gateway-virtualization
+  namespace: default
+spec:
+  parentRefs:
+    - name: envoy-ai-gateway-basic
+      kind: Gateway
+      group: gateway.networking.k8s.io
+  llmRequestCosts:
+    - metadataKey: prompt_tokens
+      type: InputToken # Counts tokens in the request
+    - metadataKey: completion_tokens
+      type: OutputToken # Counts tokens in the response
+    - metadataKey: total_tokens
+      type: TotalToken # Counts total tokens (input + output)
+  rules:
+    - matches:
+        - headers:
+            - type: Exact
+              name: x-ai-eg-model
+              value: smart-llm
+      backendRefs:
+        - name: envoy-ai-gateway-basic-openai
+          modelNameOverride: gpt-5
+          weight: 50
+        - name: envoy-ai-gateway-basic-gcp
+          modelNameOverride: gemini-2.5-flash
+          weight: 30
+        - name: envoy-ai-gateway-fireworks
+          modelNameOverride: accounts/fireworks/models/qwen3-vl-235b-a22b-instruct
+          weight: 20
+    - matches:
+        - headers:
+            - type: Exact
+              name: x-ai-eg-model
+              value: gemini
+      backendRefs:
+        - name: envoy-ai-gateway-basic-openai-fake
+          modelNameOverride: gpt-5-mini
+          priority: 1
+        - name: envoy-ai-gateway-basic-openai
+          modelNameOverride: gemini-2.5-flash
+          priority: 2
+        - name: envoy-ai-gateway-gcp-broken
+          modelNameOverride: gemini-2.5-pro
+          priority: 0
+
+---
+apiVersion: gateway.envoyproxy.io/v1alpha1
+kind: BackendTrafficPolicy
+metadata:
+  name: envoy-ai-gateway-fallback-policy
+  namespace: default
+spec:
+  targetRefs:
+    - group: gateway.networking.k8s.io
+      kind: Gateway
+      name: envoy-ai-gateway-basic
+  rateLimit:
+    type: Global
+    global:
+      rules:
+        # Rate limit rule for smart-llm: 20 total tokens per minute per user
+        - clientSelectors:
+            - headers:
+                - name: x-user-id
+                  type: Distinct
+                - name: x-ai-eg-model
+                  type: Exact
+                  value: smart-llm
+          limit:
+            requests: 30 # 30 total tokens per minute
+            unit: Minute
+          cost:
+            request:
+              from: Number
+              number: 0 # Set to 0 so only token usage counts
+            response:
+              from: Metadata
+              metadata:
+                namespace: io.envoy.ai_gateway
+                key: total_tokens # Uses total tokens from the responses
+        # Rate limit rule for gemini: 30 total tokens per minute per user
+        - clientSelectors:
+            - headers:
+                - name: x-user-id
+                  type: Distinct
+                - name: x-ai-eg-model
+                  type: Exact
+                  value: gemini
+          limit:
+            requests: 30 # 30 total tokens per minute (higher limit for less expensive model)
+            unit: Minute
+          cost:
+            request:
+              from: Number
+              number: 0 # Set to 0 so only token usage counts
+            response:
+              from: Metadata
+              metadata:
+                namespace: io.envoy.ai_gateway
+                key: total_tokens # Uses total tokens from the response
+  retry:
+    numRetries: 3
+    perRetry:
+      backOff:
+        baseInterval: 100ms
+        maxInterval: 10s
+      timeout: 30s
+    retryOn:
+      triggers:
+        - connect-failure
+      httpStatusCodes:
+        - 500
+        - 502
+        - 503
+        - 504
+        - 401
+        - 404
+        - 400
+        - 403
+        - 402
+        - 429
+      triggers:
+        - connect-failure
+        - retriable-status-codes
+
+
+
+

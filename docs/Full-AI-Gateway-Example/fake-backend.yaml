@@ -1,0 +1,47 @@
+apiVersion: gateway.envoyproxy.io/v1alpha1
+kind: Backend
+metadata:
+  name: envoy-ai-gateway-basic-openai-fake
+  namespace: default
+spec:
+  endpoints:
+    - fqdn:
+        hostname: dddddddai.kivoyo.com
+        port: 443
+---
+apiVersion: aigateway.envoyproxy.io/v1alpha1
+kind: AIServiceBackend
+metadata:
+  name: envoy-ai-gateway-basic-openai-fake
+  namespace: default
+spec:
+  schema:
+    name: OpenAI
+  backendRef:
+    name: envoy-ai-gateway-basic-openai-fake
+    kind: Backend
+    group: gateway.envoyproxy.io
+---
+apiVersion: gateway.envoyproxy.io/v1alpha1
+kind: Backend
+metadata:
+  name: envoy-ai-gateway-gcp-broken
+  namespace: default
+spec:
+  endpoints:
+    - fqdn:
+        hostname: does-not-exist.aiplatform.googleapis.com
+        port: 443
+---
+apiVersion: aigateway.envoyproxy.io/v1alpha1
+kind: AIServiceBackend
+metadata:
+  name: envoy-ai-gateway-gcp-broken
+  namespace: default
+spec:
+  schema:
+    name: GCPVertexAI
+  backendRef:
+    name: envoy-ai-gateway-gcp-broken
+    kind: Backend
+    group: gateway.envoyproxy.io
