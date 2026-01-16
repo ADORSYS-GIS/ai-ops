@@ -1,0 +1,40 @@
+apiVersion: authorino.kuadrant.io/v1beta2
+kind: AuthConfig
+metadata:
+  name: ai-gateway-apikey-auth
+  namespace: default
+  labels:
+    authorino: enabled
+spec:
+  # Match requests to the AI Gateway
+  hosts:
+    - "*.default.svc.cluster.local"
+    - "localhost"
+    - "*"
+  
+  # API Key authentication
+  authentication:
+    "api-key":
+      apiKey:
+        selector:
+          matchLabels:
+            app: ai-gateway
+        allNamespaces: true
+      credentials:
+        authorizationHeader:
+          prefix: Bearer
+  
+  # Authorization - allow all authenticated requests
+  authorization:
+    "allow-all":
+      opa:
+        rego: |
+          allow = true
+  
+  # Response - add user info to headers
+  response:
+    success:
+      headers:
+        "x-auth-user":
+          plain:
+            value: '{auth.identity.metadata.annotations.user}'
