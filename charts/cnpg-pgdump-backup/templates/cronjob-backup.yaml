@@ -1,0 +1,150 @@
+{{- if .Values.backup.enabled }}
+{{- if not .Values.s3.secretName }}
+{{- fail "s3.secretName is required for backup cronjob" }}
+{{- end }}
+{{- if not .Values.cnpg.secretName }}
+{{- fail "cnpg.secretName is required for backup cronjob" }}
+{{- end }}
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: {{ include "cnpg-backup.cronjobName" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "cnpg-backup.labels" . | nindent 4 }}
+  annotations:
+    description: "Scheduled PostgreSQL backup job for CNPG cluster"
+spec:
+  schedule: {{ .Values.backup.schedule | quote }}
+  successfulJobsHistoryLimit: {{ .Values.backup.successfulJobsHistoryLimit | default 3 }}
+  failedJobsHistoryLimit: {{ .Values.backup.failedJobsHistoryLimit | default 3 }}
+  concurrencyPolicy: {{ .Values.backup.concurrencyPolicy | default "Forbid" }}
+  jobTemplate:
+    spec:
+      {{- with .Values.backup.ttlSecondsAfterFinished }}
+      ttlSecondsAfterFinished: {{ . }}
+      {{- end }}
+      template:
+        metadata:
+          labels:
+            {{- include "cnpg-backup.selectorLabels" . | nindent 12 }}
+          {{- with .Values.monitoring.annotations }}
+          annotations:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+        spec:
+          {{- with .Values.backup.nodeSelector }}
+          nodeSelector:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.backup.affinity }}
+          affinity:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.backup.tolerations }}
+          tolerations:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.imagePullSecrets }}
+          imagePullSecrets:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          restartPolicy: OnFailure
+          {{- if .Values.backup.terminationGracePeriodSeconds }}
+          terminationGracePeriodSeconds: {{ .Values.backup.terminationGracePeriodSeconds }}
+          {{- end }}
+
+          initContainers:
+            - name: wait-for-pg
+              image: {{ .Values.backup.image }}
+              imagePullPolicy: {{ .Values.backup.imagePullPolicy | default "IfNotPresent" }}
+              command:
+                - /bin/bash
+                - -c
+                - |
+                  set -euo pipefail
+                  echo "Waiting for PostgreSQL to be ready..."
+                  local max_attempts=30
+                  local attempt=0
+                  while [[ $attempt -lt $max_attempts ]]; do
+                    if pg_isready -h "${PGHOST}" -p "${PGPORT}" -q 2>/dev/null; then
+                      echo "PostgreSQL is ready"
+                      exit 0
+                    fi
+                    attempt=$((attempt + 1))
+                    echo "PostgreSQL not ready (attempt ${attempt}/${max_attempts}), retrying in 5s..."
+                    sleep 5
+                  done
+                  echo "PostgreSQL did not become ready in time"
+                  exit 1
+              env:
+                - name: PGHOST
+                  valueFrom:
+                    secretKeyRef:
+                      name: {{ .Values.cnpg.secretName }}
+                      key: host
+                - name: PGPORT
+                  valueFrom:
+                    secretKeyRef:
+                      name: {{ .Values.cnpg.secretName }}
+                      key: port
+
+          containers:
+            - name: backup
+              image: {{ .Values.backup.image }}
+              imagePullPolicy: {{ .Values.backup.imagePullPolicy | default "IfNotPresent" }}
+              command: ["/bin/bash", "/scripts/backup.sh"]
+              {{- with .Values.backup.resources }}
+              resources:
+                {{- toYaml . | nindent 16 }}
+              {{- end }}
+              securityContext:
+                {{- include "cnpg-backup.securityContext" . | nindent 16 }}
+              env:
+                - name: PGHOST
+                  valueFrom:
+                    secretKeyRef:
+                      name: {{ .Values.cnpg.secretName }}
+                      key: host
+                - name: PGPORT
+                  valueFrom:
+                    secretKeyRef:
+                      name: {{ .Values.cnpg.secretName }}
+                      key: port
+                - name: PGDATABASE
+                  value: {{ .Values.cnpg.database }}
+                - name: PGUSER
+                  valueFrom:
+                    secretKeyRef:
+                      name: {{ .Values.cnpg.secretName }}
+                      key: username
+                - name: PGPASSWORD
+                  valueFrom:
+                    secretKeyRef:
+                      name: {{ .Values.cnpg.secretName }}
+                      key: password
+                {{- if .Values.s3.region }}
+                - name: AWS_REGION
+                  value: {{ .Values.s3.region }}
+                - name: AWS_DEFAULT_REGION
+                  value: {{ .Values.s3.region }}
+                {{- end }}
+              envFrom:
+                {{- if .Values.s3.secretName }}
+                - secretRef:
+                    name: {{ .Values.s3.secretName }}
+                {{- end }}
+              volumeMounts:
+                - name: scripts
+                  mountPath: /scripts
+                  readOnly: true
+              {{- with .Values.backup.livenessProbe }}
+              livenessProbe:
+                {{- toYaml . | nindent 16 }}
+              {{- end }}
+          volumes:
+            - name: scripts
+              configMap:
+                name: {{ include "cnpg-backup.scriptsConfigMapName" . }}
+                defaultMode: 0755
+{{- end }}
