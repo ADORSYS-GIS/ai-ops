@@ -67,47 +67,6 @@ This Helm chart provides:
   - `AWS_ACCESS_KEY_ID`
   - `AWS_SECRET_ACCESS_KEY`
 
-## Installation
-
-### 1. Add the chart to Helm (if distributing)
-
-```bash
-helm repo add adorsys-gis https://adorsys-gis.github.io/ai-ops/charts
-helm repo update
-```
-
-### 2. Create required secrets
-
-**CNPG Connection Secret** (created automatically by CloudNativePG):
-```bash
-# CloudNativePG creates this automatically
-kubectl get secret -n <namespace> <cluster-name>-pguser-postgres
-```
-
-**S3 Credentials Secret**:
-```bash
-kubectl create secret generic s3-backup-creds \
-  --from-literal=AWS_ACCESS_KEY_ID=<your-access-key> \
-  --from-literal=AWS_SECRET_ACCESS_KEY=<your-secret-key> \
-  -n <namespace>
-```
-
-### 3. Install the chart
-
-```bash
-helm upgrade --install cnpg-backup ./charts/cnpg-pgdump-backup \
-  --namespace <namespace> \
-  --create-namespace \
-  --set backup.enabled=true \
-  --set backup.schedule="0 2 * * *" \
-  --set cnpg.secretName=<cluster-name>-pguser-postgres \
-  --set cnpg.database=appdb \
-  --set s3.bucket=my-backups-bucket \
-  --set s3.prefix=appdb \
-  --set s3.region=us-east-1 \
-  --set s3.secretName=s3-backup-creds
-```
-
 ## Configuration
 
 ### Global Configuration
@@ -351,4 +310,13 @@ Note: This only removes Helm resources. S3 backups remain in your bucket and mus
 ## License
 
 Apache License 2.0
+
+## Changelog
+
+### Latest Fixes
+- Fixed package manager usage: Replaced `apk` with `apt-get` for Debian-based postgres:16 image
+- Fixed PATH value: Removed invalid user ID reference from PATH environment variable
+- Fixed missing `file` binary: Replaced with `gzip -t` for gzip validation (guaranteed to exist)
+- Fixed S3 secret rendering: Added conditional logic to only render when credentials are provided
+- Fixed validation mismatch: Removed `cnpg.database` from required validation for restore operations
 
