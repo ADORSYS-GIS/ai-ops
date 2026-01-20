@@ -155,6 +155,9 @@ data:
         local start_time
         start_time=$(date +%s)
 
+        # Suppress NOTICE messages
+        export PGOPTIONS='-c client_min_messages=warning'
+
         if PGPASSWORD="${PGPASSWORD}" pg_dump \
             --host="${PGHOST}" \
             --port="${PGPORT}" \
@@ -254,14 +257,22 @@ data:
     fi
 
     # List objects and filter by date using aws s3api for proper date comparison
-    aws s3api list-objects-v2 \
+    local old_backups
+    if ! old_backups=$(aws s3api list-objects-v2 \
         --bucket "${s3_bucket}" \
         --prefix "${s3_prefix}/" \
         --query "Contents[?LastModified<'${cutoff_date}'].[Key]" \
-        --output text 2>/dev/null | while read -r key; do
+        --output text 2>> "${LOG_FILE}"); then
+      log_warning "Could not list old backups from S3. Skipping cleanup."
+      return
+    fi
+
+    echo "${old_backups}" | while read -r key; do
         if [[ -n "$key" ]]; then
             log_info "Removing old backup: ${key}"
-            aws s3 rm "s3://${s3_bucket}/${key}" 2>/dev/null || true
+            if ! aws s3 rm "s3://${s3_bucket}/${key}" 2>> "${LOG_FILE}"; then
+                log_warning "Failed to remove old backup: ${key}"
+            fi
         fi
     done
     {{- else }}
@@ -291,9 +302,6 @@ data:
 
         # Cleanup old backups (optional)
         cleanup_old_backups
-
-        # Final cleanup
-        rm -f "${backup_file}" 2>/dev/null || true
 
         log_info "========================================"
         log_success "Backup completed successfully"
@@ -490,7 +498,7 @@ data:
         start_time=$(date +%s)
 
         # For gzip files, decompress and pipe to psql
-        if file "${backup_file}" 2>/dev/null | grep -q "gzip"; then
+        if gzip -t "${backup_file}" 2>/dev/null; then
             log_info "Decompressing backup..."
 
             # Check if it's a valid gzip file

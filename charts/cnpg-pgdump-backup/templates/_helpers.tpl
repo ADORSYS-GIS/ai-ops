@@ -109,9 +109,6 @@ Validate required values
 {{- if not .Values.cnpg.secretName -}}
 {{- $requiredErrors = append $requiredErrors "cnpg.secretName is required" -}}
 {{- end -}}
-{{- if not .Values.cnpg.database -}}
-{{- $requiredErrors = append $requiredErrors "cnpg.database is required" -}}
-{{- end -}}
 {{- if not .Values.s3.bucket -}}
 {{- $requiredErrors = append $requiredErrors "s3.bucket is required" -}}
 {{- end -}}
