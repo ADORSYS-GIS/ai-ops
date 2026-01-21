@@ -37,7 +37,7 @@ values-local.yaml
 .idea/
 *.iml
 # Chart files
-charts/
+# charts/
 # Secrets
 *.pem
 *.key

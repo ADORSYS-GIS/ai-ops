@@ -1,4 +1,4 @@
-{{- if .Values.backup.enabled }}
+{{- if or .Values.controllers.cronjob.enabled .Values.controllers.job.enabled }}
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -212,6 +212,9 @@ data:
         local aws_cmd=("aws" "s3" "cp" "${backup_file}" "${s3_path}")
         {{- if .Values.s3.endpoint }}
         aws_cmd+=("--endpoint-url" "${s3_endpoint}")
+        {{- if or (contains "minio" .Values.s3.endpoint) (contains "s3." .Values.s3.endpoint) }}
+        aws_cmd+=("--no-verify-ssl")
+        {{- end }}
         {{- end }}
         {{- if .Values.s3.storageClass }}
         aws_cmd+=("--storage-class" "{{ .Values.s3.storageClass }}")
@@ -225,7 +228,15 @@ data:
             log_info "Duration: ${duration}s"
 
             # Verify upload
-            if aws s3 ls "${s3_path}" >/dev/null 2>&1; then
+            local verify_cmd=("aws" "s3" "ls" "${s3_path}")
+            {{- if .Values.s3.endpoint }}
+            verify_cmd+=("--endpoint-url" "${s3_endpoint}")
+            {{- if or (contains "minio" .Values.s3.endpoint) (contains "s3." .Values.s3.endpoint) }}
+            verify_cmd+=("--no-verify-ssl")
+            {{- end }}
+            {{- end }}
+            
+            if "${verify_cmd[@]}" >/dev/null 2>&1; then
                 log_info "Backup verified in S3"
             else
                 log_warning "Could not verify backup in S3"
@@ -258,11 +269,15 @@ data:
 
     # List objects and filter by date using aws s3api for proper date comparison
     local old_backups
-    if ! old_backups=$(aws s3api list-objects-v2 \
-        --bucket "${s3_bucket}" \
-        --prefix "${s3_prefix}/" \
-        --query "Contents[?LastModified<'${cutoff_date}'].[Key]" \
-        --output text 2>> "${LOG_FILE}"); then
+    local list_cmd=("aws" "s3api" "list-objects-v2" "--bucket" "${s3_bucket}" "--prefix" "${s3_prefix}/" "--query" "Contents[?LastModified<'${cutoff_date}'].[Key]" "--output" "text")
+    {{- if .Values.s3.endpoint }}
+    list_cmd+=("--endpoint-url" "${s3_endpoint}")
+    {{- if or (contains "minio" .Values.s3.endpoint) (contains "s3." .Values.s3.endpoint) }}
+    list_cmd+=("--no-verify-ssl")
+    {{- end }}
+    {{- end }}
+    
+    if ! old_backups=$("${list_cmd[@]}" 2>> "${LOG_FILE}"); then
       log_warning "Could not list old backups from S3. Skipping cleanup."
       return
     fi
@@ -270,7 +285,14 @@ data:
     echo "${old_backups}" | while read -r key; do
         if [[ -n "$key" ]]; then
             log_info "Removing old backup: ${key}"
-            if ! aws s3 rm "s3://${s3_bucket}/${key}" 2>> "${LOG_FILE}"; then
+            local rm_cmd=("aws" "s3" "rm" "s3://${s3_bucket}/${key}")
+            {{- if .Values.s3.endpoint }}
+            rm_cmd+=("--endpoint-url" "${s3_endpoint}")
+            {{- if or (contains "minio" .Values.s3.endpoint) (contains "s3." .Values.s3.endpoint) }}
+            rm_cmd+=("--no-verify-ssl")
+            {{- end }}
+            {{- end }}
+            if ! "${rm_cmd[@]}" 2>> "${LOG_FILE}"; then
                 log_warning "Failed to remove old backup: ${key}"
             fi
         fi
@@ -459,6 +481,9 @@ data:
         local aws_cmd=("aws" "s3" "cp" "${s3_path}" "${local_file}")
         {{- if .Values.s3.endpoint }}
         aws_cmd+=("--endpoint-url" "${s3_endpoint}")
+        {{- if or (contains "minio" .Values.s3.endpoint) (contains "s3." .Values.s3.endpoint) }}
+        aws_cmd+=("--no-verify-ssl")
+        {{- end }}
         {{- end }}
 
         if "${aws_cmd[@]}" 2>> "${LOG_FILE}"; then
@@ -593,4 +618,3 @@ data:
 
     main "$@"
 {{- end }}
-

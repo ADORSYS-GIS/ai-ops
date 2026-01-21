@@ -29,23 +29,24 @@ Create chart name and version as used by the chart label.
 {{- end }}
 
 {{/*
-Common labels
+Common labels - uses common library for global labels
 */}}
 {{- define "cnpg-backup.labels" -}}
-helm.sh/chart: {{ include "cnpg-backup.chart" . }}
-{{ include "cnpg-backup.selectorLabels" . }}
-{{- if .Chart.AppVersion }}
-app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
+{{- $root := . -}}
+{{- $labels := dict -}}
+{{- $_ := set $labels "helm.sh/chart" (include "cnpg-backup.chart" $root) -}}
+{{- $_ := set $labels "app.kubernetes.io/managed-by" "Helm" -}}
+{{- range $key, $value := .Values.globalLabels }}
+{{- $_ := set $labels $key $value -}}
 {{- end }}
-app.kubernetes.io/managed-by: {{ .Release.Service }}
+{{- include "bjw-s.common.lib.metadata.allLabels" . | fromYaml | merge $labels | toYaml }}
 {{- end }}
 
 {{/*
 Selector labels
 */}}
 {{- define "cnpg-backup.selectorLabels" -}}
-app.kubernetes.io/name: {{ include "cnpg-backup.name" . }}
-app.kubernetes.io/instance: {{ .Release.Name }}
+{{- dict "app.kubernetes.io/name" (include "cnpg-backup.name" .) "app.kubernetes.io/instance" .Release.Name | toYaml }}
 {{- end }}
 
 {{/*
@@ -70,52 +71,134 @@ Scripts ConfigMap name
 {{- end }}
 
 {{/*
-S3 destination URL
+Image specification to image string
 */}}
-{{- define "cnpg-backup.s3Destination" -}}
-{{- $bucket := .Values.s3.bucket }}
-{{- $prefix := .Values.s3.prefix }}
-{{- $endpoint := .Values.s3.endpoint }}
-{{- $usePathStyle := false }}
-{{- if contains "minio" $endpoint | or (contains "s3." $endpoint) }}
-{{- $usePathStyle = true }}
-{{- end }}
-{{- if $endpoint }}
-s3://{{ $bucket }}/{{ $prefix }}?endpoint={{ $endpoint }}&s3ForcePathStyle={{ $usePathStyle }}
-{{- else }}
-s3://{{ $bucket }}/{{ $prefix }}
-{{- end }}
+{{- define "cnpg-backup.image" -}}
+{{- $root := .rootContext -}}
+{{- $imageSpec := .imageSpec -}}
+{{- $image := "" -}}
+
+{{- if $imageSpec.digest -}}
+  {{- /* Use digest if provided */ -}}
+  {{- if $imageSpec.registry -}}
+    {{- $image = printf "%s/%s@%s" $imageSpec.registry $imageSpec.repository $imageSpec.digest -}}
+  {{- else -}}
+    {{- $image = printf "%s@%s" $imageSpec.repository $imageSpec.digest -}}
+  {{- end -}}
+{{- else -}}
+  {{- /* Use tag if provided, otherwise default to "16" */ -}}
+  {{- $tag := $imageSpec.tag | default "16" -}}
+  {{- if $imageSpec.registry -}}
+    {{- $image = printf "%s/%s:%s" $imageSpec.registry $imageSpec.repository $tag -}}
+  {{- else -}}
+    {{- $image = printf "%s:%s" $imageSpec.repository $tag -}}
+  {{- end -}}
+{{- end -}}
+
+{{- $image -}}
 {{- end }}
 
 {{/*
-Backup filename pattern
-*/}}
-{{- define "cnpg-backup.backupFilename" -}}
-{{- .Values.cnpg.database }}_$(date +"%Y-%m-%d_%H-%M-%S").sql.gz
-{{- end }}
-
-{{/*
-Container security context
-*/}}
-{{- define "cnpg-backup.securityContext" -}}
-{{- toYaml .Values.securityContext }}
-{{- end }}
-
-{{/*
-Validate required values
+Validate required values - PRODUCTION READY VERSION
 */}}
 {{- define "cnpg-backup.validateValues" -}}
-{{- $requiredErrors := list -}}
-{{- if not .Values.cnpg.secretName -}}
-{{- $requiredErrors = append $requiredErrors "cnpg.secretName is required" -}}
+{{- $errors := list -}}
+
+{{- /* Validation for CronJob if enabled */ -}}
+{{- if .Values.controllers.cronjob.enabled -}}
+  {{- /* Basic CronJob validation */ -}}
+  {{- if not .Values.cnpg.secretName -}}
+    {{- $errors = append $errors "cnpg.secretName is required when controllers.cronjob.enabled is true" -}}
+  {{- end -}}
+  {{- if not .Values.cnpg.database -}}
+    {{- $errors = append $errors "cnpg.database is required when controllers.cronjob.enabled is true" -}}
+  {{- end -}}
+  {{- if not .Values.s3.bucket -}}
+    {{- $errors = append $errors "s3.bucket is required when controllers.cronjob.enabled is true" -}}
+  {{- end -}}
+  {{- if not .Values.s3.secretName -}}
+    {{- $errors = append $errors "s3.secretName is required when controllers.cronjob.enabled is true" -}}
+  {{- end -}}
+  {{- /* Cron schedule validation */ -}}
+  {{- if not .Values.controllers.cronjob.schedule -}}
+    {{- $errors = append $errors "controllers.cronjob.schedule is required when cronjob is enabled" -}}
+  {{- end -}}
 {{- end -}}
-{{- if not .Values.s3.bucket -}}
-{{- $requiredErrors = append $requiredErrors "s3.bucket is required" -}}
+
+{{- /* Validation for Job if enabled AND restore.object is set */ -}}
+{{- if and .Values.controllers.job.enabled .Values.restore.object -}}
+  {{- /* Basic Job validation only when restoring */ -}}
+  {{- if not .Values.cnpg.secretName -}}
+    {{- $errors = append $errors "cnpg.secretName is required when restoring (controllers.job.enabled and restore.object are set)" -}}
+  {{- end -}}
+  {{- if not .Values.cnpg.database -}}
+    {{- $errors = append $errors "cnpg.database is required when restoring (controllers.job.enabled and restore.object are set)" -}}
+  {{- end -}}
+  {{- if not .Values.s3.bucket -}}
+    {{- $errors = append $errors "s3.bucket is required when restoring (controllers.job.enabled and restore.object are set)" -}}
+  {{- end -}}
+  {{- if not .Values.s3.secretName -}}
+    {{- $errors = append $errors "s3.secretName is required when restoring (controllers.job.enabled and restore.object are set)" -}}
+  {{- end -}}
+  {{- if not .Values.restore.object -}}
+    {{- $errors = append $errors "restore.object is required when controllers.job.enabled is true" -}}
+  {{- end -}}
 {{- end -}}
-{{- if not .Values.s3.secretName -}}
-{{- $requiredErrors = append $requiredErrors "s3.secretName is required" -}}
+
+{{- /* Check if both controllers are disabled */ -}}
+{{- if and (not .Values.controllers.cronjob.enabled) (not .Values.controllers.job.enabled) -}}
+  {{- $errors = append $errors "At least one controller must be enabled (controllers.cronjob.enabled or controllers.job.enabled)" -}}
 {{- end -}}
-{{- if $requiredErrors -}}
-{{- printf "Missing required values:\n%s" (join "\n" $requiredErrors) | fail -}}
+
+{{- /* Output errors */ -}}
+{{- if $errors -}}
+{{- printf "\nVALIDATION FAILED:\n%s\n" (join "\n" $errors) | fail -}}
 {{- end -}}
+{{- end -}}
+
+{{/*
+Get controller values with fallback to legacy values for backward compatibility
+*/}}
+{{- define "cnpg-backup.getControllerValues" -}}
+{{- $root := .root -}}
+{{- $controllerType := .controllerType -}}
+{{- $result := dict -}}
+{{- if eq $controllerType "cronjob" -}}
+  {{- if $root.Values.controllers.cronjob -}}
+    {{- $result = $root.Values.controllers.cronjob -}}
+  {{- else -}}
+    {{- /* Fallback to legacy backup values */ -}}
+    {{- $_ := set $result "enabled" $root.Values.backup.enabled -}}
+    {{- $_ := set $result "schedule" $root.Values.backup.schedule -}}
+    {{- $_ := set $result "concurrencyPolicy" $root.Values.backup.concurrencyPolicy -}}
+    {{- $_ := set $result "successfulJobsHistoryLimit" $root.Values.backup.successfulJobsHistoryLimit -}}
+    {{- $_ := set $result "failedJobsHistoryLimit" $root.Values.backup.failedJobsHistoryLimit -}}
+    {{- $_ := set $result "startingDeadlineSeconds" 30 -}}
+    {{- $_ := set $result "ttlSecondsAfterFinished" $root.Values.backup.ttlSecondsAfterFinished -}}
+    {{- $_ := set $result "terminationGracePeriodSeconds" $root.Values.backup.terminationGracePeriodSeconds -}}
+    {{- $_ := set $result "resources" $root.Values.backup.resources -}}
+    {{- $_ := set $result "nodeSelector" $root.Values.backup.nodeSelector -}}
+    {{- $_ := set $result "tolerations" $root.Values.backup.tolerations -}}
+    {{- $_ := set $result "affinity" $root.Values.backup.affinity -}}
+    {{- $_ := set $result "livenessProbe" $root.Values.backup.livenessProbe -}}
+    {{- $_ := set $result "image" (dict "repository" "postgres" "tag" "16" "pullPolicy" "IfNotPresent") -}}
+  {{- end -}}
+{{- else if eq $controllerType "job" -}}
+  {{- if $root.Values.controllers.job -}}
+    {{- $result = $root.Values.controllers.job -}}
+  {{- else -}}
+    {{- /* Fallback to legacy restore values */ -}}
+    {{- $_ := set $result "enabled" $root.Values.restoreLegacy.enabled -}}
+    {{- $_ := set $result "resources" $root.Values.restoreLegacy.resources -}}
+    {{- $_ := set $result "nodeSelector" $root.Values.restoreLegacy.nodeSelector -}}
+    {{- $_ := set $result "tolerations" $root.Values.restoreLegacy.tolerations -}}
+    {{- $_ := set $result "affinity" $root.Values.restoreLegacy.affinity -}}
+    {{- $_ := set $result "terminationGracePeriodSeconds" $root.Values.restoreLegacy.terminationGracePeriodSeconds -}}
+    {{- $_ := set $result "ttlSecondsAfterFinished" $root.Values.restoreLegacy.ttlSecondsAfterFinished -}}
+    {{- $_ := set $result "backoffLimit" $root.Values.restoreLegacy.backoffLimit -}}
+    {{- $_ := set $result "annotations" (dict "helm.sh/hook" "post-install" "helm.sh/hook-delete-policy" "hook-succeeded,before-hook-creation") -}}
+    {{- $_ := set $result "image" (dict "repository" "postgres" "tag" "16" "pullPolicy" "IfNotPresent") -}}
+  {{- end -}}
+{{- end -}}
+{{- $result | toYaml -}}
 {{- end -}}

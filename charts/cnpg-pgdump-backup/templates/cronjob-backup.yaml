@@ -1,5 +1,39 @@
-{{- if .Values.backup.enabled }}
+{{- if .Values.controllers.cronjob.enabled }}
 {{- include "cnpg-backup.validateValues" . -}}
+{{- $cronjob := .Values.controllers.cronjob -}}
+{{- $scriptsCM := include "cnpg-backup.scriptsConfigMapName" . -}}
+{{- $root := . -}}
+
+{{- /* Build image specification */ -}}
+{{- $imageSpec := dict -}}
+{{- if $cronjob.image -}}
+  {{- $imageSpec = $cronjob.image -}}
+{{- else -}}
+  {{- $imageSpec = .Values.image -}}
+{{- end -}}
+{{- $image := include "cnpg-backup.image" (dict "rootContext" $root "imageSpec" $imageSpec) -}}
+
+{{- $imagePullPolicy := "IfNotPresent" -}}
+{{- if $cronjob.image.pullPolicy -}}
+{{- $imagePullPolicy = $cronjob.image.pullPolicy -}}
+{{- end -}}
+
+{{- $securityContext := dict -}}
+{{- if $cronjob.securityContext -}}
+{{- $securityContext = $cronjob.securityContext -}}
+{{- else -}}
+{{- $securityContext = dict "runAsNonRoot" true "runAsUser" 999 "runAsGroup" 999 "allowPrivilegeEscalation" false -}}
+{{- end -}}
+
+{{- $serviceAccountName := "" -}}
+{{- if $cronjob.serviceAccountName -}}
+{{- $serviceAccountName = $cronjob.serviceAccountName -}}
+{{- else if and .Values.rbac.create .Values.rbac.serviceAccountName -}}
+{{- $serviceAccountName = .Values.rbac.serviceAccountName -}}
+{{- else if .Values.rbac.create -}}
+{{- $serviceAccountName = include "cnpg-backup.fullname" . -}}
+{{- end -}}
+
 apiVersion: batch/v1
 kind: CronJob
 metadata:
@@ -7,151 +41,170 @@ metadata:
   namespace: {{ .Release.Namespace }}
   labels:
     {{- include "cnpg-backup.labels" . | nindent 4 }}
+    {{- if $cronjob.labels -}}
+    {{- toYaml $cronjob.labels | nindent 4 }}
+    {{- end }}
   annotations:
+    {{- if $cronjob.annotations -}}
+    {{- toYaml $cronjob.annotations | nindent 4 }}
+    {{- end }}
     description: "Scheduled PostgreSQL backup job for CNPG cluster"
 spec:
-  schedule: {{ .Values.backup.schedule | quote }}
-  successfulJobsHistoryLimit: {{ .Values.backup.successfulJobsHistoryLimit | default 3 }}
-  failedJobsHistoryLimit: {{ .Values.backup.failedJobsHistoryLimit | default 3 }}
-  concurrencyPolicy: {{ .Values.backup.concurrencyPolicy | default "Forbid" }}
+  schedule: {{ $cronjob.schedule | quote }}
+  successfulJobsHistoryLimit: {{ $cronjob.successfulJobsHistoryLimit | default 3 }}
+  failedJobsHistoryLimit: {{ $cronjob.failedJobsHistoryLimit | default 3 }}
+  concurrencyPolicy: {{ $cronjob.concurrencyPolicy | default "Forbid" }}
+  {{- with $cronjob.timezone }}
+  timeZone: {{ . }}
+  {{- end }}
+  {{- with $cronjob.startingDeadlineSeconds }}
+  startingDeadlineSeconds: {{ . }}
+  {{- end }}
   jobTemplate:
     spec:
-      {{- with .Values.backup.ttlSecondsAfterFinished }}
+      {{- with $cronjob.ttlSecondsAfterFinished }}
       ttlSecondsAfterFinished: {{ . }}
       {{- end }}
       template:
         metadata:
           labels:
             {{- include "cnpg-backup.selectorLabels" . | nindent 12 }}
-          {{- with .Values.monitoring.annotations }}
+            {{- if $cronjob.podLabels -}}
+            {{- toYaml $cronjob.podLabels | nindent 12 }}
+            {{- end -}}
+          {{- with $cronjob.podAnnotations }}
           annotations:
             {{- toYaml . | nindent 12 }}
           {{- end }}
         spec:
-          {{- with .Values.backup.nodeSelector }}
+          {{- if $serviceAccountName }}
+          serviceAccountName: {{ $serviceAccountName }}
+          {{- end }}
+          {{- if $cronjob.automountServiceAccountToken }}
+          automountServiceAccountToken: {{ $cronjob.automountServiceAccountToken }}
+          {{- end }}
+          {{- if $cronjob.podSecurityContext }}
+          securityContext:
+            {{- toYaml $cronjob.podSecurityContext | nindent 12 }}
+          {{- end }}
+          {{- with $cronjob.nodeSelector }}
           nodeSelector:
             {{- toYaml . | nindent 12 }}
           {{- end }}
-          {{- with .Values.backup.affinity }}
-          affinity:
-            {{- toYaml . | nindent 12 }}
-          {{- end }}
-          {{- with .Values.backup.tolerations }}
+          {{- with $cronjob.tolerations }}
           tolerations:
             {{- toYaml . | nindent 12 }}
           {{- end }}
-          {{- with .Values.imagePullSecrets }}
-          imagePullSecrets:
+          {{- with $cronjob.affinity }}
+          affinity:
             {{- toYaml . | nindent 12 }}
           {{- end }}
-          restartPolicy: OnFailure
-          {{- if .Values.backup.terminationGracePeriodSeconds }}
-          terminationGracePeriodSeconds: {{ .Values.backup.terminationGracePeriodSeconds }}
+          {{- with $cronjob.topologySpreadConstraints }}
+          topologySpreadConstraints:
+            {{- toYaml . | nindent 12 }}
           {{- end }}
-
+          {{- with $cronjob.terminationGracePeriodSeconds }}
+          terminationGracePeriodSeconds: {{ . }}
+          {{- end }}
           initContainers:
-            - name: install-aws-cli
-              image: {{ .Values.backup.image }}
-              imagePullPolicy: {{ .Values.backup.imagePullPolicy | default "IfNotPresent" }}
+            - name: install-dependencies
+              image: alpine:3.18
               securityContext:
-                runAsUser: 0
+                runAsNonRoot: true
+                runAsUser: 1000
+                runAsGroup: 1000
+                allowPrivilegeEscalation: false
+                capabilities:
+                  drop:
+                    - ALL
               command:
-                - /bin/bash
+                - /bin/sh
                 - -c
                 - |
                   set -euo pipefail
-                  echo "Installing AWS CLI v2..."
-                  apt-get update && apt-get install -y --no-install-recommends curl unzip
-                  rm -rf /var/lib/apt/lists/*
-                  curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
-                  unzip awscliv2.zip
-                  ./aws/install --bin-dir /tools/bin --install-dir /tools/aws-cli
-                  rm -rf awscliv2.zip aws
-                  chmod -R a+rx /tools
-                  echo "AWS CLI installed successfully at /tools/bin/aws"
+                  echo "Installing dependencies..."
+                  
+                  # Create tools directory with correct permissions
+                  mkdir -p /tools/bin
+                  chown -R 1000:1000 /tools
+                  
+                  # Install as non-root using --no-cache in temp directory
+                  export HOME=/tmp
+                  apk add --no-cache postgresql-client aws-cli
+                  
+                  echo "Copying binaries to /tools..."
+                  cp /usr/bin/psql /usr/bin/pg_dump /usr/bin/pg_isready /usr/bin/aws /tools/bin/
+                  
+                  # Set executable permissions
+                  chmod -R 755 /tools
+                  echo "Tools ready"
               volumeMounts:
                 - name: tools
                   mountPath: /tools
-            - name: wait-for-pg
-              image: {{ .Values.backup.image }}
-              imagePullPolicy: {{ .Values.backup.imagePullPolicy | default "IfNotPresent" }}
-              command:
-                - /bin/bash
-                - -c
-                - |
-                  set -euo pipefail
-                  echo "Waiting for PostgreSQL to be ready..."
-                  local max_attempts=30
-                  local attempt=0
-                  while [[ $attempt -lt $max_attempts ]]; do
-                    if pg_isready -h "${PGHOST}" -p "${PGPORT}" -q 2>/dev/null; then
-                      echo "PostgreSQL is ready"
-                      exit 0
-                    fi
-                    attempt=$((attempt + 1))
-                    echo "PostgreSQL not ready (attempt ${attempt}/${max_attempts}), retrying in 5s..."
-                    sleep 5
-                  done
-                  echo "PostgreSQL did not become ready in time"
-                  exit 1
-              env:
-                - name: PGHOST
-                  valueFrom:
-                    secretKeyRef:
-                      name: {{ .Values.cnpg.secretName }}
-                      key: host
-                - name: PGPORT
-                  valueFrom:
-                    secretKeyRef:
-                      name: {{ .Values.cnpg.secretName }}
-                      key: port
-
           containers:
             - name: backup
-              image: {{ .Values.backup.image }}
-              imagePullPolicy: {{ .Values.backup.imagePullPolicy | default "IfNotPresent" }}
+              image: {{ $image }}
+              imagePullPolicy: {{ $imagePullPolicy }}
               command: ["/bin/bash", "/scripts/backup.sh"]
-              {{- with .Values.backup.resources }}
+              {{- with $cronjob.resources }}
               resources:
                 {{- toYaml . | nindent 16 }}
               {{- end }}
               securityContext:
-                {{- include "cnpg-backup.securityContext" . | nindent 16 }}
+                {{- toYaml . | nindent 16 }}  # ✅ CORRECT: regular hyphen
               env:
                 - name: PATH
                   value: /tools/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
                 - name: PGHOST
                   valueFrom:
                     secretKeyRef:
-                      name: {{ .Values.cnpg.secretName }}
+                      name: {{ $root.Values.cnpg.secretName }}
                       key: host
                 - name: PGPORT
                   valueFrom:
                     secretKeyRef:
-                      name: {{ .Values.cnpg.secretName }}
+                      name: {{ $root.Values.cnpg.secretName }}
                       key: port
                 - name: PGDATABASE
-                  value: {{ .Values.cnpg.database }}
+                  value: {{ $root.Values.cnpg.database }}
                 - name: PGUSER
                   valueFrom:
                     secretKeyRef:
-                      name: {{ .Values.cnpg.secretName }}
+                      name: {{ $root.Values.cnpg.secretName }}
                       key: username
                 - name: PGPASSWORD
                   valueFrom:
                     secretKeyRef:
-                      name: {{ .Values.cnpg.secretName }}
+                      name: {{ $root.Values.cnpg.secretName }}
                       key: password
-                {{- if .Values.s3.region }}
+                # Map Terraform S3_* keys to AWS_* keys for scripts
+                - name: AWS_ACCESS_KEY_ID
+                  valueFrom:
+                    secretKeyRef:
+                      name: {{ $root.Values.s3.secretName }}
+                      key: S3_ACCESS_KEY_ID
+                - name: AWS_SECRET_ACCESS_KEY
+                  valueFrom:
+                    secretKeyRef:
+                      name: {{ $root.Values.s3.secretName }}
+                      key: S3_SECRET_ACCESS_KEY
+                # Use region from values, fallback to secret
+                {{- if $root.Values.s3.region }}
                 - name: AWS_REGION
-                  value: {{ .Values.s3.region }}
+                  value: {{ $root.Values.s3.region }}
                 - name: AWS_DEFAULT_REGION
-                  value: {{ .Values.s3.region }}
-                {{- end }}
-              envFrom:
-                {{- if .Values.s3.secretName }}
-                - secretRef:
-                    name: {{ .Values.s3.secretName }}
+                  value: {{ $root.Values.s3.region }}
+                {{- else }}
+                - name: AWS_REGION
+                  valueFrom:
+                    secretKeyRef:
+                      name: {{ $root.Values.s3.secretName }}
+                      key: S3_REGION_NAME
+                - name: AWS_DEFAULT_REGION
+                  valueFrom:
+                    secretKeyRef:
+                      name: {{ $root.Values.s3.secretName }}
+                      key: S3_REGION_NAME
                 {{- end }}
               volumeMounts:
                 - name: scripts
@@ -159,15 +212,20 @@ spec:
                   readOnly: true
                 - name: tools
                   mountPath: /tools
-              {{- with .Values.backup.livenessProbe }}
+                  readOnly: true
+                - name: tmp
+                  mountPath: /tmp
+              {{- with $cronjob.livenessProbe }}
               livenessProbe:
-                {{- toYaml . | nindent 16 }}
+                {{- toYaml . | nindent 16 }}   
               {{- end }}
           volumes:
             - name: scripts
               configMap:
-                name: {{ include "cnpg-backup.scriptsConfigMapName" . }}
+                name: {{ $scriptsCM }}
                 defaultMode: 0755
             - name: tools
+              emptyDir: {}
+            - name: tmp
               emptyDir: {}
 {{- end }}
