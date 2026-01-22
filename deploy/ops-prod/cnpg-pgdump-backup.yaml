@@ -1,0 +1,26 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: cnpg-pgdump-backup
+  namespace: argocd
+spec:
+  project: default
+
+  source:
+    repoURL: git@github.com:ADORSYS-GIS/ai-ops.git
+    targetRevision: feat/backup-with-pg-dump
+    path: charts/cnpg-pgdump-backup
+    helm:
+      releaseName: cnpg-pgdump-backup
+      valueFiles:
+        - values.yaml
+
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: litellm
+
+  syncPolicy:
+    syncOptions:
+      - ServerSideApply=true
+
+  revisionHistoryLimit: 2
