@@ -135,7 +135,7 @@ data:
     perform_backup() {
         local db_name="${PGDATABASE}"
         local backup_file="/tmp/${db_name}_${TIMESTAMP}.sql.gz"
-        local s3_bucket="{{ .Values.s3.bucket }}"
+        local s3_bucket="${S3_BUCKET_NAME}"
         local s3_prefix="{{ .Values.s3.prefix }}"
         {{- if .Values.s3.endpoint }}
         local s3_endpoint="{{ .Values.s3.endpoint }}"
@@ -192,7 +192,7 @@ data:
     ###############################################################################
     upload_to_s3() {
         local backup_file="$1"
-        local s3_bucket="{{ .Values.s3.bucket }}"
+        local s3_bucket="${S3_BUCKET_NAME}"
         local s3_prefix="{{ .Values.s3.prefix }}"
         {{- if .Values.s3.endpoint }}
         local s3_endpoint="{{ .Values.s3.endpoint }}"
@@ -252,7 +252,7 @@ data:
     ###############################################################################
     cleanup_old_backups() {
     {{- if and (.Values.backup.retentionDays) (gt (.Values.backup.retentionDays | int) 0) }}
-    local s3_bucket="{{ .Values.s3.bucket }}"
+    local s3_bucket="${S3_BUCKET_NAME}"
     local s3_prefix="{{ .Values.s3.prefix }}"
     local retention_days="{{ .Values.backup.retentionDays }}"
 
@@ -462,7 +462,7 @@ data:
     ###############################################################################
     download_from_s3() {
         local s3_object="$1"
-        local s3_bucket="{{ .Values.s3.bucket }}"
+        local s3_bucket="${S3_BUCKET_NAME}"
         local s3_prefix="{{ .Values.s3.prefix }}"
         {{- if .Values.s3.endpoint }}
         local s3_endpoint="{{ .Values.s3.endpoint }}"

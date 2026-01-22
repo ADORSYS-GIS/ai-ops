@@ -110,12 +110,6 @@ Validate required values - PRODUCTION READY VERSION
   {{- if not .Values.cnpg.secretName -}}
     {{- $errors = append $errors "cnpg.secretName is required when controllers.cronjob.enabled is true" -}}
   {{- end -}}
-  {{- if not .Values.cnpg.database -}}
-    {{- $errors = append $errors "cnpg.database is required when controllers.cronjob.enabled is true" -}}
-  {{- end -}}
-  {{- if not .Values.s3.bucket -}}
-    {{- $errors = append $errors "s3.bucket is required when controllers.cronjob.enabled is true" -}}
-  {{- end -}}
   {{- if not .Values.s3.secretName -}}
     {{- $errors = append $errors "s3.secretName is required when controllers.cronjob.enabled is true" -}}
   {{- end -}}
@@ -130,12 +124,6 @@ Validate required values - PRODUCTION READY VERSION
   {{- /* Basic Job validation only when restoring */ -}}
   {{- if not .Values.cnpg.secretName -}}
     {{- $errors = append $errors "cnpg.secretName is required when restoring (controllers.job.enabled and restore.object are set)" -}}
-  {{- end -}}
-  {{- if not .Values.cnpg.database -}}
-    {{- $errors = append $errors "cnpg.database is required when restoring (controllers.job.enabled and restore.object are set)" -}}
-  {{- end -}}
-  {{- if not .Values.s3.bucket -}}
-    {{- $errors = append $errors "s3.bucket is required when restoring (controllers.job.enabled and restore.object are set)" -}}
   {{- end -}}
   {{- if not .Values.s3.secretName -}}
     {{- $errors = append $errors "s3.secretName is required when restoring (controllers.job.enabled and restore.object are set)" -}}

@@ -166,7 +166,10 @@ spec:
                       name: {{ $root.Values.cnpg.secretName }}
                       key: port
                 - name: PGDATABASE
-                  value: {{ $root.Values.cnpg.database }}
+                  valueFrom:
+                    secretKeyRef:
+                      name: {{ $root.Values.cnpg.secretName }}
+                      key: dbname
                 - name: PGUSER
                   valueFrom:
                     secretKeyRef:
