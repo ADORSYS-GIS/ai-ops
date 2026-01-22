@@ -63,12 +63,7 @@ Restore Job name
 {{- printf "%s-restore" (include "cnpg-backup.fullname" .) }}
 {{- end }}
 
-{{/*
-Scripts ConfigMap name
-*/}}
-{{- define "cnpg-backup.scriptsConfigMapName" -}}
-{{- printf "%s-scripts" (include "cnpg-backup.fullname" .) }}
-{{- end }}
+
 
 {{/*
 Image specification to image string

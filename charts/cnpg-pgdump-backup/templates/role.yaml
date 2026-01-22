@@ -7,22 +7,11 @@ metadata:
   labels:
     {{- include "cnpg-backup.labels" . | nindent 4 }}
 rules:
-  # Allow reading CNPG secret
+  # Allow reading CNPG and S3 secrets
   - apiGroups: [""]
     resources: ["secrets"]
     verbs: ["get"]
-    resourceNames:
-      - {{ .Values.cnpg.secretName | quote }}
-      {{- if .Values.s3.secretName }}
-      - {{ .Values.s3.secretName | quote }}
-      {{- end }}
   
-  # Allow reading configmaps (for scripts)
-  - apiGroups: [""]
-    resources: ["configmaps"]
-    verbs: ["get"]
-    resourceNames:
-      - {{ include "cnpg-backup.scriptsConfigMapName" . | quote }}
   
   # Allow creating pods (for Jobs/CronJobs)
   - apiGroups: [""]

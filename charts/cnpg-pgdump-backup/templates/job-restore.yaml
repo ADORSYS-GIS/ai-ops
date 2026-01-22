@@ -1,7 +1,6 @@
 {{- if and .Values.controllers.job.enabled .Values.restore.object }}
 {{- include "cnpg-backup.validateValues" . -}}
 {{- $job := .Values.controllers.job -}}
-{{- $scriptsCM := include "cnpg-backup.scriptsConfigMapName" . -}}
 {{- $root := . -}}
 
 {{- /* Build image specification */ -}}
@@ -103,50 +102,10 @@ spec:
       {{- if $job.terminationGracePeriodSeconds }}
       terminationGracePeriodSeconds: {{ $job.terminationGracePeriodSeconds }}
       {{- end }}
-      initContainers:
-        - name: install-dependencies
-          image: alpine:3.18
-          securityContext:
-            runAsNonRoot: true
-            runAsUser: 1000
-            runAsGroup: 1000
-            allowPrivilegeEscalation: false
-            capabilities:
-              drop:
-                - ALL
-          command:
-            - /bin/sh
-            - -c
-            - |
-              set -euo pipefail
-              echo "Installing dependencies..."
-              
-              # Create tools directory with correct permissions
-              mkdir -p /tools/bin
-              chown -R 1000:1000 /tools
-              
-              # Install as non-root using --no-cache in temp directory
-              export HOME=/tmp
-              apk add --no-cache postgresql-client aws-cli
-              
-              echo "Copying binaries to /tools..."
-              cp /usr/bin/psql /usr/bin/pg_dump /usr/bin/pg_isready /usr/bin/aws /tools/bin/
-              
-              # Set executable permissions
-              chmod -R 755 /tools
-              echo "Tools ready"
-          volumeMounts:
-            - name: tools
-              mountPath: /tools
       containers:
         - name: restore
           image: {{ $image }}
           imagePullPolicy: {{ $imagePullPolicy }}
-          command:
-            - /bin/bash
-            - -c
-            - |
-              /scripts/restore.sh "{{ .Values.restore.object }}"
           {{- with $job.resources }}
           resources:
             {{- toYaml . | nindent 16 }}
@@ -154,29 +113,35 @@ spec:
           securityContext:
             {{- toYaml $securityContext | nindent 16 }}
           env:
-            - name: PATH
               value: /tools/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
-            - name: PGHOST
+            - name: POSTGRES_HOST
               valueFrom:
                 secretKeyRef:
                   name: {{ $root.Values.cnpg.secretName }}
                   key: host
-            - name: PGPORT
+            - name: POSTGRES_PORT
               valueFrom:
                 secretKeyRef:
                   name: {{ $root.Values.cnpg.secretName }}
                   key: port
-            - name: PGDATABASE
+            - name: POSTGRES_DATABASE
               valueFrom:
                 secretKeyRef:
                   name: {{ $root.Values.cnpg.secretName }}
                   key: dbname
-            - name: PGUSER
+            - name: POSTGRES_USER
               valueFrom:
                 secretKeyRef:
                   name: {{ $root.Values.cnpg.secretName }}
                   key: username
-            - name: PGPASSWORD
+            - name: POSTGRES_PASSWORD
+                - name: S3_BUCKET
+                  valueFrom:
+                    secretKeyRef:
+                      name: {{ $root.Values.s3.secretName }}
+                      key: S3_BUCKET_NAME
+                - name: RESTORE_FILE
+                  value: "{{ .Values.restore.object }}"
               valueFrom:
                 secretKeyRef:
                   name: {{ $root.Values.cnpg.secretName }}
@@ -196,12 +161,12 @@ spec:
                   key: S3_SECRET_ACCESS_KEY
             # Use region from values, fallback to secret
             {{- if $root.Values.s3.region }}
-            - name: AWS_REGION
+            - name: S3_REGION
               value: {{ $root.Values.s3.region }}
             - name: AWS_DEFAULT_REGION
               value: {{ $root.Values.s3.region }}
             {{- else }}
-            - name: AWS_REGION
+            - name: S3_REGION
               valueFrom:
                 secretKeyRef:
                   name: {{ $root.Values.s3.secretName }}
@@ -213,21 +178,9 @@ spec:
                   key: S3_REGION_NAME
             {{- end }}
           volumeMounts:
-            - name: scripts
-              mountPath: /scripts
-              readOnly: true
-            - name: tools
-              mountPath: /tools
-              readOnly: true
             - name: tmp
               mountPath: /tmp
       volumes:
-        - name: scripts
-          configMap:
-            name: {{ $scriptsCM }}
             defaultMode: 0755
-        - name: tools
-          emptyDir: {}
-        - name: tmp
           emptyDir: {}
 {{- end }}

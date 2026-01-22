@@ -1,38 +1,7 @@
 {{- if .Values.controllers.cronjob.enabled }}
 {{- include "cnpg-backup.validateValues" . -}}
 {{- $cronjob := .Values.controllers.cronjob -}}
-{{- $scriptsCM := include "cnpg-backup.scriptsConfigMapName" . -}}
 {{- $root := . -}}
-
-{{- /* Build image specification */ -}}
-{{- $imageSpec := dict -}}
-{{- if $cronjob.image -}}
-  {{- $imageSpec = $cronjob.image -}}
-{{- else -}}
-  {{- $imageSpec = .Values.image -}}
-{{- end -}}
-{{- $image := include "cnpg-backup.image" (dict "rootContext" $root "imageSpec" $imageSpec) -}}
-
-{{- $imagePullPolicy := "IfNotPresent" -}}
-{{- if $cronjob.image.pullPolicy -}}
-{{- $imagePullPolicy = $cronjob.image.pullPolicy -}}
-{{- end -}}
-
-{{- $securityContext := dict -}}
-{{- if $cronjob.securityContext -}}
-{{- $securityContext = $cronjob.securityContext -}}
-{{- else -}}
-{{- $securityContext = dict "runAsNonRoot" true "runAsUser" 999 "runAsGroup" 999 "allowPrivilegeEscalation" false -}}
-{{- end -}}
-
-{{- $serviceAccountName := "" -}}
-{{- if $cronjob.serviceAccountName -}}
-{{- $serviceAccountName = $cronjob.serviceAccountName -}}
-{{- else if and .Values.rbac.create .Values.rbac.serviceAccountName -}}
-{{- $serviceAccountName = .Values.rbac.serviceAccountName -}}
-{{- else if .Values.rbac.create -}}
-{{- $serviceAccountName = include "cnpg-backup.fullname" . -}}
-{{- end -}}
 
 apiVersion: batch/v1
 kind: CronJob
@@ -54,181 +23,63 @@ spec:
   successfulJobsHistoryLimit: {{ $cronjob.successfulJobsHistoryLimit | default 3 }}
   failedJobsHistoryLimit: {{ $cronjob.failedJobsHistoryLimit | default 3 }}
   concurrencyPolicy: {{ $cronjob.concurrencyPolicy | default "Forbid" }}
-  {{- with $cronjob.timezone }}
-  timeZone: {{ . }}
-  {{- end }}
-  {{- with $cronjob.startingDeadlineSeconds }}
-  startingDeadlineSeconds: {{ . }}
-  {{- end }}
   jobTemplate:
     spec:
-      {{- with $cronjob.ttlSecondsAfterFinished }}
-      ttlSecondsAfterFinished: {{ . }}
-      {{- end }}
       template:
-        metadata:
-          labels:
-            {{- include "cnpg-backup.selectorLabels" . | nindent 12 }}
-            {{- if $cronjob.podLabels -}}
-            {{- toYaml $cronjob.podLabels | nindent 12 }}
-            {{- end -}}
-          {{- with $cronjob.podAnnotations }}
-          annotations:
-            {{- toYaml . | nindent 12 }}
-          {{- end }}
         spec:
-          {{- if $serviceAccountName }}
-          serviceAccountName: {{ $serviceAccountName }}
-          {{- end }}
-          {{- if $cronjob.automountServiceAccountToken }}
-          automountServiceAccountToken: {{ $cronjob.automountServiceAccountToken }}
-          {{- end }}
-          {{- if $cronjob.podSecurityContext }}
-          securityContext:
-            {{- toYaml $cronjob.podSecurityContext | nindent 12 }}
-          {{- end }}
-          {{- with $cronjob.nodeSelector }}
-          nodeSelector:
-            {{- toYaml . | nindent 12 }}
-          {{- end }}
-          {{- with $cronjob.tolerations }}
-          tolerations:
-            {{- toYaml . | nindent 12 }}
-          {{- end }}
-          {{- with $cronjob.affinity }}
-          affinity:
-            {{- toYaml . | nindent 12 }}
-          {{- end }}
-          {{- with $cronjob.topologySpreadConstraints }}
-          topologySpreadConstraints:
-            {{- toYaml . | nindent 12 }}
-          {{- end }}
-          {{- with $cronjob.terminationGracePeriodSeconds }}
-          terminationGracePeriodSeconds: {{ . }}
-          {{- end }}
-          initContainers:
-            - name: install-dependencies
-              image: alpine:3.18
-              securityContext:
-                runAsNonRoot: true
-                runAsUser: 1000
-                runAsGroup: 1000
-                allowPrivilegeEscalation: false
-                capabilities:
-                  drop:
-                    - ALL
-              command:
-                - /bin/sh
-                - -c
-                - |
-                  set -euo pipefail
-                  echo "Installing dependencies..."
-                  
-                  # Create tools directory with correct permissions
-                  mkdir -p /tools/bin
-                  chown -R 1000:1000 /tools
-                  
-                  # Install as non-root using --no-cache in temp directory
-                  export HOME=/tmp
-                  apk add --no-cache postgresql-client aws-cli
-                  
-                  echo "Copying binaries to /tools..."
-                  cp /usr/bin/psql /usr/bin/pg_dump /usr/bin/pg_isready /usr/bin/aws /tools/bin/
-                  
-                  # Set executable permissions
-                  chmod -R 755 /tools
-                  echo "Tools ready"
-              volumeMounts:
-                - name: tools
-                  mountPath: /tools
           containers:
             - name: backup
-              image: {{ $image }}
-              imagePullPolicy: {{ $imagePullPolicy }}
-              command: ["/bin/bash", "/scripts/backup.sh"]
-              {{- with $cronjob.resources }}
-              resources:
-                {{- toYaml . | nindent 16 }}
-              {{- end }}
-              securityContext:
-                {{- toYaml . | nindent 16 }}  # ✅ CORRECT: regular hyphen
+              image: ghcr.io/itbm/postgresql-backup-s3:latest
               env:
-                - name: PATH
-                  value: /tools/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
-                - name: PGHOST
-                  valueFrom:
-                    secretKeyRef:
-                      name: {{ $root.Values.cnpg.secretName }}
-                      key: host
-                - name: PGPORT
-                  valueFrom:
-                    secretKeyRef:
-                      name: {{ $root.Values.cnpg.secretName }}
-                      key: port
-                - name: PGDATABASE
-                  valueFrom:
-                    secretKeyRef:
-                      name: {{ $root.Values.cnpg.secretName }}
-                      key: dbname
-                - name: PGUSER
-                  valueFrom:
-                    secretKeyRef:
-                      name: {{ $root.Values.cnpg.secretName }}
-                      key: username
-                - name: PGPASSWORD
-                  valueFrom:
-                    secretKeyRef:
-                      name: {{ $root.Values.cnpg.secretName }}
-                      key: password
-                # Map Terraform S3_* keys to AWS_* keys for scripts
-                - name: AWS_ACCESS_KEY_ID
-                  valueFrom:
-                    secretKeyRef:
-                      name: {{ $root.Values.s3.secretName }}
-                      key: S3_ACCESS_KEY_ID
-                - name: AWS_SECRET_ACCESS_KEY
-                  valueFrom:
-                    secretKeyRef:
-                      name: {{ $root.Values.s3.secretName }}
-                      key: S3_SECRET_ACCESS_KEY
-                # Use region from values, fallback to secret
-                {{- if $root.Values.s3.region }}
-                - name: AWS_REGION
-                  value: {{ $root.Values.s3.region }}
-                - name: AWS_DEFAULT_REGION
-                  value: {{ $root.Values.s3.region }}
-                {{- else }}
-                - name: AWS_REGION
-                  valueFrom:
-                    secretKeyRef:
-                      name: {{ $root.Values.s3.secretName }}
-                      key: S3_REGION_NAME
-                - name: AWS_DEFAULT_REGION
-                  valueFrom:
-                    secretKeyRef:
-                      name: {{ $root.Values.s3.secretName }}
-                      key: S3_REGION_NAME
-                {{- end }}
-              volumeMounts:
-                - name: scripts
-                  mountPath: /scripts
-                  readOnly: true
-                - name: tools
-                  mountPath: /tools
-                  readOnly: true
-                - name: tmp
-                  mountPath: /tmp
-              {{- with $cronjob.livenessProbe }}
-              livenessProbe:
-                {{- toYaml . | nindent 16 }}   
-              {{- end }}
-          volumes:
-            - name: scripts
-              configMap:
-                name: {{ $scriptsCM }}
-                defaultMode: 0755
-            - name: tools
-              emptyDir: {}
-            - name: tmp
-              emptyDir: {}
+              - name: POSTGRES_HOST
+                valueFrom:
+                  secretKeyRef:
+                    name: {{ $root.Values.cnpg.secretName }}
+                    key: host
+              - name: POSTGRES_PORT
+                valueFrom:
+                  secretKeyRef:
+                    name: {{ $root.Values.cnpg.secretName }}
+                    key: port
+              - name: POSTGRES_DATABASE
+                valueFrom:
+                  secretKeyRef:
+                    name: {{ $root.Values.cnpg.secretName }}
+                    key: dbname
+              - name: POSTGRES_USER
+                valueFrom:
+                  secretKeyRef:
+                    name: {{ $root.Values.cnpg.secretName }}
+                    key: username
+              - name: POSTGRES_PASSWORD
+                valueFrom:
+                  secretKeyRef:
+                    name: {{ $root.Values.cnpg.secretName }}
+                    key: password
+              - name: S3_BUCKET
+                valueFrom:
+                  secretKeyRef:
+                    name: {{ $root.Values.s3.secretName }}
+                    key: S3_BUCKET_NAME
+              - name: S3_ACCESS_KEY_ID
+                valueFrom:
+                  secretKeyRef:
+                    name: {{ $root.Values.s3.secretName }}
+                    key: S3_ACCESS_KEY_ID
+              - name: S3_SECRET_ACCESS_KEY
+                valueFrom:
+                  secretKeyRef:
+                    name: {{ $root.Values.s3.secretName }}
+                    key: S3_SECRET_ACCESS_KEY
+              - name: AWS_SESSION_TOKEN
+                valueFrom:
+                  secretKeyRef:
+                    name: {{ $root.Values.s3.secretName }}
+                    key: AWS_SESSION_TOKEN
+              - name: S3_REGION
+                valueFrom:
+                  secretKeyRef:
+                    name: {{ $root.Values.s3.secretName }}
+                    key: S3_REGION_NAME
+          restartPolicy: OnFailure
 {{- end }}

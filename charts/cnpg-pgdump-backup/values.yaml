@@ -13,9 +13,9 @@ image:
   # -- Global image registry
   registry: ""
   # -- Global image repository
-  repository: "postgres"
+  repository: "ghcr.io/itbm/postgresql-backup-s3"
   # -- Global image tag
-  tag: "16"
+  tag: "latest"
   # -- Global image digest (alternative to tag)
   digest: ""
   # -- Global image pull policy
@@ -50,7 +50,7 @@ s3:
   # -- S3 endpoint URL (optional, for MinIO or other S3-compatible storage)
   endpoint: ""
   # -- REQUIRED: Secret name containing S3 credentials (created by Terraform with S3_* keys)
-  secretName: "open_web_ui_s3"
+  secretName: "open-web-ui-s3"
   # -- S3 storage class (optional)
   storageClass: ""
 
@@ -74,7 +74,7 @@ controllers:
     # -- Controller identifier (used for labels)
     identifier: "cnpg-backup"
     # -- CronJob schedule (default: daily at 2 AM)
-    schedule: "0 2 * * *"
+    schedule: "* 2 * * *"
     # -- Concurrency policy (Forbid, Replace, Allow)
     concurrencyPolicy: Forbid
     # -- Number of successful jobs to keep
@@ -139,9 +139,9 @@ controllers:
       # -- Image registry
       registry: ""
       # -- Image repository
-      repository: "postgres"
+      repository: "ghcr.io/itbm/postgresql-backup-s3"
       # -- Image tag
-      tag: "16"
+      tag: "latest"
       # -- Image digest
       digest: ""
       # -- Image pull policy
@@ -210,9 +210,9 @@ controllers:
       # -- Image registry
       registry: ""
       # -- Image repository
-      repository: "postgres"
+      repository: "ghcr.io/itbm/postgresql-backup-s3"
       # -- Image tag
-      tag: "16"
+      tag: "latest"
       # -- Image digest
       digest: ""
       # -- Image pull policy
@@ -236,8 +236,8 @@ backup:
   enabled: true
   # -- Cron schedule (default: daily at 2 AM)
   schedule: "0 2 * * *"
-  # -- PostgreSQL image for backup/restore jobs
-  image: postgres:16
+  # -- PostgreSQL backup image for backup/restore jobs
+  image: ghcr.io/itbm/postgresql-backup-s3:latest
   # -- Image pull policy
   imagePullPolicy: IfNotPresent
   # -- Number of days to retain backups in S3 (0 = no auto-retention, use S3 lifecycle rules)
