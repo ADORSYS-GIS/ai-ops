@@ -7,7 +7,7 @@ spec:
   project: default
 
   source:
-    repoURL: git@github.com:ADORSYS-GIS/ai-ops.git
+    repoURL: https://github.com/ADORSYS-GIS/ai-helm.git
     targetRevision: feat/backup-with-pg-dump
     path: charts/cnpg-pgdump-backup
     helm:
