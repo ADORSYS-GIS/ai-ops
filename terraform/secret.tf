@@ -114,6 +114,22 @@ resource "kubernetes_secret" "open_web_ui_s3" {
   depends_on = [kubernetes_namespace.chat_ui_namespace]
 }
 
+resource "kubernetes_secret" "litellm_s3" {
+  metadata {
+    name      = "open-web-ui-s3"
+    namespace = kubernetes_namespace.litellm_namespace.metadata[0].name
+  }
+  data = {
+    STORAGE_PROVIDER     = "s3"
+    S3_BUCKET_NAME       = module.storage.s3_bucket_name
+    S3_REGION_NAME       = module.storage.s3_region
+    S3_ACCESS_KEY_ID     = module.storage.s3_access_key_id
+    S3_SECRET_ACCESS_KEY = module.storage.s3_secret_access_key
+  }
+
+  depends_on = [kubernetes_namespace.chat_ui_namespace]
+}
+
 resource "kubernetes_secret" "open_web_ui_config" {
   metadata {
     name      = "open-web-ui-config"
