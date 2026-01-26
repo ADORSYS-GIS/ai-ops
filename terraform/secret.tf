@@ -114,7 +114,7 @@ resource "kubernetes_secret" "open_web_ui_s3" {
   depends_on = [kubernetes_namespace.chat_ui_namespace]
 }
 
-resource "kubernetes_secret" "open_web_ui_s3" {
+resource "kubernetes_secret" "litellm_s3" {
   metadata {
     name      = "open-web-ui-s3"
     namespace = kubernetes_namespace.litellm_namespace.metadata[0].name
