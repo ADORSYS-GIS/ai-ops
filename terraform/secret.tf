@@ -127,7 +127,7 @@ resource "kubernetes_secret" "litellm_s3" {
     S3_SECRET_ACCESS_KEY = module.storage.s3_secret_access_key
   }
 
-  depends_on = [kubernetes_namespace.chat_ui_namespace]
+  depends_on = [kubernetes_namespace.litellm_namespace]
 }
 
 resource "kubernetes_secret" "open_web_ui_config" {
