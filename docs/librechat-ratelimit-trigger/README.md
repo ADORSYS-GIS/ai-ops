@@ -85,6 +85,8 @@ Edit the existing `values.yaml` file and ensure it contains the following config
 - Forward X-User-ID and X-User-Email headers
 - Point baseURL to the Envoy gateway
 
+> **Note:** Replace `REPLACE_YOUR_API_KEY` with your actual API key in both the `apiKey` and `Authorization` header fields.
+
 ```yaml
 librechat:
   configEnv:
@@ -196,6 +198,8 @@ This `LIBRECHAT_USER_ID` will be reused directly in the request headers.
 ## Step 7: Saturate the Rate Limit via Terminal Requests
 
 The goal is to consume the rate limit outside of LibreChat using the same X-User-ID, so that rate-limit errors begin to surface in the LibreChat UI.
+
+> **Important:** Replace `REPLACE_YOUR_API_KEY` with your actual API key in the Authorization header.
 
 Run the following script:
 
