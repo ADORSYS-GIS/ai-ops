@@ -8,9 +8,9 @@ The test is performed locally using **k3s** (or any local Kubernetes cluster) an
 
 ## Goal
 
-- Validate that rate limiting based on `X-User-ID` is correctly enforced by Envoy.
-- Demonstrate that LibreChat UI timeouts can mask rate-limit errors (e.g. `429` / `409`) that are otherwise visible when using direct `curl` requests.
-- Provide a deterministic way to reproduce the behavior and reach the same conclusion.
+- Validate that rate limiting based on `X-User-ID` is correctly enforced by Envoy
+- Demonstrate that LibreChat UI timeouts can mask rate-limit errors (e.g. `429` / `409`) that are otherwise visible using direct `curl` requests
+- Provide a deterministic way to reproduce the behavior and reach the same conclusion
 
 ---
 
@@ -31,9 +31,9 @@ http://converse-llm.camer.digital/v1/chat/completions
 
 ## LibreChat Setup (Custom Provider)
 
-LibreChat will be configured to use a **custom OpenAI-compatible endpoint** pointing directly to the Envoy gateway.
+LibreChat will be configured to use a custom OpenAI-compatible endpoint pointing directly to the Envoy gateway.
 
-Reference documentation:  
+Reference documentation:
 https://www.librechat.ai/docs/quick_start/custom_endpoints
 
 ---
@@ -65,12 +65,22 @@ kubectl apply -f secret-envs.yaml
 
 ---
 
-## Step 2: Configure values.yaml
+## Step 2: Install LibreChat via Helm (Local Chart)
 
-Ensure your `values.yaml` contains the following configuration.
+Clone the LibreChat repository and move to the Helm chart directory:
 
-Key points:
+```bash
+git clone https://github.com/danny-avila/LibreChat.git
+cd LibreChat/helm/librechat
+```
 
+---
+
+## Step 3: Configure values.yaml
+
+Edit the existing `values.yaml` file and ensure it contains the following configuration.
+
+**Key points:**
 - Enable the custom endpoint
 - Forward X-User-ID and X-User-Email headers
 - Point baseURL to the Envoy gateway
@@ -116,37 +126,28 @@ librechat:
 
 ---
 
-## Step 3: Install LibreChat via Helm
+## Step 4: Install LibreChat
+
+Install LibreChat using the local Helm chart:
 
 ```bash
-helm repo add librechat https://danny-avila.github.io/LibreChat/
-helm install librechat librechat/librechat -f values.yaml
+helm install librechat . -f values.yaml
 ```
 
 ---
 
-## Step 4: Expose the Service
+## Step 5: Access the LibreChat UI (Port Forward)
 
-By default, LibreChat uses ClusterIP. For local testing, expose it externally.
+Forward the LibreChat service locally:
 
-Example:
-
-```yaml
-service:
-  type: LoadBalancer
-  port: 3080
+```bash
+kubectl port-forward service/librechat-librechat 3080:3080
 ```
-
-Alternatively, use an Ingress if available.
-
----
-
-## Step 5: Access the LibreChat UI
 
 Open the UI in your browser:
 
 ```
-http://<external-ip>:3080
+http://127.0.0.1:3080
 ```
 
 1. Register a user
@@ -157,41 +158,46 @@ Once confirmed, proceed to the rate-limit test.
 
 ---
 
-## Step 6: Identify the LibreChat User ID
+## Step 6: Dynamically Extract and Export the LibreChat User ID
 
-Get the LibreChat pod name:
-
-```bash
-kubectl get pods
-```
-
-Example output:
-
-```
-librechat-librechat-57b4f56689-zfw2t   1/1   Running
-```
-
-Extract the user ID from the logs:
+Identify the running LibreChat pod:
 
 ```bash
-kubectl logs librechat-librechat-57b4f56689-zfw2t | grep -i userId
+kubectl get pods | grep librechat-librechat
 ```
 
-Example:
+Export the pod name as an environment variable:
 
-```
-userId: "6980c40cc77704fe088e4675"
+```bash
+export LIBRECHAT_POD=$(kubectl get pods \
+  | grep librechat-librechat \
+  | awk '{print $1}')
 ```
 
-Save this value — it will be reused in the curl test.
+Extract the LibreChat userId from the logs and export it:
+
+```bash
+export LIBRECHAT_USER_ID=$(kubectl logs "$LIBRECHAT_POD" \
+  | grep -i 'userId' \
+  | head -n 1 \
+  | sed -E 's/.*"([a-f0-9]{24})".*/\1/')
+```
+
+Verify the extracted value:
+
+```bash
+echo "LibreChat User ID: $LIBRECHAT_USER_ID"
+```
+
+This `LIBRECHAT_USER_ID` will be reused directly in the request headers.
 
 ---
 
 ## Step 7: Saturate the Rate Limit via Terminal Requests
 
-The goal is to consume the rate limit outside LibreChat so that the UI starts receiving rate-limit errors.
+The goal is to consume the rate limit outside of LibreChat using the same X-User-ID, so that rate-limit errors begin to surface in the LibreChat UI.
 
-Run the following script from your terminal:
+Run the following script:
 
 ```bash
 #!/bin/bash
@@ -199,7 +205,7 @@ Run the following script from your terminal:
 while true; do
   curl -X POST -v -L \
     -H "Content-Type: application/json" \
-    -H "X-User-ID: 6980c40cc77704fe088e4675" \
+    -H "X-User-ID: ${LIBRECHAT_USER_ID}" \
     -H "Authorization: APIKEY REPLACE_YOUR_API_KEY" \
     -d '{
       "model": "gpt-4-1",
@@ -215,16 +221,18 @@ while true; do
 done
 ```
 
-> **⚠️ Ensure the X-User-ID matches the ID extracted from LibreChat logs.**
+---
 
-### Expected Result
+## Expected Result
 
-**curl requests** will consistently return rate-limit errors (`429` / `409`) once the limit is exceeded.
+**Terminal (curl) requests:**
 
-**LibreChat UI** may:
+- Return rate-limit errors (`429` / `409`) once the limit is exceeded
 
-- Show delayed or inconsistent errors
-- Appear to bypass rate limits due to request timeouts
+**LibreChat UI:**
+
+- May show delayed or inconsistent errors
+- May appear to bypass rate limits due to request timeouts
 
 This confirms that rate limiting is enforced by Envoy, but LibreChat UI behavior can mask it under load.
 
@@ -234,6 +242,6 @@ This confirms that rate limiting is enforced by Envoy, but LibreChat UI behavior
 
 This test demonstrates that:
 
-- `X-User-ID` rate limiting works correctly at the Envoy layer
+- X-User-ID rate limiting works correctly at the Envoy layer
 - LibreChat UI timeouts can prevent immediate visibility of rate-limit errors
 - Direct terminal requests are the most reliable way to validate enforcement behavior
