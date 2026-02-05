@@ -1,0 +1,52 @@
+apiVersion: aigateway.envoyproxy.io/v1alpha1
+kind: AIServiceBackend
+metadata:
+  name: envoy-ai-gateway-basic-gcp
+  namespace: default
+spec:
+  schema:
+    name: GCPVertexAI
+  backendRef:
+    name: envoy-ai-gateway-basic-gcp
+    kind: Backend
+    group: gateway.envoyproxy.io
+
+---
+apiVersion: aigateway.envoyproxy.io/v1alpha1
+kind: BackendSecurityPolicy
+metadata:
+  name: envoy-ai-gateway-basic-gcp-credentials
+  namespace: default
+spec:
+  targetRefs:
+    - group: aigateway.envoyproxy.io
+      kind: AIServiceBackend
+      name: envoy-ai-gateway-basic-gcp
+    - group: aigateway.envoyproxy.io
+      kind: AIServiceBackend
+      name: envoy-ai-gateway-basic-gcp-anthropic
+  type: GCPCredentials
+  gcpCredentials:
+    projectName:  kivoyo # Replace with your GCP project name
+    region:  us-central1 # Replace with your GCP region
+    credentialsFile:
+      secretRef:
+        name: envoy-ai-gateway-basic-gcp-service-account-key-file
+
+---
+apiVersion: gateway.envoyproxy.io/v1alpha1
+kind: Backend
+metadata:
+  name: envoy-ai-gateway-basic-gcp
+  namespace: default
+spec:
+  endpoints:
+    - fqdn:
+        hostname: us-central1-aiplatform.googleapis.com
+        port: 443
+
+---
+
+
+
+
