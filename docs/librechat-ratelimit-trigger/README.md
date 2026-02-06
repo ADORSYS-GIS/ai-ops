@@ -1,34 +1,16 @@
 # Low-Level Rate Limiting Test for Envoy AI Gateway with X-User-ID
 
-This document explains how rate limiting works at the low level between **LibreChat** and the **Envoy AI Gateway**, focusing on the `X-User-ID` header mechanism.
+This document explains how rate limiting works at the low level between a client and the **Envoy AI Gateway**, focusing on the `X-User-ID` header mechanism.
 
-The test is performed using direct `curl` requests to the Envoy gateway endpoint, without deploying LibreChat.
+The test is performed using direct `curl` requests to the Envoy gateway endpoint.
 
 ---
 
 ## Understanding the Rate Limiting Mechanism
 
-### How LibreChat Sends User Identification
+### How Clients Send User Identification
 
-LibreChat is configured to forward user identification headers to custom endpoints. When configured with custom headers, LibreChat injects the `X-User-ID` header (along with `X-User-Email`) into all requests sent to the custom provider.
-
-**Reference documentation:**
-- [LibreChat Custom Endpoint Headers Configuration](https://www.librechat.ai/docs/configuration/librechat_yaml/object_structure/custom_endpoint#headers)
-
-Example LibreChat configuration that enables this behavior:
-
-```yaml
-endpoints:
-  custom:
-    - name: "GPT-CUSTOM-PROVIDER"
-      apiKey: "REPLACE_YOUR_API_KEY"
-      baseURL: "http://converse-llm.camer.digital/v1"
-      models:
-        default: ["gpt-4-1"]
-      headers:
-        X-User-ID: "{{LIBRECHAT_USER_ID}}"
-        X-User-Email: "{{LIBRECHAT_USER_EMAIL}}"
-```
+Any client can include a user identifier in the `X-User-ID` header (and optionally `X-User-Email`) when sending requests to the gateway. This header value becomes the key for per-user rate limiting.
 
 ### How Envoy AI Gateway Uses X-User-ID for Rate Limiting
 
@@ -40,7 +22,7 @@ The Envoy AI Gateway uses the `X-User-ID` header to apply usage-based rate limit
 The rate limiting flow is:
 
 ```
-LibreChat Request → Envoy Gateway (extracts X-User-ID) → Rate Limit Check → Upstream LLM
+Client Request → Envoy Gateway (extracts X-User-ID) → Rate Limit Check → Upstream LLM
 ```
 
 ---
