@@ -37,7 +37,7 @@ Resource names are provider-agnostic and role-based:
 - `gateway-external-auth`: SecurityPolicy
 
 ---
-## Prerequistes
+## Prerequisites
 - Kubernetes cluster (k3d)
 - kubectl CLI tool installed
 - Helm 3.x installed
@@ -46,17 +46,18 @@ Resource names are provider-agnostic and role-based:
 - Envoy AI Gateway installed
 - Authorino operator installed
 
-## SetUp
+## Setup
 
 ```bash
-# Deploy Authorino
-kubectl apply -f authorino.yaml
-
 # Create namespace
 kubectl apply -f namespace.yaml
 
+# Deploy Authorino
+kubectl apply -f authorino.yaml
+
+
 # Deploy Gateway Config
-kubectl apply -f basic.yaml
+kubectl apply -f envoy-core.yaml
 
 # Deploy Model backend (in the model-config.yaml file update the secret with the right API key)
 kubectl apply -f model-config.yaml
@@ -84,11 +85,6 @@ metadata:
 spec:
   hosts:
     - "*"
-  # Step 1: Extract API key from incoming request
-  authentication:
-    "client-key":
-      plain:
-        expression: context.request.http.headers["x-client-key"]
 
   # Step 2: Call mock backend to validate the key
   metadata:
@@ -97,6 +93,8 @@ spec:
         url: "http://api-key-mock-python.auth.svc.cluster.local:8080/validate"
         method: GET
         headers:
+          "X-API-Key":
+            selector: context.request.http.headers.x-client-key
 
   # Step 2: Check if backend returned valid: true
   authorization:
@@ -113,15 +111,11 @@ spec:
 ```bash
 cd python-mock-backend
 
-# 1. Build and load image
-docker build -t mock-api-backend:latest .
-k3d image import mock-api-backend:latest -c <cluster-name>
-
-# 2. Deploy validator
+# 1. Deploy validator
 kubectl apply -f deployment.yaml
 
-# 3. Deploy AuthConfig
-kubectl apply -f authconfig.yaml
+# 2. Deploy AuthConfig
+kubectl apply -f ../authconfig.yaml
 
 ```
 
@@ -143,24 +137,20 @@ kind: AuthConfig
 metadata:
   name: external-apikey-auth
   namespace: auth
-  labels:
-    authorino-portal: "true"
 spec:
   hosts:
-    - "*"
-  # Step 1: Extract API key from incoming request
-  authentication:
-    "client-key":
-      plain:
-        expression: context.request.http.headers["x-client-key"]
+    - "*" 
 
-  # Step 2: Call mock backend to validate the key
+  # Step 1: Call mock backend to validate the key
   metadata:
     "api-key-check":
       http:
         url: "http://api-key-mock.auth.svc.cluster.local/validate"
         method: GET
-
+        headers:
+          "X-API-Key":
+            selector: context.request.http.headers.x-client-key
+        
   # Step 2: Check if backend returned valid: true
   authorization:
     "check-backend-response":
@@ -175,8 +165,8 @@ spec:
 
 ```bash
 # 1. Deploy nginx validator
-kubectl apply -f configmap.yaml
-kubectl apply -f deployment.yaml
+kubectl apply -f nginx-mock-backend/configmap.yaml
+kubectl apply -f nginx-mock-backend/deployment.yaml
 
 # 2. Deploy AuthConfig
 kubectl apply -f authconfig.yaml
@@ -187,34 +177,40 @@ kubectl apply -f authconfig.yaml
 
 ### Valid Key (Should Succeed)
 ```bash
-curl -v \           
-  -H "Host: localhost" \               
-  -H "x-client-key: client-key-456" \   
-  -H "Content-Type: application/json" \    
+# Export the Gateway URL first as an environment variable
+curl -v \
+  -H "Host: localhost" \
+  -H "x-client-key: client-key-456" \
+  -H "Content-Type: application/json" \
   -d '{
     "model": "accounts/fireworks/models/qwen3-vl-30b-a3b-thinking",
     "messages": [
-      { "role": "user", "content": "hi" }
-    ]                  
-  }' \                     
-  $GATEWAY_URL/v1/chat/completions
-
+      {
+        "role": "user",
+        "content": "hi"
+      }
+    ]
+  }' \
+  "$GATEWAY_URL/v1/chat/completions"   
 ```
 Expected: `200 OK` with model response
 
 ### Invalid Key (Should Fail)
 ```bash
-curl -v \           
-  -H "Host: localhost" \               
-  -H "x-client-key: invalid-key" \   
-  -H "Content-Type: application/json" \    
+curl -v \
+  -H "Host: localhost" \
+  -H "x-client-key: invalid-key-should-fail" \
+  -H "Content-Type: application/json" \
   -d '{
     "model": "accounts/fireworks/models/qwen3-vl-30b-a3b-thinking",
     "messages": [
-      { "role": "user", "content": "hi" }
-    ]                  
-  }' \                     
-  $GATEWAY_URL/v1/chat/completions
+      {
+        "role": "user",
+        "content": "hi"
+      }
+    ]
+  }' \
+  "$GATEWAY_URL/v1/chat/completions"  
 
 ```
 Expected: `403 Forbidden`
@@ -227,10 +223,13 @@ curl -v \
   -d '{
     "model": "accounts/fireworks/models/qwen3-vl-30b-a3b-thinking",
     "messages": [
-      { "role": "user", "content": "hi" }
+      {
+        "role": "user",
+        "content": "hi"
+      }
     ]
   }' \
-  $GATEWAY_URL/v1/chat/completions
+  "$GATEWAY_URL/v1/chat/completions"  
 
 ```
 Expected: `401 Unauthorized`
@@ -241,7 +240,7 @@ Expected: `401 Unauthorized`
 
 ### Check Authorino Logs
 ```bash
-kubectl logs <authorino pod> -n auth | jq  
+kubectl logs -l authorino-resource=authorino -n auth | jq  # Remove `| jq` if you don't have the CLI installed
 ```
 Look for:
 - `"incoming authorization request"`
@@ -252,7 +251,7 @@ Look for:
 
 **Envoy:**
 ```bash
-kubectl logs -n envoy-gateway-system <envoy=pod> | jq
+kubectl logs -n envoy-gateway-system -l app.kubernetes.io/name=envoy -c envoy | jq
 ```
 
 ### Test Validator Directly
@@ -266,7 +265,7 @@ curl -v -H "X-API-Key: client-key-123" \
 
 # Python backend
 curl -v -H "X-API-Key: client-key-123" \
-  http://api-key-mock.auth.svc.cluster.local:8080/validate
+  http://api-key-mock-python.auth.svc.cluster.local:8080/validate
 
 
 # Invalid key  
@@ -274,9 +273,9 @@ curl -v -H "X-API-Key: client-key-123" \
 curl -v -H "X-API-Key: bad-key" \
   http://api-key-mock.auth.svc.cluster.local/validate
 
-# Python backedn
+# Python backend
 curl -v -H "X-API-Key: wrong-key" \
-  http://api-key-mock.auth.svc.cluster.local:8080/validate
+  http://api-key-mock-python.auth.svc.cluster.local:8080/validate
 
 ```
 ---
@@ -294,7 +293,7 @@ VALID_KEYS = {
 Rebuild and redeploy.
 
 ### Nginx Backend
-Edit `configmap.yaml`:
+Edit `nginx-mock-backend/configmap.yaml`:
 ```nginx
 map $http_x_api_key $api_key_valid {
   default 0;
@@ -304,8 +303,8 @@ map $http_x_api_key $api_key_valid {
 ```
 Apply and restart:
 ```bash
-kubectl apply -f configmap.yaml
-kubectl rollout restart <deployment> -n auth
+kubectl apply -f nginx-mock-backend/configmap.yaml
+kubectl rollout restart deployment/api-key-mock -n auth
 ```
 ---
 
@@ -332,9 +331,3 @@ kubectl rollout restart <deployment> -n auth
 
 **Cause**: AuthConfig not active or host mismatch  
 **Fix**: Check `kubectl get authconfig -n auth` shows `ready: true`
-
-### 500 Internal Server Error
-
-**Cause**: Validator service unreachable  
-<<<<<<< HEAD
-**Fix**: Verify validator pod is running and service exists

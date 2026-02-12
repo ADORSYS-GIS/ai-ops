@@ -84,4 +84,4 @@ metadata:
   namespace: default
 type: Opaque
 stringData:
-  apiKey: APIKEY # Replace with your provider API key.
+  apiKey: fw_6rqLvqUUn77CKbzEAEKikx # Replace with your provider API key.

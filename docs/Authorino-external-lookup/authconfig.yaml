@@ -1,0 +1,27 @@
+apiVersion: authorino.kuadrant.io/v1beta3
+kind: AuthConfig
+metadata:
+  name: external-apikey-auth
+  namespace: auth
+spec:
+  hosts:
+    - "*"
+
+  # Step 1: Call mock backend to validate the key
+  metadata:
+    "api-key-check":
+      http:
+        url: "http://api-key-mock-python.auth.svc.cluster.local:8080/validate"
+        method: GET
+        headers:
+          "X-API-Key":
+            selector: context.request.http.headers.x-client-key
+
+  # Step 2: Check if backend returned valid: true
+  authorization:
+    "check-backend-response":
+      opa:
+        rego: |
+          allow {
+            input.auth.metadata["api-key-check"].valid == true
+          }

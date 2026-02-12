@@ -19,12 +19,6 @@ spec:
       - name: mock-backend
         image: mock-api-backend:latest  # Build and tag locally
         imagePullPolicy: IfNotPresent
-        ports:
-        - containerPort: 8080
-          name: http
-        env:
-        - name: PORT
-          value: "8080"
         livenessProbe:
           httpGet:
             path: /health
