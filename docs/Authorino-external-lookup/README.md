@@ -114,8 +114,8 @@ spec:
 cd python-mock-backend
 
 # 1. Build and load image
-docker build -t api-key-validator:latest .
-k3d image import api-key-validator:latest -c <cluster-name>
+docker build -t mock-api-backend:latest .
+k3d image import mock-api-backend:latest -c <cluster-name>
 
 # 2. Deploy validator
 kubectl apply -f deployment.yaml
