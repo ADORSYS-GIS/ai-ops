@@ -1,12 +1,12 @@
 apiVersion: gateway.envoyproxy.io/v1alpha1
 kind: SecurityPolicy
 metadata:
-  name: external-auth
+  name: gateway-external-auth
 spec:
   targetRef:
     group: gateway.networking.k8s.io
     kind: Gateway
-    name: envoy-ai-gateway-basic
+    name: ai-gateway
   extAuth:
     grpc:
       backendRef:
@@ -17,7 +17,7 @@ spec:
 apiVersion: gateway.networking.k8s.io/v1beta1
 kind: ReferenceGrant
 metadata:
-  name: allow-envoy-gateway-to-authorino
+  name: allow-gateway-to-authorino
   namespace: auth
 spec:
   from:

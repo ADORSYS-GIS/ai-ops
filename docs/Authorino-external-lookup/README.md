@@ -22,6 +22,20 @@ Provider
 
 **Key Principle**: Client API keys are validated by calling an external HTTP service. Authorino acts as the authorization layer, but the validation logic lives externally.
 
+## Naming Convention
+
+Resource names are provider-agnostic and role-based:
+
+- `ai-gateway-class`: GatewayClass
+- `ai-gateway`: Gateway
+- `ai-gateway-proxy`: EnvoyProxy
+- `ai-model-route`: AIGatewayRoute
+- `ai-llm-service`: AIServiceBackend
+- `ai-llm-upstream`: Backend
+- `ai-llm-upstream-tls`: BackendTLSPolicy
+- `ai-llm-provider-apikey`: BackendSecurityPolicy + Secret
+- `gateway-external-auth`: SecurityPolicy
+
 ---
 ## Prerequistes
 - Kubernetes cluster (k3d)

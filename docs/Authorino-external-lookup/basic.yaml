@@ -6,16 +6,16 @@
 apiVersion: gateway.networking.k8s.io/v1
 kind: GatewayClass
 metadata:
-  name: envoy-ai-gateway-basic
+  name: ai-gateway-class
 spec:
   controllerName: gateway.envoyproxy.io/gatewayclass-controller
 ---
 apiVersion: gateway.networking.k8s.io/v1
 kind: Gateway
 metadata:
-  name: envoy-ai-gateway-basic
+  name: ai-gateway
 spec:
-  gatewayClassName: envoy-ai-gateway-basic
+  gatewayClassName: ai-gateway-class
   listeners:
     - name: http
       protocol: HTTP
@@ -24,26 +24,26 @@ spec:
     parametersRef:
       group: gateway.envoyproxy.io
       kind: EnvoyProxy
-      name: envoy-ai-gateway-basic
+      name: ai-gateway-proxy
 ---
 # By default, Envoy Gateway sets the buffer limit to 32kiB which is not sufficient for AI workloads.
 # This ClientTrafficPolicy sets the buffer limit to 50MiB as an example.
 apiVersion: gateway.envoyproxy.io/v1alpha1
 kind: ClientTrafficPolicy
 metadata:
-  name: client-buffer-limit
+  name: ai-gateway-client-traffic
 spec:
   targetRefs:
     - group: gateway.networking.k8s.io
       kind: Gateway
-      name: envoy-ai-gateway-basic
+      name: ai-gateway
   connection:
     bufferLimit: 50Mi
 ---
 apiVersion: gateway.envoyproxy.io/v1alpha1
 kind: EnvoyProxy
 metadata:
-  name: envoy-ai-gateway-basic
+  name: ai-gateway-proxy
 spec:
   provider:
     type: Kubernetes
