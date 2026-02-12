@@ -97,8 +97,6 @@ spec:
         url: "http://api-key-mock-python.auth.svc.cluster.local:8080/validate"
         method: GET
         headers:
-          "X-API-Key":
-            selector: context.request.http.headers.x-client-key
 
   # Step 2: Check if backend returned valid: true
   authorization:
@@ -108,9 +106,6 @@ spec:
           allow {
             input.auth.metadata["api-key-check"].valid == true
           }
-          "X-API-Key":
-            selector: context.request.http.headers.x-client-key
-
 ```
 
 ### Deployment Steps
@@ -165,9 +160,6 @@ spec:
       http:
         url: "http://api-key-mock.auth.svc.cluster.local/validate"
         method: GET
-        headers:
-          "X-API-Key":
-            selector: context.request.http.headers.x-client-key
 
   # Step 2: Check if backend returned valid: true
   authorization:
@@ -177,7 +169,6 @@ spec:
           allow {
             input.auth.metadata["api-key-check"].valid == true
           }
-
 ```
 
 ### Deployment Steps
@@ -189,9 +180,7 @@ kubectl apply -f deployment.yaml
 
 # 2. Deploy AuthConfig
 kubectl apply -f authconfig.yaml
-
 ```
-
 ---
 
 ## Testing
@@ -290,7 +279,6 @@ curl -v -H "X-API-Key: wrong-key" \
   http://api-key-mock.auth.svc.cluster.local:8080/validate
 
 ```
-
 ---
 
 ## Adding More Keys
@@ -319,7 +307,6 @@ Apply and restart:
 kubectl apply -f configmap.yaml
 kubectl rollout restart <deployment> -n auth
 ```
-
 ---
 
 ## Production Considerations
@@ -349,9 +336,5 @@ kubectl rollout restart <deployment> -n auth
 ### 500 Internal Server Error
 
 **Cause**: Validator service unreachable  
+<<<<<<< HEAD
 **Fix**: Verify validator pod is running and service exists
-
-### "unknown field" Error in AuthConfig
-
-**Cause**: Using wrong API syntax for v1beta3  
-**Fix**: Use `expression:` not `selector:` or `valueFrom:` in metadata headers
