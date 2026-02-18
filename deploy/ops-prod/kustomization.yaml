@@ -7,4 +7,4 @@ resources:
   - litellm.yaml
   - mcpo.yaml
   - librechat.yaml
-  - cnpg-pgdump-backup.yaml
+  - pgdump-backup.yaml

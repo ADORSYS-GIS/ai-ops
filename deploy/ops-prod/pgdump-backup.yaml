@@ -1,17 +1,17 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: cnpg-pgdump-backup
+  name: pgdump-backup
   namespace: argocd
 spec:
   project: default
 
   source:
     repoURL: https://github.com/ADORSYS-GIS/ai-helm.git
-    targetRevision: feat/backup-with-pg-dump
-    path: charts/cnpg-pgdump-backup
+    targetRevision: fix/pgdump-backup
+    path: charts/pgdump-backup
     helm:
-      releaseName: cnpg-pgdump-backup
+      releaseName: pgdump-backup
       valueFiles:
         - values.yaml
 
