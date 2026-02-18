@@ -32,6 +32,7 @@ litellm:
       USE_DDTRACE: "false",
       LITELLM_MODE: "production",
       PHOENIX_API_KEY: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJBcGlLZXk6MTUifQ.6TqDQNY2zMMcPBDtOzpBxWEJ3lwL78lMGXVkBMv07jQ",
+      PHOENIX_PROJECT_NAME: "litellm",
       PHOENIX_COLLECTOR_HTTP_ENDPOINT: "https://analytics.ai.camer.digital/v1/traces"
     }
   
