@@ -106,7 +106,7 @@ metadata:
   namespace: default
 type: Opaque
 stringData:
-  apiKey: <Your-Github-PAT> # Replace with your OpenAI API key.
+  apiKey: <Your-Github-PAT> # Replace with your github PAT key.
 ---
 EOF
 ```
@@ -255,7 +255,7 @@ To remove all resources created during this installation:
 
 ```bash
 # Delete MCP Route
-kubectl delete -f docs-manifest/envoy-configs/envoy-config.yaml
+kubectl delete -f mcproute/mcp-route -n default
 
 # Uninstall AI Gateway
 helm uninstall aieg -n envoy-ai-gateway-system
