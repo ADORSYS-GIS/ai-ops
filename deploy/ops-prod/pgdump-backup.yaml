@@ -8,7 +8,7 @@ spec:
 
   source:
     repoURL: https://github.com/ADORSYS-GIS/ai-helm.git
-    targetRevision: fix/pgdump-backup
+    targetRevision: feat/backup-with-pg-dump
     path: charts/pgdump-backup
     helm:
       releaseName: pgdump-backup
