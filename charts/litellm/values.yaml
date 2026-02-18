@@ -31,6 +31,8 @@ litellm:
     {
       USE_DDTRACE: "false",
       LITELLM_MODE: "production",
+      PHOENIX_API_KEY: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJBcGlLZXk6MTUifQ.6TqDQNY2zMMcPBDtOzpBxWEJ3lwL78lMGXVkBMv07jQ",
+      PHOENIX_COLLECTOR_HTTP_ENDPOINT: "https://analytics.ai.camer.digital/v1/traces"
     }
   
   # if set, use this secret for the master key; otherwise, autogenerate a new one
@@ -38,7 +40,7 @@ litellm:
   
   # if set, use this secret key for the master key; otherwise, use the default key
   masterkeySecretKey: "master_key"
-  
+
   affinity:
     podAntiAffinity:
       requiredDuringSchedulingIgnoredDuringExecution:
@@ -96,6 +98,7 @@ litellm:
     general_settings:
       user_header_name: X-OpenWebUI-User-Email
     litellm_settings:
+      callbacks: ["arize_phoenix"]
       cache: True
       cache_params: # set cache params for redis
         type: redis
