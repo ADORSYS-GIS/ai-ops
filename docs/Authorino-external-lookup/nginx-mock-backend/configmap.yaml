@@ -1,0 +1,60 @@
+# apiVersion: v1
+# kind: ConfigMap
+# metadata:
+#   name: api-key-mock-nginx
+#   namespace: auth
+# data:
+#   nginx.conf: |
+#     events {}
+
+#     http {
+#       # Client API keys allowed
+#       map $http_x_api_key $api_key_valid {
+#         default 0;
+#         "client-key-123" 1;
+#         "client-key-456" 1;
+#       }
+
+#       server {
+#         listen 8080;
+
+#         location /validate {
+#           if ($api_key_valid = 0) {
+#             return 401;
+#           }
+#           return 200;
+#         }
+#       }
+#     }
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: api-key-mock-nginx
+  namespace: auth
+data:
+  nginx.conf: |
+    events {}
+
+    http {
+      # Map client API keys to validity
+      map $http_x_api_key $api_key_valid {
+        default 0;
+        "client-key-123" 1;
+        "client-key-456" 1;
+      }
+
+      server {
+        listen 8080;
+
+        location /validate {
+          add_header Content-Type application/json;
+
+          if ($api_key_valid = 0) {
+            return 401 '{"valid": false}';
+          }
+
+          return 200 '{"valid": true}';
+        }
+      }
+    }

@@ -1,0 +1,87 @@
+# Copyright Envoy AI Gateway Authors
+# SPDX-License-Identifier: Apache-2.0
+# The full text of the Apache license is available in the LICENSE file at
+# the root of the repo.
+
+apiVersion: aigateway.envoyproxy.io/v1alpha1
+kind: AIGatewayRoute
+metadata:
+  name: ai-model-route
+  namespace: default
+spec:
+  parentRefs:
+    - name: ai-gateway
+      kind: Gateway
+      group: gateway.networking.k8s.io
+  rules:
+    - matches:
+        - headers:
+            - type: Exact
+              name: x-ai-eg-model
+              value: accounts/fireworks/models/qwen3-vl-30b-a3b-thinking
+      backendRefs:
+        - name: ai-llm-service
+---
+apiVersion: aigateway.envoyproxy.io/v1alpha1
+kind: AIServiceBackend
+metadata:
+  name: ai-llm-service
+  namespace: default
+spec:
+  schema:
+    name: OpenAI
+    prefix: /inference/v1
+  backendRef:
+    name: ai-llm-upstream
+    kind: Backend
+    group: gateway.envoyproxy.io
+---
+apiVersion: gateway.envoyproxy.io/v1alpha1
+kind: Backend
+metadata:
+  name: ai-llm-upstream
+  namespace: default
+spec:
+  endpoints:
+    - fqdn:
+        hostname: api.fireworks.ai
+        port: 443
+---
+apiVersion: gateway.networking.k8s.io/v1alpha3
+kind: BackendTLSPolicy
+metadata:
+  name: ai-llm-upstream-tls
+  namespace: default
+spec:
+  targetRefs:
+    - group: "gateway.envoyproxy.io"
+      kind: Backend
+      name: ai-llm-upstream
+  validation:
+    wellKnownCACertificates: "System"
+    hostname: api.fireworks.ai
+---
+apiVersion: aigateway.envoyproxy.io/v1alpha1
+kind: BackendSecurityPolicy
+metadata:
+  name: ai-llm-provider-apikey
+  namespace: default
+spec:
+  targetRefs:
+    - group: aigateway.envoyproxy.io
+      kind: AIServiceBackend
+      name: ai-llm-service
+  type: APIKey
+  apiKey:
+    secretRef:
+      name: ai-llm-provider-apikey
+      namespace: default
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: ai-llm-provider-apikey
+  namespace: default
+type: Opaque
+stringData:
+  apiKey: fw_6rqLvqUUn77CKbzEAEKikx # Replace with your provider API key.
