@@ -578,26 +578,6 @@ k3d cluster delete rbac-demo
 
 ---
 
-## TROUBLESHOOTING NOTES
-
-### Issue: "unknown command 'app-secret1'"
-**Problem**: Incorrect `kubectl create secret` syntax
-**Solution**: Use `kubectl create secret generic <name> --from-literal=key=value`
-
-### Issue: "AlreadyExists" when creating secrets
-**Problem**: Secret name already exists
-**Solution**: Use unique names or delete existing secret
-
-### Issue: Permission errors after RoleBinding deletion
-**Problem**: Removed RBAC without replacing
-**Solution**: Ensure new RBAC is applied before removing old
-
-### Issue: Cross-namespace access unexpectedly works
-**Problem**: ClusterRoleBinding present instead of RoleBinding
-**Solution**: Audit and replace with namespace-scoped bindings
-
----
-
 ## CONCLUSIONS
 
 ### What We Proved
