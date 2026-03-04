@@ -406,13 +406,4 @@ For your **Envoy AI Gateway + Kuadrant** stack:
 
 ---
 
-## Part 10 — Source Index
 
-| Phase | Report | Key Files Analysed |
-|-------|--------|-------------------|
-| 1 — Token & Cost | [phase1.md](phase1.md) | `handlerUtils.ts`, `preRequestValidatorService.ts`, `logsService.ts`, `providers/openai/chatComplete.ts`, `requestBody.ts`, `streamHandler.ts` |
-| 2 — Attribution | [phase2.md](phase2.md) | `globals.ts`, `requestContext.ts`, `handlerUtils.ts` (conditional routing), `conf.example.json` |
-| 3 — Governance | [phase3.md](phase3.md) | `conf.example.json`, `retryHandler.ts`, `middlewares/hooks/index.ts`, `requestBody.ts`, `handlerUtils.ts` |
-| 4 — Observability | [phase4.md](phase4.md) | `logsService.ts`, `middlewares/log/index.ts`, `apm/index.ts`, `globals.ts` (METRICS_KEYS) |
-| Live Tests | This document §2 | Real curl outputs against `localhost:8787`, March 2026 |
-| Portkey Docs | [portkey.ai/docs](https://portkey.ai/docs/introduction/what-is-portkey) | Observability, AI Gateway, Budget Limits features pages |
