@@ -23,7 +23,7 @@ Running `npx tsx src/start-server.ts` gives you:
 | Fallback routing across providers | ✅ Full | `strategy.mode = fallback` in live tests |
 | Weighted load balancing | ✅ Full | `strategy.mode = loadbalance` |
 | Conditional routing by metadata | ✅ Full | `ConditionalRouter` reads `x-portkey-metadata` |
-| Request/response logging (SSE stream) | ✅ Full | `GET /public-logs` raw SSE endpoint works |
+| Request/response logging (SSE stream) | ✅ Full | `GET /public/logs` raw SSE endpoint works |
 | Basic browser log console | ✅ Full (`GET /public/`) | Simple real-time view only |
 | Attribution headers (`x-portkey-metadata`) | ✅ Full | Headers flow through and are logged |
 | In-memory cache | ✅ Full (cache disabled by default in `conf.json`) | `x-portkey-cache-status: HIT/MISS` header present |
@@ -84,75 +84,6 @@ When you log into the Portkey web application, every capability that is a stub i
 
 All tests ran against the locally running OSS server (`http://localhost:8787`, `npx tsx src/start-server.ts`).
 
-### Test 0 — Health Check & Routing Validation ✅
-
-```
-GET /v1/models  →  HTTP 401 from OpenAI (673ms round trip)
-```
-**Finding:** Gateway correctly proxies to OpenAI even with no valid key. Response time confirms real upstream network call — not a mock.
-
-### Test 1 — Attribution Headers Flow ✅
-
-```bash
-curl ... -H 'x-portkey-metadata: {"tenant":"acme-corp","project":"billing-bot","user":"alice@acme.com"}'
-         -H "x-portkey-trace-id: trace-acme-001"
-```
-
-**Real observed response headers:**
-```
-x-portkey-trace-id: trace-acme-001        ← echoed back exactly
-x-portkey-cache-status: DISABLED
-x-portkey-provider: openai
-x-portkey-retry-attempt-count: 0
-x-portkey-last-used-option-index: config
-```
-
-**Finding:** `x-portkey-trace-id` is echoed in the response header — useful for correlating client-side logs with gateway logs. `metadata` flows through but is invisible in response headers (it's logged internally).
-
-### Test 2 — Retry Behaviour ⚠️ Bug Found
-
-```bash
-curl ... -H 'x-portkey-config: {"retry":{"attempts":2,"onStatusCodes":[401,429]}}'
-```
-
-**Real observed header:**
-```
-x-portkey-retry-attempt-count: -1
-```
-
-**Expected:** `2` (two retry attempts).
-
-**Finding (Limitation #1):** When 401 is included in `onStatusCodes`, the retry counter returns `-1` — an off-by-one or sign bug in the retry counter when the first attempt itself returns a 401. If you remove 401 from the retry list (only retry on 429, 500, 502, 503, 504), the counter works correctly. **Do not include 401 `invalid_api_key` in retry lists** in the OSS build.
-
-### Test 3 — Input Guardrail ⚠️ Does NOT Block Before LLM
-
-```bash
-curl ... -H 'x-portkey-config: {"input_guardrails":[{"default.contains":{"words":["password"]},"deny":true}]}'
-         -d '{"messages":[{"role":"user","content":"What is my password?"}]}'
-```
-
-**Real observed result:** HTTP 401 from OpenAI — the LLM was still called.
-
-**Finding (Limitation #2):** In the OSS build, `default.contains` input guardrails do NOT produce a hard pre-LLM block when the authentication itself fails. The guardrail check requires the hook runner to have an active context — if the upstream call itself errors (401), the guardrail result is overridden by the upstream error. **Input guardrails only reliably block before a successful upstream call** — they still fire, but their HTTP 446 response is masked by upstream authentication errors. In the hosted product, the guardrail check runs independently of the upstream call status.
-
-### Test 4 — Fallback Routing ✅ Structure Works
-
-```bash
-# Two-target fallback, both invalid keys
-x-portkey-config: {"strategy":{"mode":"fallback"}, "targets":[target1, target2]}
-```
-
-**Real observed result:** HTTP 400 (both targets exhausted, gateway returns bad request for missing required fields when fallback exhausts all targets).
-
-**Finding:** Fallback correctly iterates through targets. When all targets are exhausted, the final error is returned to the client. The `x-portkey-last-used-option-index` header correctly reports which target index was last tried.
-
-### Test 5 — Budget Config in `conf.json` ❌ No Enforcement in OSS
-
-Added `rate_limits: [{type: "tokens", unit: "rph", value: 3000}]` to `conf.json` and sent requests well above 3000 tokens (simulated with large requests). 
-
-**Real observed result:** Requests pass through regardless. No 429 returned.
-
-**Finding (Limitation #3 — critical):** `rate_limits` in `conf.json` is **schema only** in OSS. The `preRequestValidator` slot is empty — the values are parsed and stored but nothing reads them to enforce them. Token budgets defined in `conf.json` have **zero enforcement effect** in the OSS gateway. This is the single most important OSS limitation for a billing use case.
 
 ### Live Testing: Summary of Real Limitations Found
 
@@ -170,41 +101,6 @@ Added `rate_limits: [{type: "tokens", unit: "rph", value: 3000}]` to `conf.json`
 
 ## Part 3 — Three-Way Architectural Comparison
 
-### Portkey OSS vs Portkey Hosted vs Envoy AI Gateway + Kuadrant
-
-```mermaid
-graph LR
-    subgraph "Portkey OSS (Self-Hosted)"
-        PO1["Routing engine ✅"]
-        PO2["Provider normalisation ✅"]
-        PO3["Per-request log schema ✅"]
-        PO4["Budget enforcement ❌ stub"]
-        PO5["Dashboard ❌ none"]
-        PO6["Pricing resolution ❌ stub"]
-    end
-
-    subgraph "Portkey Hosted (app.portkey.ai)"
-        PH1["Everything in OSS +"]
-        PH2["Full budget enforcement ✅"]
-        PH3["Real-time analytics dashboard ✅"]
-        PH4["Pricing DB (2300+ models) ✅"]
-        PH5["Virtual key management UI ✅"]
-        PH6["Guardrail marketplace ✅"]
-        PH7["Named Config management ✅"]
-        PH8["Circuit breaker, canary, gRPC ✅"]
-    end
-
-    subgraph "Envoy AI Gateway + Kuadrant"
-        EA1["K8s-native, CRD-based ✅"]
-        EA2["mTLS, service mesh ✅"]
-        EA3["Multi-cluster policy ✅"]
-        EA4["Request-rate limits ✅"]
-        EA5["Token metering ❌ needs WASM"]
-        EA6["Cost resolution ❌ needs microservice"]
-        EA7["Provider normalisation ⚠️ partial"]
-        EA8["GitOps / RBAC policy ownership ✅"]
-    end
-```
 
 ### Feature-by-Feature Three-Way Table
 
@@ -306,27 +202,6 @@ The OTLP span format follows **OTel GenAI Semantic Conventions** — `gen_ai.ope
 
 ## Part 6 — Production Readiness: What It Takes
 
-### Using Portkey OSS in Production
-
-If you want to use the OSS gateway in production, you must build these components yourself:
-
-| Component | What to Build | Effort |
-|-----------|--------------|--------|
-| Budget enforcement | Implement the `preRequestValidator` hook in `src/start-server.ts`; check a Redis counter against your budget store | 1–2 weeks |
-| Pricing resolution | Query the [Portkey Models pricing DB](https://github.com/Portkey-AI/models); return `modelPricingConfig` from your hook | 3–5 days |
-| Log sink & aggregation | Forward SSE logs (`/public-logs`) to ClickHouse/BigQuery; build Grafana dashboards | 1–2 weeks |
-| Rate limiting at scale | Replace the OSS in-memory approach with a distributed counter (Redis + Limitador) | 1 week |
-| HA & clustering | The OSS gateway is stateless — run multiple replicas behind a load balancer; use Redis for shared cache | 2–3 days |
-| Auth / virtual key store | Either use `conf.json` or build a database-backed virtual key resolver | 1 week |
-
-**Total estimated effort for a production-ready OSS deployment: ~6–8 weeks engineering.**
-
-### Using Portkey Hosted in Production
-
-The hosted product provides everything above out of the box. The tradeoff:
-- **SaaS dependency** — your LLM traffic flows through Portkey's cloud (or your on-prem deployment with the enterprise plan)
-- **Custom headers** — clients must send `x-portkey-*` headers; introduces a degree of vendor coupling
-- **Pricing** — the free tier is limited; enterprise pricing for high-volume or on-prem deployments
 
 ### Using Envoy AI Gateway + Kuadrant in Production
 
@@ -402,7 +277,7 @@ For your **Envoy AI Gateway + Kuadrant** stack:
 - **Routing primitives** are already covered by Envoy + Kuadrant (no gap).
 - **Attribution via headers** maps cleanly to Kuadrant descriptors (no gap, config only).
 - **Request-rate quotas** are a direct Kuadrant `RateLimitPolicy` deployment (no gap).
-- **Token-based metering and cost** requires two new components: a WASM response-body parser and a token-budget microservice. These are the concrete implementation tasks — estimate **2–4 weeks** for both.
+- **Token-based metering and cost** requires two new components: a WASM response-body parser and a token-budget microservice. 
 
 ---
 
