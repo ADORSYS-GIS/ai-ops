@@ -1,10 +1,22 @@
-# Phase 5 — Gap Analysis, Design Note & Three-Way Comparison
+# Portkey Cost Governance Study: Gap Analysis & Design Note
 
-> **This is the ticket deliverable.** It synthesises Phases 1–4, live testing results, and Portkey hosted documentation into:
+> **Executive Summary**: This document synthesises our research findings, live testing results, and Portkey hosted documentation into:
 > 1. A three-way architectural comparison (Portkey OSS · Portkey Hosted · Envoy AI Gateway + Kuadrant)
 > 2. What the Portkey hosted UI actually implements (vs what exists in the open-source code)
 > 3. An actionable design note for implementing cost attribution and traffic governance in the Envoy AI Gateway + Kuadrant stack
 > 4. Production readiness guidance
+
+## Table of Contents
+
+- [Part 1 — OSS Self-Hosted vs Portkey Hosted UI: The Real Difference](#part-1--oss-self-hosted-vs-portkey-hosted-ui-the-real-difference)
+- [Part 2 — Live Testing Findings (Real Observed Behaviour, March 2026)](#part-2--live-testing-findings-real-observed-behaviour-march-2026)
+- [Part 3 — Three-Way Architectural Comparison](#part-3--three-way-architectural-comparison)
+- [Part 4 — Original Concept Mapping Table (Portkey → Envoy/Kuadrant)](#part-4--original-concept-mapping-table-portkey--envoykuadrant)
+- [Part 5 — Metering, Attribution, Governance & Observability Narratives](#part-5--metering-attribution-governance--observability-narratives)
+- [Part 6 — Production Readiness: What It Takes](#part-6--production-readiness-what-it-takes)
+- [Part 7 — Prioritised Recommendations for Envoy + Kuadrant](#part-7--prioritised-recommendations-for-envoy--kuadrant)
+- [Part 8 — What Portkey Does That's Hard to Replicate Without Adopting It](#part-8--what-portkey-does-thats-hard-to-replicate-without-adopting-it)
+- [Part 9 — Summary](#part-9--summary)
 
 ---
 
