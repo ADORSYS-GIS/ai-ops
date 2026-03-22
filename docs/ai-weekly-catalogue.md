@@ -57,6 +57,61 @@ Copy the template below, fill it in, and add it under the [Catalogue](#catalogue
 
 ---
 
+### 🏷️ Creating a Personalized Learning Skill with Claude
+
+**Added by:** @Koufan-De-King  
+**Date added:** 2026-03-22  
+**Status:** `Proposed`
+
+---
+
+#### 📝 Description
+
+Most people use Claude the same way every session — starting from scratch, re-explaining their background, their preferred level of detail, how they like examples framed. But Claude can do better than that. This session walks through a workflow where you have a genuine learning conversation with Claude on a topic of your choice, and then — once you've noticed what clicked and what didn't — you ask Claude to distil your learning style and preferences into a reusable *skill*: a structured prompt document that Claude can load in any future session to teach you anything, exactly the way you absorb it best. The result is a personal learning assistant that gets more tailored the more you refine it, without any coding or tooling required.
+
+#### 🛠️ Technologies Involved
+
+- Claude (claude.ai or any API-connected interface)
+- Claude's custom skills / system prompt mechanism
+- Markdown (for authoring and storing the skill file)
+- Any Claude-compatible client (claude.ai, LibreChat, Cursor, etc.)
+
+#### 🎯 Benefit to the Audience
+
+Attendees will walk away knowing how to turn Claude into a genuinely personalised tutor — one that reflects their own learning style rather than a generic one. Concretely, they'll understand what a learning skill looks like, how to prompt Claude to build one from a real conversation, and how to store and reuse it across sessions and tools. It's a low-effort, high-return workflow anyone can adopt the same day.
+
+#### 🗂️ Outline
+
+1. **Opening: the problem with starting from scratch every time** — A quick, relatable framing of why "just ask Claude" isn't always enough. Every session is stateless. Claude doesn't know you prefer holistic overviews before details, or that analogies land better for you than abstract definitions, or that you like a one-liner takeaway at the end of every section. You end up re-teaching Claude about yourself, over and over.
+
+2. **What is a learning skill?** — Introduce the concept: a skill is a short, structured markdown document that captures your learning preferences, communication style expectations, and the output format you want Claude to consistently produce. It lives in a file, gets loaded into Claude's context, and turns any future learning session into one that feels tailor-made. Show a real example — the `teach-me-tech` skill — and walk through what's in it and why each part matters.
+
+3. **Live demo part 1: a learning conversation** — Pick a concrete technical topic (e.g. Kubernetes taints and tolerations, or how an LLM attention mechanism works) and have a genuine learning exchange with Claude on screen. Narrate what's happening: when Claude's explanation lands, when it doesn't, when you ask for a different angle. This is the raw material the skill will be built from.
+
+4. **Live demo part 2: extracting the skill** — Ask Claude, right there in the same conversation, to reflect on the exchange and write a reusable learning skill based on what it observed about how you engaged. Show the output. Walk through it line by line — what it captured, what you might tweak, and how to save it.
+
+5. **Reusing the skill: a before/after comparison** — Open a fresh Claude session. Ask about a new topic without the skill. Then load the skill and ask the same question. Let the difference speak for itself.
+
+6. **Practical tips and pitfalls** — How to refine the skill over time, how to keep it from getting too long, and how to use it across different clients (claude.ai Projects, LibreChat system prompts, Cursor rules, etc.).
+
+7. **Q&A** — Open floor.
+
+#### 📄 Full Proposal
+
+The deeper idea behind this session is that most people are dramatically underusing Claude as a learning tool — not because they lack curiosity, but because they haven't thought about the *interface* between their learning style and the model's defaults. Claude is extraordinarily adaptable, but it adapts on demand, not automatically. The skill workflow is essentially a way of making that adaptation persistent.
+
+What makes this session particularly well-suited for the AI Weekly format is that it's both immediately practical and genuinely surprising to most people. The concept of "teaching Claude how to teach you" isn't something most users have encountered, even among developers who use Claude daily. The live demo is the session's strongest asset — watching a skill get generated in real time, from a real conversation, makes the whole thing feel tangible rather than abstract.
+
+The `teach-me-tech` skill is the perfect worked example to anchor the talk. It was built after a real session on Kubernetes taints, tolerations, and affinities — a non-trivial topic that required a specific kind of explanation (ontology first, then practicals; contrasts with known concepts; analogies welcome but never as a substitute for direct explanation; one-liner takeaways at the end of dense paragraphs). The skill captures all of that, and the before/after comparison of a Claude session with and without it loaded is immediately convincing.
+
+One thing worth being deliberate about in the talk: the skill isn't magic, and it isn't permanent without maintenance. As your understanding deepens, your learning needs change. Part of the workflow is knowing when to revisit and refine the skill — and Claude can help with that too. Mentioning this keeps expectations honest and frames the skill as a living document rather than a one-time artifact.
+
+The session should close with everyone in the room feeling like they could go home, have a learning conversation with Claude about something they've been meaning to understand better, and come out of it with their own skill file. That's the bar.
+
+---
+
+---
+
 ### 🏷️ Meet the AI-Ops Team: What We Do and How We Can Help You
 
 **Added by:** @Koufan-De-King  
