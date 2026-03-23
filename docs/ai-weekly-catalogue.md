@@ -116,7 +116,7 @@ The session should close with everyone in the room feeling like they could go ho
 
 **Added by:** @Koufan-De-King  
 **Date added:** 2026-03-22  
-**Status:** `Proposed`
+**Status:** `Presented`
 
 ---
 
@@ -172,4 +172,4 @@ The LightBridge demo should be short enough that no one loses the thread, but co
 
 | Date | Title | Presenter(s) |
 |------|-------|--------------|
-| —    | —     | —            |
+| 2026-03-23 | Meet the AI-Ops Team: What We Do and How We Can Help You | @Koufan-De-King |
