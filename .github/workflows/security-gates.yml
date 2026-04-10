@@ -1,0 +1,50 @@
+name: Shared Security Scanning
+on:
+  workflow_call:
+    inputs:
+      trivy-scan-type:
+        description: 'Trivy scan type (fs, config)'
+        required: true
+        type: string
+        default: 'fs'
+      trivy-target:
+        description: 'Target directory for Trivy'
+        required: false
+        type: string
+        default: '.'
+      trivy-scanners:
+        description: 'Comma separated list of what security issues to detect'
+        required: false
+        type: string
+        default: 'vuln,secret,misconfig'
+
+jobs:
+  gitleaks:
+    name: Secret Scan (Gitleaks)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Gitleaks
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITLEAKS_LICENSE: ${{ secrets.GITLEAKS_LICENSE }}
+          GITLEAKS_ENABLE_UPLOAD_ARTIFACT: false
+
+  trivy:
+    name: Vulnerability Scan (Trivy)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run Trivy scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: ${{ inputs.trivy-scan-type }}
+          scan-ref: ${{ inputs.trivy-target }}
+          scanners: ${{ inputs.trivy-scanners }}
+          ignore-unfixed: true
+          format: 'table'
+          exit-code: '1'
+          severity: 'HIGH,CRITICAL'
