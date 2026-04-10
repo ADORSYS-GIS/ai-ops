@@ -4,6 +4,11 @@ on:
     branches: [ "main", "sec/ci-scanning-rollout" ]
   pull_request:
     branches: [ "main", "sec/ci-scanning-rollout" ]
+
+permissions:
+  contents: read
+  pull-requests: write
+
 jobs:
   scan:
     uses: ADORSYS-GIS/ai-ops/.github/workflows/security-gates.yml@sec/ci-scanning-rollout

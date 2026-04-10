@@ -18,6 +18,10 @@ on:
         type: string
         default: 'vuln,secret,misconfig'
 
+permissions:
+  contents: read
+  pull-requests: write
+
 jobs:
   gitleaks:
     name: Secret Scan (Gitleaks)
