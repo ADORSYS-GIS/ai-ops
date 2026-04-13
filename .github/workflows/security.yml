@@ -1,9 +1,9 @@
 name: Security Audit
 on:
   push:
-    branches: [ "main", "sec/ci-scanning-rollout" ]
+    branches: [ "main" ]
   pull_request:
-    branches: [ "main", "sec/ci-scanning-rollout" ]
+    branches: [ "main" ]
 
 permissions:
   contents: read
@@ -11,7 +11,7 @@ permissions:
 
 jobs:
   scan:
-    uses: ADORSYS-GIS/ai-ops/.github/workflows/security-gates.yml@sec/ci-scanning-rollout
+    uses: ADORSYS-GIS/ai-ops/.github/workflows/security-gates.yml@main
     secrets: inherit
     with:
       trivy-scan-type: 'fs'
